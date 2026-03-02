@@ -8,6 +8,9 @@ import 'emergency_mode_screen.dart';
 import 'patient_qr_screen.dart';
 import 'ai_assistant_screen.dart';
 import 'patient_appointments_screen.dart';
+import 'nearby_hospitals_screen.dart';
+import 'book_appointment_screen.dart';
+import 'prescription_scan_screen.dart';
 
 class PatientDashboard extends StatefulWidget {
   final String patientId;
@@ -191,11 +194,14 @@ class _PatientDashboardState extends State<PatientDashboard> {
                   mainAxisSpacing: 16,
                   childAspectRatio: 0.9,
                   children: [
+                    _buildGridButton(context, icon: Icons.document_scanner, title: 'Scan Prescription', subtitle: 'AI automatically reads your medicines.', destination: PrescriptionScanScreen(patientId: widget.patientId)),
+                    _buildGridButton(context, icon: Icons.calendar_month, title: 'Book Appointment', subtitle: 'Schedule a visit with your doctor.', destination: BookAppointmentScreen()),
                     _buildGridButton(context, icon: Icons.history_edu, title: 'Medical History', subtitle: 'Detailed logs of your past treatments.', destination: MedicalTimelineScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.upload_file, title: 'Upload Reports', subtitle: 'Add new lab results or documents.', destination: DocumentUploadScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.calendar_today, title: 'Appointments', subtitle: 'Book or view your schedule.', destination: PatientAppointmentsScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.local_hospital, title: 'Emergency Info', subtitle: 'Critical medical data for responders.', destination: EmergencyModeScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.qr_code_2, title: 'My QR Code', subtitle: 'Your unique patient identifier.', destination: PatientQRScreen(patientId: widget.patientId)),
+                    _buildGridButton(context, icon: Icons.location_on, title: 'Nearby Hospitals', subtitle: 'Find hospitals & clinics near you.', destination: const NearbyHospitalsScreen()),
                   ],
                 ),
 
@@ -231,6 +237,16 @@ class _PatientDashboardState extends State<PatientDashboard> {
                     if (eventText.contains('Upload')) { icon = Icons.upload_file; iconColor = Colors.green[600]!; iconBg = Colors.green[50]!; }
                     else if (eventText.contains('AI')) { icon = Icons.smart_toy; iconColor = Colors.purple[600]!; iconBg = Colors.purple[50]!; }
                     else if (eventText.contains('Note')) { icon = Icons.note; iconColor = Colors.orange[600]!; iconBg = Colors.orange[50]!; }
+                    else if (eventText.contains('medicine') || eventText.contains('prescription') || eventText.contains('extracted')) { icon = Icons.medication; iconColor = Colors.teal[600]!; iconBg = Colors.teal[50]!; }
+
+                    // Format the Firestore Timestamp to a readable string
+                    String dateStr = '';
+                    try {
+                      if (event['date'] != null) {
+                        final dt = (event['date'] as dynamic).toDate();
+                        dateStr = '${dt.day}/${dt.month}/${dt.year}';
+                      }
+                    } catch (_) {}
 
                     final dateObj = event['date'];
                     String dateStr = '';

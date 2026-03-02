@@ -97,6 +97,7 @@ class _MedicalTimelineScreenState extends State<MedicalTimelineScreen> {
                       if (eventText.toString().contains('Report')) { icon = Icons.upload_file; iconColor = Colors.green; }
                       if (eventText.toString().contains('AI')) { icon = Icons.smart_toy; iconColor = Colors.purple; }
                       if (eventText.toString().contains('Note')) { icon = Icons.note_add; iconColor = Colors.orange; }
+                      if (eventText.toString().contains('medicine') || eventText.toString().contains('prescription') || eventText.toString().contains('extracted')) { icon = Icons.medication; iconColor = Colors.teal; }
 
                       return _buildTimelineItem(
                         year: date,
