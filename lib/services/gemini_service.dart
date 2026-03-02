@@ -1,5 +1,5 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
-import '../config/api_keys.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GeminiService {
   /// Sends patient info + symptoms to Gemini 2.5 Flash and returns advice.
@@ -20,7 +20,7 @@ class GeminiService {
       // Create the Gemini model with system instruction
       final model = GenerativeModel(
         model: 'gemini-2.5-flash',
-        apiKey: GEMINI_API_KEY,
+        apiKey: dotenv.env['GEMINI_API_KEY'] ?? '',
         systemInstruction: Content.system(
           'You are an AI emergency medical triage assistant.\n\n'
           'RULES:\n'
