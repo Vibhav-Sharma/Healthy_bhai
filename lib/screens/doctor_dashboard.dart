@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'doctor_patient_search_screen.dart';
+import 'doctor_patient_detail_screen.dart';
 class DoctorDashboard extends StatelessWidget {
   const DoctorDashboard({super.key});
 
@@ -171,12 +172,20 @@ class DoctorDashboard extends StatelessWidget {
                             child: const Icon(Icons.person_search, color: Color(0xffDC2626), size: 20),
                           ),
                           const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Find Patient', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                              Text('Search database by ID or Name', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
-                            ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Find Patient', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                Text('Search database by ID or Name', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.arrow_forward_ios, size: 16),
+                            onPressed: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => const DoctorPatientSearchScreen()));
+                            },
                           )
                         ],
                       ),
@@ -197,12 +206,17 @@ class DoctorDashboard extends StatelessWidget {
                             ),
                             suffixIcon: Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: const Color(0xffDC2626),
-                                  borderRadius: BorderRadius.circular(8),
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.push(context, MaterialPageRoute(builder: (context) => const DoctorPatientSearchScreen()));
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xffDC2626),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(Icons.search, color: Colors.white, size: 20),
                                 ),
-                                child: const Icon(Icons.search, color: Colors.white, size: 20),
                               ),
                             ),
                          ),
@@ -312,6 +326,7 @@ class DoctorDashboard extends StatelessWidget {
                 const SizedBox(height: 16),
                 
                 _buildAppointmentCard(
+                  context,
                   name: 'Sarah Jenkins',
                   time: '10:30 AM',
                   type: 'General Checkup',
@@ -322,6 +337,7 @@ class DoctorDashboard extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                  _buildAppointmentCard(
+                  context,
                   name: 'Robert Chen',
                   time: '11:15 AM',
                   type: 'Follow-up',
@@ -441,7 +457,8 @@ class DoctorDashboard extends StatelessWidget {
     );
   }
 
-   Widget _buildAppointmentCard({
+   Widget _buildAppointmentCard(
+     BuildContext context, {
      required String name,
      required String time,
      required String type,
@@ -451,18 +468,22 @@ class DoctorDashboard extends StatelessWidget {
      required IconData imagePlaceholder,
      bool isWarning = false,
    }) {
-     return Container(
-       padding: const EdgeInsets.all(16),
-       decoration: BoxDecoration(
-         color: Colors.white,
-         borderRadius: BorderRadius.circular(12),
-         border: Border(
-           left: BorderSide(color: statusBorderColor, width: 4),
-           top: BorderSide(color: Colors.grey[100]!),
-           right: BorderSide(color: Colors.grey[100]!),
-           bottom: BorderSide(color: Colors.grey[100]!),
-         )
-       ),
+     return GestureDetector(
+       onTap: () {
+         Navigator.push(context, MaterialPageRoute(builder: (context) => const DoctorPatientDetailScreen()));
+       },
+       child: Container(
+         padding: const EdgeInsets.all(16),
+         decoration: BoxDecoration(
+           color: Colors.white,
+           borderRadius: BorderRadius.circular(12),
+           border: Border(
+             left: BorderSide(color: statusBorderColor, width: 4),
+             top: BorderSide(color: Colors.grey[100]!),
+             right: BorderSide(color: Colors.grey[100]!),
+             bottom: BorderSide(color: Colors.grey[100]!),
+           )
+         ),
        child: Row(
          children: [
             Stack(
@@ -557,7 +578,8 @@ class DoctorDashboard extends StatelessWidget {
             )
          ],
        ),
-     );
+     ),
+    );
    }
 
    Widget _buildNavItem(IconData icon, String label, bool isActive) {

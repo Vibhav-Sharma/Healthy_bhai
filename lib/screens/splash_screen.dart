@@ -1,7 +1,26 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'home_selection_screen.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+    // Simulate initial loading and auto-navigate
+    Timer(const Duration(seconds: 2), () {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomeSelectionScreen())
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
