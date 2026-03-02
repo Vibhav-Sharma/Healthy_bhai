@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'patient_dashboard.dart';
+import 'patient_register_screen.dart';
 
 class PatientLoginScreen extends StatelessWidget {
   const PatientLoginScreen({super.key});
@@ -12,7 +14,9 @@ class PatientLoginScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xff1E293B)),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
         title: const Text(
           'Healthy Bhai',
@@ -165,7 +169,12 @@ class PatientLoginScreen extends StatelessWidget {
                       const SizedBox(height: 32),
                       
                       ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                           Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const PatientDashboard()),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xffDC2626),
                           minimumSize: const Size(double.infinity, 56),
@@ -176,7 +185,12 @@ class PatientLoginScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                        OutlinedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                           Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const PatientRegisterScreen()),
+                          );
+                        },
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 56),
                           side: const BorderSide(color: Color(0xffDC2626)),
@@ -223,7 +237,6 @@ class PatientLoginScreen extends StatelessWidget {
                          child: const Row(
                            mainAxisAlignment: MainAxisAlignment.center,
                            children: [
-                             // Note: Replaced social images with placeholder icons for simplicity
                              Icon(Icons.g_mobiledata, color: Colors.black87, size: 32),
                              SizedBox(width: 4),
                              Text('Google', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87)),
@@ -231,85 +244,15 @@ class PatientLoginScreen extends StatelessWidget {
                          ),
                        ),
                      ),
-                     const SizedBox(width: 16),
-                     Expanded(
-                       child: Container(
-                         height: 48,
-                         decoration: BoxDecoration(
-                           border: Border.all(color: Colors.grey[200]!),
-                           borderRadius: BorderRadius.circular(12),
-                         ),
-                         child: const Row(
-                           mainAxisAlignment: MainAxisAlignment.center,
-                           children: [
-                             Icon(Icons.facebook, color: Colors.blue, size: 24),
-                             SizedBox(width: 8),
-                             Text('Facebook', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87)),
-                           ],
-                         ),
-                       ),
-                     )
                    ],
                  ),
                  
-                 const SizedBox(height: 100), // padding for nav
+                 const SizedBox(height: 32), // removed padding for nav
               ],
             ),
           ),
-          
-          // Custom Bottom Nav
-          Positioned(
-             bottom: 0,
-             left: 0,
-             right: 0,
-             child: Container(
-               padding: const EdgeInsets.only(top: 12, bottom: 24, left: 16, right: 16),
-               decoration: BoxDecoration(
-                 color: Colors.white,
-                 border: Border(top: BorderSide(color: Colors.grey[200]!)),
-                  boxShadow: [
-                   BoxShadow(
-                     color: Colors.black.withOpacity(0.02),
-                     blurRadius: 6,
-                     offset: const Offset(0, -4),
-                   )
-                 ]
-               ),
-               child: Row(
-                 mainAxisAlignment: MainAxisAlignment.spaceAround,
-                 children: [
-                    _buildNavItem(Icons.home, 'HOME', false),
-                    _buildNavItem(Icons.description, 'RECORDS', false),
-                    _buildNavItem(Icons.account_circle, 'PROFILE', true),
-                 ],
-               ),
-             ),
-          )
         ],
       ),
     );
   }
-
-   Widget _buildNavItem(IconData icon, String label, bool isActive) {
-     return Column(
-       mainAxisSize: MainAxisSize.min,
-       children: [
-         Icon(
-           icon,
-           color: isActive ? const Color(0xffDC2626) : Colors.grey[400],
-           size: 24,
-         ),
-         const SizedBox(height: 4),
-         Text(
-           label,
-           style: TextStyle(
-             fontSize: 10,
-             fontWeight: FontWeight.bold,
-             letterSpacing: 1,
-             color: isActive ? const Color(0xffDC2626) : Colors.grey[400],
-           ),
-         )
-       ],
-     );
-   }
 }

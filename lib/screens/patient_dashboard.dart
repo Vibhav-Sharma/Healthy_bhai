@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-
+import 'medical_timeline_screen.dart';
+import 'document_upload_screen.dart';
+import 'emergency_mode_screen.dart';
+import 'patient_qr_screen.dart';
+import 'ai_emergency_assistant_screen.dart';
 class PatientDashboard extends StatelessWidget {
   const PatientDashboard({super.key});
 
@@ -62,6 +66,13 @@ class PatientDashboard extends StatelessWidget {
           )
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const AIEmergencyAssistantScreen()));
+        },
+        backgroundColor: Colors.blue,
+        child: const Icon(Icons.smart_toy, color: Colors.white),
+      ),
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -100,24 +111,32 @@ class PatientDashboard extends StatelessWidget {
                   childAspectRatio: 0.9,
                   children: [
                     _buildGridButton(
+                      context,
                       icon: Icons.history_edu,
                       title: 'Medical History',
                       subtitle: 'Detailed logs of your past treatments.',
+                      destination: const MedicalTimelineScreen(),
                     ),
                      _buildGridButton(
+                      context,
                       icon: Icons.upload_file,
                       title: 'Upload Reports',
                       subtitle: 'Add new lab results or documents.',
+                      destination: const DocumentUploadScreen(),
                     ),
                      _buildGridButton(
+                      context,
                       icon: Icons.local_hospital,
                       title: 'Emergency Info',
                       subtitle: 'Critical medical data for responders.',
+                      destination: const EmergencyModeScreen(),
                     ),
                      _buildGridButton(
+                      context,
                       icon: Icons.qr_code_2,
                       title: 'My QR Code',
                       subtitle: 'Your unique patient identifier.',
+                      destination: const PatientQRScreen(),
                     ),
                   ],
                 ),
@@ -204,64 +223,71 @@ class PatientDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildGridButton({
+  Widget _buildGridButton(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
+    required Widget destination,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[100]!),
-        boxShadow: [
-          BoxShadow(
-             color: Colors.black.withOpacity(0.02),
-             blurRadius: 6,
-             offset: const Offset(0, -1),
-          ),
-           BoxShadow(
-             color: Colors.black.withOpacity(0.01),
-             blurRadius: 4,
-             offset: const Offset(0, 2),
-          )
-        ]
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.red[50], // Light red
-              shape: BoxShape.circle,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => destination));
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[100]!),
+          boxShadow: [
+            BoxShadow(
+               color: Colors.black.withOpacity(0.02),
+               blurRadius: 6,
+               offset: const Offset(0, -1),
             ),
-            child: Icon(icon, color: const Color(0xffDC2626), size: 24),
-          ),
-          const Spacer(),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Color(0xffDC2626),
+             BoxShadow(
+               color: Colors.black.withOpacity(0.01),
+               blurRadius: 4,
+               offset: const Offset(0, 2),
+            )
+          ]
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.red[50], // Light red
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: const Color(0xffDC2626), size: 24),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: Colors.grey[500],
-              height: 1.3,
+            const Spacer(),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Color(0xffDC2626),
+              ),
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          )
-        ],
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: Colors.grey[500],
+                height: 1.3,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            )
+          ],
+        ),
       ),
     );
   }

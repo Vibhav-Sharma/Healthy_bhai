@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'patient_login_screen.dart';
+import 'doctor_login_screen.dart';
 
 class HomeSelectionScreen extends StatelessWidget {
   const HomeSelectionScreen({super.key});
@@ -123,13 +125,23 @@ class HomeSelectionScreen extends StatelessWidget {
                         _buildSelectionButton(
                           title: 'Patient Login',
                           icon: Icons.person,
-                          onPressed: () {},
+                          onPressed: () {
+                             Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const PatientLoginScreen()),
+                            );
+                          },
                         ),
                         const SizedBox(height: 20),
                         _buildSelectionButton(
                           title: 'Doctor Login',
                           icon: Icons.medical_services,
-                          onPressed: () {},
+                          onPressed: () {
+                             Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const DoctorLoginScreen()),
+                            );
+                          },
                         ),
                         
                         const SizedBox(height: 48),
@@ -171,7 +183,6 @@ class HomeSelectionScreen extends StatelessWidget {
                      mainAxisAlignment: MainAxisAlignment.spaceAround,
                      children: [
                        _buildNavItem(Icons.home, 'HOME', true),
-                       _buildNavItem(Icons.person, 'PROFILE', false),
                        _buildNavItem(Icons.settings, 'SETTINGS', false),
                      ],
                    ),
