@@ -1,4 +1,11 @@
+<<<<<<< HEAD
 # flutter_application_1
+=======
+<<<<<<< HEAD
+# Healthy_bhai
+=======
+# hv1
+>>>>>>> b23c1917981fce9e7260b6a6794d68042693556c
 
 A new Flutter project.
 
@@ -14,3 +21,7 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+<<<<<<< HEAD
+=======
+>>>>>>> ab53a6c (step 1)
+>>>>>>> b23c1917981fce9e7260b6a6794d68042693556c
