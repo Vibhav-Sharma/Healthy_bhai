@@ -13,8 +13,10 @@ class DoctorLoginScreen extends StatefulWidget {
 class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _hasStartedTypingId = false;
 
   @override
   void dispose() {
@@ -23,10 +25,19 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
     super.dispose();
   }
 
+  // --- VALIDATION LOGIC ---
+  bool _isValidEmail(String email) {
+    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+  }
+
+  bool _isValidDoctorId(String id) {
+    return RegExp(r'^DR-\d{4}-[A-Z]{2}$').hasMatch(id.toUpperCase());
+  }
+
   Future<void> _login() async {
     if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter email/Doctor ID and password.')),
+        const SnackBar(content: Text('Please enter your email/Doctor ID and password.')),
       );
       return;
     }
@@ -38,6 +49,7 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
       final password = _passwordController.text.trim();
 
       String doctorId;
+      // Check if they typed an ID or an Email
       if (AuthService.isDoctorId(input)) {
         doctorId = await AuthService.doctorLoginWithId(
           doctorId: input.toUpperCase(),
@@ -58,13 +70,14 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      String msg = e.toString().replaceAll('Exception: ', '');
+      // Clean up Firebase error messages
+      String msg = e.toString().replaceAll('Exception: ', '').replaceAll('[firebase_auth/invalid-credential]', '');
       if (msg.contains('user-not-found')) msg = 'No account found.';
       if (msg.contains('wrong-password')) msg = 'Incorrect password.';
       if (msg.contains('invalid-email')) msg = 'Invalid email address.';
-      if (msg.contains('invalid-credential')) msg = 'Invalid email/ID or password.';
+      if (msg.trim().isEmpty) msg = 'Invalid email/ID or password.';
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg.trim())));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -131,9 +144,25 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
               ),
               child: Column(
                 children: [
-                  _buildInputField(label: 'Email or Doctor ID', controller: _emailController, prefixIcon: Icons.mail, hintText: 'doctor@hospital.com or DR-XXXX-XX'),
+                  // --- LIVE FEEDBACK ID/EMAIL FIELD ---
+                  _buildInputField(
+                    label: 'Email or Doctor ID', 
+                    controller: _emailController, 
+                    prefixIcon: Icons.mail, 
+                    hintText: 'doctor@hospital.com or DR-XXXX-XX',
+                    keyboardType: TextInputType.emailAddress,
+                    onChanged: (val) => setState(() => _hasStartedTypingId = true),
+                    bottomWidget: _buildIdCriteria(),
+                  ),
                   const SizedBox(height: 24),
-                  _buildInputField(label: 'Password', controller: _passwordController, prefixIcon: Icons.lock, hintText: 'Enter your password', isPassword: true),
+                  
+                  _buildInputField(
+                    label: 'Password', 
+                    controller: _passwordController, 
+                    prefixIcon: Icons.lock, 
+                    hintText: 'Enter your password', 
+                    isPassword: true
+                  ),
                   const SizedBox(height: 32),
 
                   _isLoading
@@ -199,7 +228,35 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
     );
   }
 
-  Widget _buildInputField({required String label, required TextEditingController controller, required IconData prefixIcon, required String hintText, bool isPassword = false}) {
+  // --- REAL-TIME FEEDBACK WIDGET ---
+  Widget _buildIdCriteria() {
+    if (!_hasStartedTypingId) return const SizedBox.shrink();
+    String input = _emailController.text.trim();
+    bool isValid = _isValidEmail(input) || _isValidDoctorId(input);
+    
+    return Row(
+      children: [
+        Icon(isValid ? Icons.check_circle : Icons.cancel, color: isValid ? Colors.green : Colors.red, size: 16),
+        const SizedBox(width: 6),
+        Text(
+          isValid ? 'Valid format' : 'Enter a valid Email or DR-XXXX-XX',
+          style: TextStyle(color: isValid ? Colors.green : Colors.red, fontSize: 12, fontWeight: FontWeight.w500),
+        ),
+      ],
+    );
+  }
+
+  // --- STANDARD INPUT FIELD ---
+  Widget _buildInputField({
+    required String label, 
+    required TextEditingController controller, 
+    required IconData prefixIcon, 
+    required String hintText, 
+    bool isPassword = false,
+    TextInputType keyboardType = TextInputType.text,
+    ValueChanged<String>? onChanged,
+    Widget? bottomWidget,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -210,6 +267,8 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
         TextField(
           controller: controller,
           obscureText: isPassword ? _obscurePassword : false,
+          keyboardType: keyboardType,
+          onChanged: onChanged,
           decoration: InputDecoration(
             hintText: hintText,
             hintStyle: TextStyle(color: Colors.grey[400]),
@@ -221,6 +280,10 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
           ),
         ),
+        if (bottomWidget != null) ...[
+          const SizedBox(height: 8),
+          bottomWidget,
+        ]
       ],
     );
   }

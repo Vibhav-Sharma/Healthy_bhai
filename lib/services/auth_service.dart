@@ -121,12 +121,13 @@ class AuthService {
   }
 
   /// Register a new doctor. Returns the auto-generated DoctorID.
+  /// Register a new doctor. Returns the auto-generated DoctorID.
   static Future<String> doctorSignup({
     required String email,
     required String password,
     required String name,
-    required String specialization,
-    required String hospital,
+    required String phone,       // <-- Added Phone
+    required String specialty,   // <-- Changed from specialization to match UI
   }) async {
     final credential = await _auth.createUserWithEmailAndPassword(
       email: email,
@@ -138,9 +139,9 @@ class AuthService {
     await _db.collection('doctors').doc(uid).set({
       'doctorId': doctorId,
       'name': name,
-      'specialization': specialization,
-      'hospital': hospital,
-      'phone': '',
+      'specialty': specialty,    // <-- Saves the dropdown choice
+      'phone': phone,            // <-- Saves the 10-digit number
+      'hospital': 'Not Specified', // Defaulting since it isn't in the UI yet
       'email': email,
       'createdAt': FieldValue.serverTimestamp(),
     });

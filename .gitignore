@@ -33,6 +33,12 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# API Keys — do NOT commit
+.env
+lib/config/api_keys.dart
+lib/config/maps_api_key.dart
+lib/config/env.dart
+
 # Symbolication related
 app.*.symbols
 
@@ -43,3 +49,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Secrets – NEVER commit these
+.env
+lib/config/api_keys.dart
