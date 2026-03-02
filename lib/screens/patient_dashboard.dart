@@ -14,6 +14,7 @@ import 'prescription_scan_screen.dart';
 import 'notification_settings_screen.dart';
 import 'active_medicines_screen.dart';
 import 'patient_profile_screen.dart';
+import 'patient_settings_screen.dart';
 
 class PatientDashboard extends StatefulWidget {
   final String patientId;
@@ -27,6 +28,9 @@ class _PatientDashboardState extends State<PatientDashboard> {
   int _navIndex = 0;
   String _patientName = 'Patient';
   List<Map<String, dynamic>> _recentActivity = [];
+  bool _isChatBotHovered = false;
+  double? _fabX;
+  double? _fabY;
   bool _needsMedicalDetails = false;
   Map<String, dynamic>? _patientData;
 
@@ -101,9 +105,9 @@ class _PatientDashboardState extends State<PatientDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF3F4F6),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -132,16 +136,18 @@ class _PatientDashboardState extends State<PatientDashboard> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.settings, color: Colors.grey),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => PatientSettingsScreen(patientId: widget.patientId)));
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.account_circle, color: Color(0xffDC2626), size: 28),
             tooltip: 'My Profile',
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PatientProfileScreen(patientId: widget.patientId))),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AiAssistantScreen(patientId: widget.patientId))),
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.smart_toy, color: Colors.white),
       ),
       body: Stack(
         children: [
@@ -151,7 +157,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header
-                Text('Hello, $_patientName', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xff1E293B))),
+                Text('Hello, $_patientName', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.inverseSurface)),
                 const SizedBox(height: 4),
                 Text('ID: ${widget.patientId}', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.grey[500])),
 
@@ -219,7 +225,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Recent Activity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+                    Text('Recent Activity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.inverseSurface)),
                     GestureDetector(
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MedicalTimelineScreen(patientId: widget.patientId))),
                       child: const Text('View All', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xffDC2626))),
@@ -233,7 +239,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
                 if (_recentActivity.isEmpty)
                   Container(
                     padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[100]!)),
+                    decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[100]!)),
                     child: Center(child: Text('No recent activity yet.', style: TextStyle(color: Colors.grey[400]))),
                   )
                 else
@@ -251,7 +257,9 @@ class _PatientDashboardState extends State<PatientDashboard> {
                     final dateObj = event['date'];
                     String dateStr = '';
                     if (dateObj != null) {
-                      dateStr = DateFormat('MMM dd, yyyy - hh:mm a').format((dateObj as dynamic).toDate());
+                      try {
+                        dateStr = DateFormat('MMM dd, yyyy - hh:mm a').format((dateObj as dynamic).toDate());
+                      } catch (_) {}
                     }
 
                     return Padding(
@@ -271,7 +279,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
             child: Container(
               padding: const EdgeInsets.only(top: 16, bottom: 24, left: 24, right: 24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 border: Border(top: BorderSide(color: Colors.grey[200]!)),
                 boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 6, offset: const Offset(0, -4))],
               ),
@@ -286,7 +294,50 @@ class _PatientDashboardState extends State<PatientDashboard> {
               ),
             ),
           ),
+
+          // Draggable Assistive Touch Chatbot
+          if (_fabX == null || _fabY == null)
+            Positioned(
+              right: 24,
+              bottom: 110,
+              child: _buildDraggableFab(),
+            )
+          else
+            Positioned(
+              left: _fabX,
+              top: _fabY,
+              child: _buildDraggableFab(),
+            ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDraggableFab() {
+    return GestureDetector(
+      onPanUpdate: (details) {
+        setState(() {
+          if (_fabX == null || _fabY == null) {
+            final size = MediaQuery.of(context).size;
+            // rough estimations of starting pos if null
+            _fabX = size.width - 24 - (_isChatBotHovered ? 120 : 56);
+            _fabY = size.height - 110 - 56;
+          }
+          _fabX = _fabX! + details.delta.dx;
+          _fabY = _fabY! + details.delta.dy;
+        });
+      },
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isChatBotHovered = true),
+        onExit: (_) => setState(() => _isChatBotHovered = false),
+        child: FloatingActionButton.extended(
+          elevation: 8,
+          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AiAssistantScreen(patientId: widget.patientId))),
+          backgroundColor: Colors.blue,
+          isExtended: _isChatBotHovered,
+          icon: const Icon(Icons.smart_toy, color: Colors.white),
+          label: const Text('Ask AI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        ),
       ),
     );
   }
@@ -297,7 +348,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey[100]!),
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 6, offset: const Offset(0, -1))],
@@ -321,7 +372,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MedicalTimelineScreen(patientId: widget.patientId))),
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[100]!)),
+        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[100]!)),
         child: Row(
           children: [
             Container(width: 40, height: 40, decoration: BoxDecoration(color: iconBgColor, shape: BoxShape.circle), child: Icon(icon, color: iconColor, size: 20)),
@@ -330,7 +381,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xff1E293B)), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.inverseSurface), maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 2),
                   Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
                 ],
