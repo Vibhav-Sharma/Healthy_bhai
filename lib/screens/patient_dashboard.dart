@@ -239,14 +239,6 @@ class _PatientDashboardState extends State<PatientDashboard> {
                     else if (eventText.contains('Note')) { icon = Icons.note; iconColor = Colors.orange[600]!; iconBg = Colors.orange[50]!; }
                     else if (eventText.contains('medicine') || eventText.contains('prescription') || eventText.contains('extracted')) { icon = Icons.medication; iconColor = Colors.teal[600]!; iconBg = Colors.teal[50]!; }
 
-                    // Format the Firestore Timestamp to a readable string
-                    String dateStr = '';
-                    try {
-                      if (event['date'] != null) {
-                        final dt = (event['date'] as dynamic).toDate();
-                        dateStr = '${dt.day}/${dt.month}/${dt.year}';
-                      }
-                    } catch (_) {}
 
                     final dateObj = event['date'];
                     String dateStr = '';
