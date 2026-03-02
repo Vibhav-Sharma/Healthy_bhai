@@ -12,6 +12,8 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
   final _bloodGroupController = TextEditingController();
+  final _weightController = TextEditingController();
+  final _heightController = TextEditingController();
   final _emergencyContactController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -38,6 +40,8 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
     _nameController.dispose();
     _ageController.dispose();
     _bloodGroupController.dispose();
+    _weightController.dispose();
+    _heightController.dispose();
     _emergencyContactController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -112,6 +116,8 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
         name: _nameController.text.trim(),
         age: _ageController.text.trim(),
         bloodGroup: _bloodGroupController.text.trim(),
+        height: _heightController.text.trim(),
+        weight: _weightController.text.trim(),
         emergencyContact: _emergencyContactController.text.trim(),
         allergies: _allergiesController.text.trim(),
         pastDiseases: _pastDiseasesController.text.trim(),
@@ -235,6 +241,10 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
                       Expanded(child: _buildInputField(label: 'BLOOD GROUP', controller: _bloodGroupController, prefixIcon: Icons.bloodtype_outlined, hintText: 'e.g., O+')),
                     ],
                   ),
+                  const SizedBox(height: 20),
+                  _buildInputField(label: 'WEIGHT (kg)', controller: _weightController, prefixIcon: Icons.monitor_weight_outlined, hintText: 'e.g., 70', keyboardType: TextInputType.number),
+                  const SizedBox(height: 20),
+                  _buildInputField(label: 'HEIGHT (cm)', controller: _heightController, prefixIcon: Icons.height, hintText: 'e.g., 170', keyboardType: TextInputType.number),
                   const SizedBox(height: 20),
 
                   // --- PHONE FIELD WITH LIVE VALIDATION ---

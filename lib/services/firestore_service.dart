@@ -362,13 +362,24 @@ class FirestoreService {
       'currentMedicines': FieldValue.arrayUnion(encryptedNames),
     });
 
-    // Add reminders
+    // Add reminders with full prescription data + expiry
+    final now = DateTime.now();
     for (var med in medicines) {
+      final durationStr = (med['duration'] as String?) ?? '';
+      int durationDays = _parseDurationToDays(durationStr);
+      final expiresAt = now.add(Duration(days: durationDays));
+
       final reminderRef = patientDoc.reference.collection('reminders').doc();
       batch.set(reminderRef, {
         'name': med['name'],
         'dosage': med['dosage'],
-        'timings': med['timings'],
+        'frequency': med['frequency'] ?? '',
+        'timingContext': med['timing_context'] ?? '',
+        'duration': durationStr,
+        'timings': med['timings'] ?? [],
+        'startDate': Timestamp.fromDate(now),
+        'expiresAt': Timestamp.fromDate(expiresAt),
+        'active': true,
         'createdAt': FieldValue.serverTimestamp(),
       });
     }
@@ -382,6 +393,76 @@ class FirestoreService {
     });
 
     await batch.commit();
+  }
+
+  /// Get all medicines (reminders) for a patient, sorted by creation date.
+  /// Also auto-deactivates expired ones.
+  static Future<List<Map<String, dynamic>>> getMedicines(String patientId) async {
+    final query = await _db.collection('patients').where('patientId', isEqualTo: patientId).limit(1).get();
+    if (query.docs.isEmpty) return [];
+
+    final patientDoc = query.docs.first;
+    final snapshot = await patientDoc.reference
+        .collection('reminders')
+        .orderBy('createdAt', descending: true)
+        .get();
+
+    final now = DateTime.now();
+    final List<Map<String, dynamic>> result = [];
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      data['id'] = doc.id;
+
+      // Auto-deactivate expired medicines
+      final expiresAt = (data['expiresAt'] as Timestamp?)?.toDate();
+      if (expiresAt != null && expiresAt.isBefore(now) && data['active'] == true) {
+        await doc.reference.update({'active': false});
+        data['active'] = false;
+      }
+
+      result.add(data);
+    }
+
+    return result;
+  }
+
+  /// Deactivate all expired medicines for a patient.
+  static Future<int> deactivateExpiredMedicines(String patientId) async {
+    final query = await _db.collection('patients').where('patientId', isEqualTo: patientId).limit(1).get();
+    if (query.docs.isEmpty) return 0;
+
+    final patientDoc = query.docs.first;
+    final snapshot = await patientDoc.reference
+        .collection('reminders')
+        .where('active', isEqualTo: true)
+        .get();
+
+    final now = DateTime.now();
+    int deactivated = 0;
+
+    for (final doc in snapshot.docs) {
+      final expiresAt = (doc.data()['expiresAt'] as Timestamp?)?.toDate();
+      if (expiresAt != null && expiresAt.isBefore(now)) {
+        await doc.reference.update({'active': false});
+        deactivated++;
+      }
+    }
+
+    return deactivated;
+  }
+
+  /// Parse duration string into days (helper).
+  static int _parseDurationToDays(String duration) {
+    if (duration.isEmpty) return 7; // Default 7 days
+    final lower = duration.toLowerCase().trim();
+    final numMatch = RegExp(r'(\d+)').firstMatch(lower);
+    final num = numMatch != null ? int.tryParse(numMatch.group(1)!) ?? 1 : 1;
+    if (lower.contains('day')) return num;
+    if (lower.contains('week')) return num * 7;
+    if (lower.contains('month')) return num * 30;
+    if (lower.contains('year')) return num * 365;
+    return 7;
   }
 }
 

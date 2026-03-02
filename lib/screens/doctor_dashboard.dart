@@ -4,6 +4,7 @@ import '../services/firestore_service.dart';
 import 'doctor_patient_search_screen.dart';
 import 'doctor_appointments_screen.dart';
 import 'doctor_patient_detail_screen.dart';
+import 'notification_settings_screen.dart';
 
 class DoctorDashboard extends StatefulWidget {
   final String doctorId;
@@ -113,6 +114,12 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Color(0xffDC2626)),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationSettingsScreen(role: 'doctor')));
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout, color: Color(0xffDC2626)),
             onPressed: () async {
