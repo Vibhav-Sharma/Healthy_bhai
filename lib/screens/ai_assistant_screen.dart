@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../services/gemini_service.dart';
 import '../services/firestore_service.dart';
 
@@ -195,7 +196,17 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                         Text(_hasError ? 'Error' : 'AI Advice', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _hasError ? Colors.red : Colors.green)),
                       ]),
                       const Divider(),
-                      SelectableText(_aiResponse, style: const TextStyle(fontSize: 14, height: 1.5)),
+                      MarkdownBody(
+                        data: _aiResponse,
+                        selectable: true,
+                        styleSheet: MarkdownStyleSheet(
+                          p: const TextStyle(fontSize: 14, height: 1.5),
+                          h1: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          h2: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          h3: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          listBullet: const TextStyle(fontSize: 14),
+                        ),
+                      ),
                     ],
                   ),
                 ),
