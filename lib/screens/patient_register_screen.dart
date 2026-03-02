@@ -1,7 +1,109 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 
-class PatientRegisterScreen extends StatelessWidget {
+class PatientRegisterScreen extends StatefulWidget {
   const PatientRegisterScreen({super.key});
+
+  @override
+  State<PatientRegisterScreen> createState() => _PatientRegisterScreenState();
+}
+
+class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
+  final _nameController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _bloodGroupController = TextEditingController();
+  final _emergencyContactController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _ageController.dispose();
+    _bloodGroupController.dispose();
+    _emergencyContactController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _register() async {
+    // Validate
+    if (_nameController.text.trim().isEmpty ||
+        _emailController.text.trim().isEmpty ||
+        _passwordController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in Name, Email, and Password.')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final patientId = await AuthService.patientSignup(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+        name: _nameController.text.trim(),
+        age: _ageController.text.trim(),
+        bloodGroup: _bloodGroupController.text.trim(),
+        emergencyContact: _emergencyContactController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      // Show success dialog with PatientID
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Registration Successful!'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle, color: Colors.green, size: 64),
+              const SizedBox(height: 16),
+              const Text('Your Patient ID is:'),
+              const SizedBox(height: 8),
+              SelectableText(
+                patientId,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xffDC2626),
+                  letterSpacing: 2,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Save this ID! Doctors will use it to access your records.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx); // close dialog
+                Navigator.pop(context); // go back to login
+              },
+              child: const Text('GO TO LOGIN'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString().replaceAll('Exception: ', '')}')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,11 +118,7 @@ class PatientRegisterScreen extends StatelessWidget {
         ),
         title: const Text(
           'Patient Registration',
-          style: TextStyle(
-            color: Color(0xff1E293B),
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Color(0xff1E293B), fontSize: 18, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -28,46 +126,24 @@ class PatientRegisterScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
         child: Column(
           children: [
-            // Icon
-             Container(
-              width: 80,
-              height: 80,
+            Container(
+              width: 80, height: 80,
               decoration: BoxDecoration(
-                color: Colors.blue[50],
-                shape: BoxShape.circle,
+                color: Colors.blue[50], shape: BoxShape.circle,
                 border: Border.all(color: Colors.blue[100]!),
               ),
-              child: const Icon(
-                Icons.assignment_ind,
-                color: Colors.blue,
-                size: 36,
-              ),
+              child: const Icon(Icons.assignment_ind, color: Colors.blue, size: 36),
             ),
             const SizedBox(height: 24),
-            
-            // Titles
-            const Text(
-              'Create Your Profile',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                color: Color(0xff0F172A),
-                letterSpacing: -0.5,
-              ),
+            const Text('Create Your Profile',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Color(0xff0F172A), letterSpacing: -0.5),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Generate your unique Patient ID instantly.',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
-              ),
+            const Text('Generate your unique Patient ID instantly.',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey),
             ),
-            
             const SizedBox(height: 32),
-            
-            // Form Box
+
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -77,91 +153,42 @@ class PatientRegisterScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildInputField(
-                    label: 'FULL NAME',
-                    prefixIcon: Icons.person_outline,
-                    hintText: 'Jane Doe',
-                  ),
+                  _buildInputField(label: 'FULL NAME', controller: _nameController, prefixIcon: Icons.person_outline, hintText: 'Jane Doe'),
                   const SizedBox(height: 20),
-                  
-                  // Age and Blood Group Row
                   Row(
                     children: [
-                      Expanded(
-                        child: _buildInputField(
-                          label: 'AGE',
-                          prefixIcon: Icons.cake_outlined,
-                          hintText: 'e.g., 34',
-                          keyboardType: TextInputType.number,
-                        ),
-                      ),
+                      Expanded(child: _buildInputField(label: 'AGE', controller: _ageController, prefixIcon: Icons.cake_outlined, hintText: 'e.g., 34', keyboardType: TextInputType.number)),
                       const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildInputField(
-                          label: 'BLOOD GROUP',
-                          prefixIcon: Icons.bloodtype_outlined,
-                          hintText: 'e.g., O+',
-                        ),
-                      ),
+                      Expanded(child: _buildInputField(label: 'BLOOD GROUP', controller: _bloodGroupController, prefixIcon: Icons.bloodtype_outlined, hintText: 'e.g., O+')),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  
-                  _buildInputField(
-                    label: 'EMERGENCY CONTACT',
-                    prefixIcon: Icons.phone_outlined,
-                    hintText: '+1 234 567 8900',
-                    keyboardType: TextInputType.phone,
-                  ),
-                   const SizedBox(height: 20),
-
-                   // Separator
-                   Divider(color: Colors.grey[300], height: 32),
-                  
-                  _buildInputField(
-                    label: 'EMAIL ADDRESS',
-                    prefixIcon: Icons.mail_outline,
-                    hintText: 'jane@example.com',
-                    keyboardType: TextInputType.emailAddress,
-                  ),
+                  _buildInputField(label: 'EMERGENCY CONTACT', controller: _emergencyContactController, prefixIcon: Icons.phone_outlined, hintText: '+1 234 567 8900', keyboardType: TextInputType.phone),
                   const SizedBox(height: 20),
-                  
-                  _buildInputField(
-                    label: 'PASSWORD',
-                    prefixIcon: Icons.lock_outline,
-                    hintText: '••••••••',
-                    isPassword: true,
-                  ),
+                  Divider(color: Colors.grey[300], height: 32),
+                  _buildInputField(label: 'EMAIL ADDRESS', controller: _emailController, prefixIcon: Icons.mail_outline, hintText: 'jane@example.com', keyboardType: TextInputType.emailAddress),
+                  const SizedBox(height: 20),
+                  _buildInputField(label: 'PASSWORD', controller: _passwordController, prefixIcon: Icons.lock_outline, hintText: '••••••••', isPassword: true),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
-            ElevatedButton(
-              onPressed: () {
-                // Return to login for now
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xffDC2626),
-                minimumSize: const Size(double.infinity, 56),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-              child: const Text(
-                'REGISTER',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            
-             const SizedBox(height: 32),
+
+            _isLoading
+                ? const CircularProgressIndicator(color: Color(0xffDC2626))
+                : ElevatedButton(
+                    onPressed: _register,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xffDC2626),
+                      minimumSize: const Size(double.infinity, 56),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                    child: const Text('REGISTER', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
+
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -170,6 +197,7 @@ class PatientRegisterScreen extends StatelessWidget {
 
   Widget _buildInputField({
     required String label,
+    required TextEditingController controller,
     required IconData prefixIcon,
     required String hintText,
     bool isPassword = false,
@@ -178,17 +206,10 @@ class PatientRegisterScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: Color(0xff1E293B),
-            letterSpacing: 0.5,
-          ),
-        ),
+        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xff1E293B), letterSpacing: 0.5)),
         const SizedBox(height: 8),
         TextField(
+          controller: controller,
           obscureText: isPassword,
           keyboardType: keyboardType,
           decoration: InputDecoration(
@@ -198,21 +219,12 @@ class PatientRegisterScreen extends StatelessWidget {
             suffixIcon: isPassword ? Icon(Icons.visibility, color: Colors.grey[400]) : null,
             filled: true,
             fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[200]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[200]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-               borderSide: const BorderSide(color: Color(0xffDC2626)),
-            ),
-             contentPadding: const EdgeInsets.symmetric(vertical: 16),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xffDC2626))),
+            contentPadding: const EdgeInsets.symmetric(vertical: 16),
           ),
-        )
+        ),
       ],
     );
   }

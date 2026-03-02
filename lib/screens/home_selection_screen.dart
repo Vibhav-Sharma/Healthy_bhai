@@ -50,19 +50,7 @@ class HomeSelectionScreen extends StatelessWidget {
               ),
             ),
           ),
-           // Grid Background Overlay
-          Positioned.fill(
-              child: Opacity(
-            opacity: 0.03,
-            child: Container(
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/grid.png'), // Consider adding a grid image or drawing one
-                  repeat: ImageRepeat.repeat,
-                ),
-              ),
-            ),
-          )),
+           // Grid Background Overlay (removed - asset doesn't exist)
           
           SafeArea(
             child: Column(
