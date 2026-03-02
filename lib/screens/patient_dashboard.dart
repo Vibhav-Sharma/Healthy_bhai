@@ -5,14 +5,10 @@ import 'medical_timeline_screen.dart';
 import 'document_upload_screen.dart';
 import 'emergency_mode_screen.dart';
 import 'patient_qr_screen.dart';
-import 'patient_qr_screen.dart';
 import 'ai_assistant_screen.dart';
-<<<<<<< HEAD
 import 'nearby_hospitals_screen.dart';
-=======
 import 'book_appointment_screen.dart';
 import 'prescription_scan_screen.dart';
->>>>>>> b5cb2fdb1433a036d6f6ab40e3aac1075ec6ee43
 
 class PatientDashboard extends StatefulWidget {
   final String patientId;

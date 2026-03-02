@@ -77,7 +77,7 @@ $symptoms
     try {
       final model = GenerativeModel(
         model: 'gemini-2.5-flash',
-        apiKey: GEMINI_API_KEY,
+        apiKey: dotenv.env['GEMINI_API_KEY'] ?? '',
         systemInstruction: Content.system(
           'You are a clinical summarisation assistant for doctors.\n\n'
           'RULES:\n'
@@ -148,7 +148,7 @@ Please provide a concise clinical summary for the attending doctor.
   static Future<Map<String, dynamic>> extractPrescription(Uint8List imageBytes) async {
     final model = GenerativeModel(
       model: 'gemini-2.5-flash',
-      apiKey: GEMINI_API_KEY,
+      apiKey: dotenv.env['GEMINI_API_KEY'] ?? '',
       generationConfig: GenerationConfig(
         responseMimeType: 'application/json',
       ),
