@@ -298,7 +298,7 @@ class DoctorListScreen extends StatelessWidget {
 
               return GestureDetector(
                 onTap: () {
-                  // Navigate to the new Detail Screen instead of booking immediately
+                  // Navigate to the Detail Screen
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -343,7 +343,6 @@ class DoctorListScreen extends StatelessWidget {
                             ],
                           ),
                         ),
-                        // Changed Book button to View Profile arrow
                         const Icon(Icons.chevron_right, color: Colors.grey),
                       ],
                     ),
@@ -359,7 +358,7 @@ class DoctorListScreen extends StatelessWidget {
 }
 
 // ------------------------------------------------------------------------
-// NEW: DOCTOR DETAIL & BOOKING SCREEN (UPDATED)
+// DOCTOR DETAIL & BOOKING SCREEN (UPDATED WITH ONLINE/OFFLINE)
 // ------------------------------------------------------------------------
 
 class DoctorDetailBookingScreen extends StatefulWidget {
@@ -381,7 +380,9 @@ class DoctorDetailBookingScreen extends StatefulWidget {
 class _DoctorDetailBookingScreenState extends State<DoctorDetailBookingScreen> {
   final TextEditingController _reasonController = TextEditingController();
   final TextEditingController _reviewController = TextEditingController();
+  
   int _selectedRating = 5;
+  bool _isOnline = false; // Tracks the Online/Offline toggle
 
   @override
   void dispose() {
@@ -418,11 +419,14 @@ class _DoctorDetailBookingScreenState extends State<DoctorDetailBookingScreen> {
     if (pickedTime == null) return; 
 
     // 3. Save to Firebase
+    // 3. Save to Firebase
     try {
       DateTime appointmentDateTime = DateTime(
         pickedDate.year, pickedDate.month, pickedDate.day, 
         pickedTime.hour, pickedTime.minute
       );
+
+      String defaultMeetLink = 'https://meet.google.com/abc-defg-hij';
 
       await FirebaseFirestore.instance.collection('appointments').add({
         'patientId': widget.patientId,
@@ -431,8 +435,10 @@ class _DoctorDetailBookingScreenState extends State<DoctorDetailBookingScreen> {
         'specialty': widget.doctorData['specialty'],
         'hospital': widget.doctorData['hospital'] ?? 'Not specified',
         'appointmentDate': appointmentDateTime,
-        'reason': _reasonController.text.trim(), // <-- Saved Reason
-        'status': 'Waiting', // <-- New Default Status
+        'reason': _reasonController.text.trim(),
+        'status': 'Waiting',
+        'type': _isOnline ? 'Online' : 'Offline', 
+        'meetLink': _isOnline ? defaultMeetLink : null, 
         'createdAt': FieldValue.serverTimestamp(),
       });
 
@@ -441,7 +447,13 @@ class _DoctorDetailBookingScreenState extends State<DoctorDetailBookingScreen> {
         SnackBar(content: Text('Appointment request sent to ${widget.doctorData['name']}!'), backgroundColor: Colors.green),
       );
       
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      // Stay on the same page: clear the form and reset UI instead of navigating away
+      _reasonController.clear();
+      if (mounted) {
+        setState(() {
+          _isOnline = false;
+        });
+      }
       
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to book: $e'), backgroundColor: Colors.red));
@@ -544,6 +556,53 @@ class _DoctorDetailBookingScreenState extends State<DoctorDetailBookingScreen> {
             ),
             
             const SizedBox(height: 32),
+
+            // --- APPOINTMENT TYPE TOGGLE ---
+            const Text('Appointment Type', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ChoiceChip(
+                    label: Container(
+                      width: double.infinity,
+                      alignment: Alignment.center,
+                      child: const Text('In-Clinic'),
+                    ),
+                    selected: !_isOnline,
+                    onSelected: (val) => setState(() => _isOnline = false),
+                    selectedColor: Colors.red.shade50,
+                    backgroundColor: Colors.grey.shade100,
+                    labelStyle: TextStyle(
+                      color: !_isOnline ? Colors.red.shade700 : Colors.grey.shade600, 
+                      fontWeight: FontWeight.bold
+                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: !_isOnline ? Colors.red.shade200 : Colors.transparent)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ChoiceChip(
+                    label: Container(
+                      width: double.infinity,
+                      alignment: Alignment.center,
+                      child: const Text('Online (Video)'),
+                    ),
+                    selected: _isOnline,
+                    onSelected: (val) => setState(() => _isOnline = true),
+                    selectedColor: Colors.red.shade50,
+                    backgroundColor: Colors.grey.shade100,
+                    labelStyle: TextStyle(
+                      color: _isOnline ? Colors.red.shade700 : Colors.grey.shade600, 
+                      fontWeight: FontWeight.bold
+                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: _isOnline ? Colors.red.shade200 : Colors.transparent)),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
 
             // --- REASON FOR APPOINTMENT ---
             const Text('Reason for Appointment', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),

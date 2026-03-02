@@ -260,21 +260,29 @@ class FirestoreService {
 
   // ─── APPOINTMENTS ───
 
-  /// Book an appointment
+  /// Book an appointment (stores all fields the UI screens rely on)
   static Future<void> bookAppointment({
     required String patientId,
     required String doctorId,
     required String doctorName,
     required DateTime appointmentDate,
-    required String symptoms,
+    required String reason,
+    String specialty = '',
+    String hospital = '',
+    String type = 'Offline',
+    String? meetLink,
   }) async {
     await _db.collection('appointments').add({
       'patientId': patientId,
       'doctorId': doctorId,
       'doctorName': doctorName,
+      'specialty': specialty,
+      'hospital': hospital.isNotEmpty ? hospital : 'Not specified',
       'appointmentDate': Timestamp.fromDate(appointmentDate),
-      'symptoms': symptoms,
-      'status': 'upcoming',
+      'reason': reason,
+      'status': 'Waiting',
+      'type': type,
+      'meetLink': meetLink,
       'createdAt': FieldValue.serverTimestamp(),
     });
 
@@ -299,7 +307,7 @@ class FirestoreService {
     return docs;
   }
 
-  /// Get appointments for a doctor
+  /// Get appointments for a doctor (one-time fetch)
   static Future<List<Map<String, dynamic>>> getDoctorAppointments(String doctorId) async {
     final query = await _db
         .collection('appointments')
@@ -312,6 +320,38 @@ class FirestoreService {
     }).toList();
     docs.sort((a, b) => (a['appointmentDate'] as Timestamp).compareTo(b['appointmentDate'] as Timestamp));
     return docs;
+  }
+
+  /// Real-time stream of appointments for a doctor
+  static Stream<QuerySnapshot> getDoctorAppointmentsStream(String doctorId) {
+    return _db
+        .collection('appointments')
+        .where('doctorId', isEqualTo: doctorId)
+        .snapshots();
+  }
+
+  /// Get a patient's display name from their patientId field
+  static Future<String> getPatientName(String patientId) async {
+    try {
+      // First try: patientId might be the document ID (Firebase Auth UID)
+      final doc = await _db.collection('patients').doc(patientId).get();
+      if (doc.exists) {
+        final data = doc.data();
+        return data?['name']?.toString() ?? patientId;
+      }
+      // Second try: patientId might be the custom ID field (e.g. "HB-8429-XT")
+      final query = await _db
+          .collection('patients')
+          .where('patientId', isEqualTo: patientId)
+          .limit(1)
+          .get();
+      if (query.docs.isNotEmpty) {
+        return query.docs.first.data()['name']?.toString() ?? patientId;
+      }
+      return patientId; // Fallback to raw ID
+    } catch (_) {
+      return patientId;
+    }
   }
 
   // ─── REMINDERS / MEDICINES ───
