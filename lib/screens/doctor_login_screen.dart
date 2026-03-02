@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'doctor_dashboard.dart';
+import 'doctor_register_screen.dart';
 
 class DoctorLoginScreen extends StatelessWidget {
   const DoctorLoginScreen({super.key});
@@ -26,15 +28,18 @@ class DoctorLoginScreen extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.grey[200]!),
-                          color: Colors.white,
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.grey[200]!),
+                            color: Colors.white,
+                          ),
+                          child: const Icon(Icons.arrow_back, color: Colors.grey, size: 20),
                         ),
-                        child: const Icon(Icons.arrow_back, color: Colors.grey, size: 20),
                       ),
                       const Text(
                         'Healthy Bhai',
@@ -167,7 +172,12 @@ class DoctorLoginScreen extends StatelessWidget {
                               
                               const SizedBox(height: 24),
                               ElevatedButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const DoctorDashboard()),
+                                  );
+                                },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xffDC2626),
                                   minimumSize: const Size(double.infinity, 56),
@@ -199,19 +209,20 @@ class DoctorLoginScreen extends StatelessWidget {
                         
                         const SizedBox(height: 32),
                         
-                        // Fast Login Section
+                        // Social Login
+                        const SizedBox(height: 32),
                         Row(
                           children: [
                             Expanded(child: Divider(color: Colors.grey[200])),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
                               child: Text(
-                                'FAST LOGIN',
+                                'OR CONTINUE WITH',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.bold,
                                   color: Colors.grey[400],
-                                  letterSpacing: 1.5,
+                                  letterSpacing: 1
                                 ),
                               ),
                             ),
@@ -220,25 +231,30 @@ class DoctorLoginScreen extends StatelessWidget {
                         ),
                         
                         const SizedBox(height: 24),
-                         Row(
-                           children: [
-                             Expanded(
-                               child: _buildBiometricButton(
-                                 icon: Icons.fingerprint,
-                                 label: 'Touch ID',
-                               ),
-                             ),
-                             const SizedBox(width: 16),
-                             Expanded(
-                               child: _buildBiometricButton(
-                                 icon: Icons.face,
-                                 label: 'Face ID',
-                               ),
-                             )
-                           ],
-                         ),
-                         
-                         const SizedBox(height: 32),
+                        
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey[200]!),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.g_mobiledata, color: Colors.black87, size: 32),
+                                    SizedBox(width: 4),
+                                    Text('Google', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 32),
                          Row(
                            mainAxisAlignment: MainAxisAlignment.center,
                            children: [
@@ -246,12 +262,20 @@ class DoctorLoginScreen extends StatelessWidget {
                                'New to Healthy Bhai? ',
                                style: TextStyle(color: Colors.grey[500], fontSize: 14, fontWeight: FontWeight.w500),
                              ),
-                             const Text(
-                               'Register Practice',
-                               style: TextStyle(
-                                 color: Color(0xffDC2626),
-                                 fontSize: 14,
-                                 fontWeight: FontWeight.bold,
+                             GestureDetector(
+                               onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const DoctorRegisterScreen()),
+                                  );
+                               },
+                               child: const Text(
+                                 'Register Practice',
+                                 style: TextStyle(
+                                   color: Color(0xffDC2626),
+                                   fontSize: 14,
+                                   fontWeight: FontWeight.bold,
+                                 ),
                                ),
                              )
                            ],
@@ -336,39 +360,4 @@ class DoctorLoginScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBiometricButton({
-    required IconData icon,
-    required String label,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          )
-        ]
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: Colors.grey[500], size: 20),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
-            ),
-          )
-        ],
-      ),
-    );
-  }
 }
