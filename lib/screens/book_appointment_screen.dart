@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 // ------------------------------------------------------------------------
-// BOOK APPOINTMENT SCREEN 
+// BOOK APPOINTMENT SCREEN (SEARCH & CATEGORIES)
 // ------------------------------------------------------------------------
 
 class BookAppointmentScreen extends StatefulWidget {
-  final String patientId; // <-- This MUST be here
+  final String patientId; 
   
-  const BookAppointmentScreen({Key? key, required this.patientId}) : super(key: key); // <-- And this!
+  const BookAppointmentScreen({Key? key, required this.patientId}) : super(key: key); 
 
   @override
   State<BookAppointmentScreen> createState() => _BookAppointmentScreenState();
@@ -91,7 +91,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
         builder: (context) => DoctorListScreen(
           searchQuery: query, 
           patientId: widget.patientId,
-          isCategorySearch: false, // It's a free-text search
+          isCategorySearch: false, 
         ),
       ),
     );
@@ -195,7 +195,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             builder: (context) => DoctorListScreen(
               searchQuery: title, 
               patientId: widget.patientId,
-              isCategorySearch: true, // It's an exact specialty match
+              isCategorySearch: true, 
             ),
           ),
         );
@@ -226,10 +226,10 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
 }
 
 // ------------------------------------------------------------------------
-// DOCTOR LIST & BOOKING SCREEN
+// DOCTOR LIST SCREEN (SEARCH RESULTS)
 // ------------------------------------------------------------------------
 
-class DoctorListScreen extends StatefulWidget {
+class DoctorListScreen extends StatelessWidget {
   final String searchQuery;
   final String patientId;
   final bool isCategorySearch;
@@ -242,88 +242,16 @@ class DoctorListScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<DoctorListScreen> createState() => _DoctorListScreenState();
-}
-
-class _DoctorListScreenState extends State<DoctorListScreen> {
-  
-  // This function handles the booking process (Date/Time picker -> Firebase)
-  Future<void> _bookAppointment(BuildContext context, Map<String, dynamic> doctorData, String doctorId) async {
-    // 1. Pick a Date
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().add(const Duration(days: 1)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 30)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(colorScheme: const ColorScheme.light(primary: Colors.red)),
-          child: child!,
-        );
-      },
-    );
-
-    if (pickedDate == null) return; // User canceled
-
-    // 2. Pick a Time
-    if (!mounted) return;
-    TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
-      initialTime: const TimeOfDay(hour: 10, minute: 0),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(colorScheme: const ColorScheme.light(primary: Colors.red)),
-          child: child!,
-        );
-      },
-    );
-
-    if (pickedTime == null) return; // User canceled
-
-    // 3. Save to Firebase
-    try {
-      // Combine date and time
-      DateTime appointmentDateTime = DateTime(
-        pickedDate.year, pickedDate.month, pickedDate.day, 
-        pickedTime.hour, pickedTime.minute
-      );
-
-      await FirebaseFirestore.instance.collection('appointments').add({
-        'patientId': widget.patientId,
-        'doctorId': doctorId,
-        'doctorName': doctorData['name'],
-        'specialty': doctorData['specialty'],
-        'hospital': doctorData['hospital'] ?? 'Not specified',
-        'appointmentDate': appointmentDateTime,
-        'status': 'Upcoming', // Can be 'Upcoming', 'Completed', 'Cancelled'
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Appointment booked with ${doctorData['name']}!'), backgroundColor: Colors.green),
-      );
-      Navigator.pop(context); // Go back to dashboard after booking
-      
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to book: $e'), backgroundColor: Colors.red),
-      );
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xffF3F4F6),
       appBar: AppBar(
-        title: Text(widget.isCategorySearch ? widget.searchQuery : 'Search Results', style: const TextStyle(color: Colors.red)),
+        title: Text(isCategorySearch ? searchQuery : 'Search Results', style: const TextStyle(color: Colors.red)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.red),
         elevation: 1,
       ),
       body: StreamBuilder<QuerySnapshot>(
-        // Fetch all doctors from Firebase
         stream: FirebaseFirestore.instance.collection('doctors').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -338,23 +266,22 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
             return const Center(child: Text('No doctors found in the database.'));
           }
 
-          // Filter the doctors based on the search query or clicked category
           var allDoctors = snapshot.data!.docs;
           var filteredDoctors = allDoctors.where((doc) {
             var data = doc.data() as Map<String, dynamic>;
             String name = (data['name'] ?? '').toString().toLowerCase();
             String specialty = (data['specialty'] ?? '').toString().toLowerCase();
-            String query = widget.searchQuery.toLowerCase();
+            String query = searchQuery.toLowerCase();
 
-            if (widget.isCategorySearch) {
-              return specialty == query; // Exact match for grid clicks
+            if (isCategorySearch) {
+              return specialty == query; 
             } else {
-              return name.contains(query) || specialty.contains(query); // Fuzzy match for search bar
+              return name.contains(query) || specialty.contains(query); 
             }
           }).toList();
 
           if (filteredDoctors.isEmpty) {
-            return Center(child: Text('No doctors found for "${widget.searchQuery}".', style: const TextStyle(fontSize: 16)));
+            return Center(child: Text('No doctors found for "$searchQuery".', style: const TextStyle(fontSize: 16)));
           }
 
           return ListView.builder(
@@ -369,55 +296,258 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
               String hospital = doctorData['hospital'] ?? 'Hospital not listed';
               String doctorId = doctorDoc.id; 
 
-              return Card(
-                elevation: 0,
-                color: Colors.white,
-                margin: const EdgeInsets.only(bottom: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade200)),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 60, height: 60,
-                        decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
-                        child: const Icon(Icons.person, color: Colors.red, size: 32),
+              return GestureDetector(
+                onTap: () {
+                  // Navigate to the new Detail Screen instead of booking immediately
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DoctorDetailBookingScreen(
+                        doctorData: doctorData,
+                        doctorId: doctorId,
+                        patientId: patientId,
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(doctorName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xff1E293B))),
-                            const SizedBox(height: 4),
-                            Text(specialty, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w500, fontSize: 13)),
-                            const SizedBox(height: 2),
-                            Row(
-                              children: [
-                                const Icon(Icons.local_hospital, size: 14, color: Colors.grey),
-                                const SizedBox(width: 4),
-                                Expanded(child: Text(hospital, style: const TextStyle(color: Colors.grey, fontSize: 12), overflow: TextOverflow.ellipsis)),
-                              ],
-                            ),
-                          ],
+                    ),
+                  );
+                },
+                child: Card(
+                  elevation: 0,
+                  color: Colors.white,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade200)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 60, height: 60,
+                          decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
+                          child: const Icon(Icons.person, color: Colors.red, size: 32),
                         ),
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(doctorName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xff1E293B))),
+                              const SizedBox(height: 4),
+                              Text(specialty, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w500, fontSize: 13)),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  const Icon(Icons.local_hospital, size: 14, color: Colors.grey),
+                                  const SizedBox(width: 4),
+                                  Expanded(child: Text(hospital, style: const TextStyle(color: Colors.grey, fontSize: 12), overflow: TextOverflow.ellipsis)),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                        onPressed: () => _bookAppointment(context, doctorData, doctorId),
-                        child: const Text('Book'),
-                      ),
-                    ],
+                        // Changed Book button to View Profile arrow
+                        const Icon(Icons.chevron_right, color: Colors.grey),
+                      ],
+                    ),
                   ),
                 ),
               );
             },
           );
         },
+      ),
+    );
+  }
+}
+
+// ------------------------------------------------------------------------
+// NEW: DOCTOR DETAIL & BOOKING SCREEN
+// ------------------------------------------------------------------------
+
+class DoctorDetailBookingScreen extends StatefulWidget {
+  final Map<String, dynamic> doctorData;
+  final String doctorId;
+  final String patientId;
+
+  const DoctorDetailBookingScreen({
+    Key? key,
+    required this.doctorData,
+    required this.doctorId,
+    required this.patientId,
+  }) : super(key: key);
+
+  @override
+  State<DoctorDetailBookingScreen> createState() => _DoctorDetailBookingScreenState();
+}
+
+class _DoctorDetailBookingScreenState extends State<DoctorDetailBookingScreen> {
+
+  Future<void> _bookAppointment() async {
+    // 1. Pick a Date
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 30)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(colorScheme: const ColorScheme.light(primary: Colors.red)),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate == null) return; 
+
+    // 2. Pick a Time
+    if (!mounted) return;
+    TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: const TimeOfDay(hour: 10, minute: 0),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(colorScheme: const ColorScheme.light(primary: Colors.red)),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedTime == null) return; 
+
+    // 3. Save to Firebase
+    try {
+      DateTime appointmentDateTime = DateTime(
+        pickedDate.year, pickedDate.month, pickedDate.day, 
+        pickedTime.hour, pickedTime.minute
+      );
+
+      await FirebaseFirestore.instance.collection('appointments').add({
+        'patientId': widget.patientId,
+        'doctorId': widget.doctorId,
+        'doctorName': widget.doctorData['name'],
+        'specialty': widget.doctorData['specialty'],
+        'hospital': widget.doctorData['hospital'] ?? 'Not specified',
+        'appointmentDate': appointmentDateTime,
+        'status': 'Upcoming', 
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Appointment booked with ${widget.doctorData['name']}!'), backgroundColor: Colors.green),
+      );
+      
+      // Pops all screens until the user is back at the Home Dashboard!
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to book: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    String name = widget.doctorData['name'] ?? 'Unknown';
+    String specialty = widget.doctorData['specialty'] ?? 'Specialty not listed';
+    String hospital = widget.doctorData['hospital'] ?? 'Hospital not listed';
+    String email = widget.doctorData['email'] ?? 'Email not provided';
+    String phone = widget.doctorData['phone'] ?? 'Phone not provided';
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('Doctor Profile', style: TextStyle(color: Colors.red)),
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.red),
+        elevation: 1,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: [
+            // Profile Header
+            Center(
+              child: Container(
+                width: 100, height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.red.shade100, width: 2),
+                ),
+                child: const Icon(Icons.person, color: Colors.red, size: 50),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+            const SizedBox(height: 4),
+            Text(specialty, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.red)),
+            
+            const SizedBox(height: 32),
+
+            // Information Cards
+            _buildInfoCard(Icons.local_hospital, 'Hospital / Clinic', hospital),
+            const SizedBox(height: 16),
+            _buildInfoCard(Icons.phone, 'Contact Number', phone),
+            const SizedBox(height: 16),
+            _buildInfoCard(Icons.email, 'Email Address', email),
+            const SizedBox(height: 32),
+            
+            // About Section Placeholder
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text('About', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '$name is a dedicated professional specializing in $specialty. They are currently practicing at $hospital and are committed to providing the best care for their patients.',
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600, height: 1.5),
+            ),
+          ],
+        ),
+      ),
+      
+      // Floating Booking Button stuck to bottom
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: ElevatedButton(
+            onPressed: _bookAppointment,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              minimumSize: const Size(double.infinity, 56),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 0,
+            ),
+            child: const Text('Book Appointment', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(IconData icon, String title, String value) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xffF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.grey.shade500),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text(value, style: const TextStyle(fontSize: 14, color: Color(0xff1E293B), fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
