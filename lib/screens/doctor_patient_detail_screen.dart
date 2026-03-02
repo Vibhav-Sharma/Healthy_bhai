@@ -89,10 +89,23 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
     final name = _patient['name'] ?? 'Unknown';
     final age = _patient['age']?.toString() ?? '—';
     final bloodGroup = _patient['bloodGroup'] ?? '—';
+    final height = _patient['height']?.toString() ?? '';
+    final weight = _patient['weight']?.toString() ?? '';
     final allergies = List<String>.from(_patient['allergies'] ?? []);
+    final pastDiseases = List<String>.from(_patient['pastDiseases'] ?? []);
+    final currentDiseases = List<String>.from(_patient['currentDiseases'] ?? []);
+    final chronicDiseases = List<String>.from(_patient['chronicDiseases'] ?? []);
     final diseases = List<String>.from(_patient['diseases'] ?? []);
+    final surgeries = List<String>.from(_patient['surgeries'] ?? []);
+    final treatments = List<String>.from(_patient['treatments'] ?? []);
     final currentMeds = List<String>.from(_patient['currentMedicines'] ?? []);
     final oldMeds = List<String>.from(_patient['oldMedicines'] ?? []);
+
+    // Build subtitle: "25 yrs • O+ • 170 cm • 70 kg"
+    final subtitleParts = <String>['$age yrs', bloodGroup];
+    if (height.isNotEmpty) subtitleParts.add('$height cm');
+    if (weight.isNotEmpty) subtitleParts.add('$weight kg');
+    final subtitleStr = subtitleParts.join(' • ');
 
     return Scaffold(
       backgroundColor: const Color(0xffF8FAFC),
@@ -144,7 +157,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
                           children: [
                             Text(name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
                             const SizedBox(height: 4),
-                            Text('$age yrs • $bloodGroup', style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500)),
+                            Text(subtitleStr, style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500)),
                           ],
                         ),
                       ),
@@ -190,10 +203,40 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
                       ListView(
                         padding: const EdgeInsets.all(24),
                         children: [
-                          if (diseases.isNotEmpty) ...[
-                            const Text('Active Diseases', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.orange)),
+                          if (currentDiseases.isNotEmpty) ...[
+                            const Text('Current Diseases', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.orange)),
                             const SizedBox(height: 8),
-                            ...diseases.map((d) => _buildSimpleItem(d, Icons.coronavirus_outlined, Colors.orange)),
+                            ...currentDiseases.map((d) => _buildSimpleItem(d, Icons.coronavirus_outlined, Colors.orange)),
+                            const SizedBox(height: 16),
+                          ],
+                          if (chronicDiseases.isNotEmpty) ...[
+                            const Text('Chronic Diseases', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.red)),
+                            const SizedBox(height: 8),
+                            ...chronicDiseases.map((d) => _buildSimpleItem(d, Icons.favorite_border, Colors.red)),
+                            const SizedBox(height: 16),
+                          ],
+                          if (diseases.isNotEmpty) ...[
+                            const Text('Other Diseases', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.deepOrange)),
+                            const SizedBox(height: 8),
+                            ...diseases.map((d) => _buildSimpleItem(d, Icons.coronavirus_outlined, Colors.deepOrange)),
+                            const SizedBox(height: 16),
+                          ],
+                          if (pastDiseases.isNotEmpty) ...[
+                            const Text('Past Diseases', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey)),
+                            const SizedBox(height: 8),
+                            ...pastDiseases.map((d) => _buildSimpleItem(d, Icons.history, Colors.grey)),
+                            const SizedBox(height: 16),
+                          ],
+                          if (surgeries.isNotEmpty) ...[
+                            const Text('Past Surgeries', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.indigo)),
+                            const SizedBox(height: 8),
+                            ...surgeries.map((s) => _buildSimpleItem(s, Icons.content_cut_outlined, Colors.indigo)),
+                            const SizedBox(height: 16),
+                          ],
+                          if (treatments.isNotEmpty) ...[
+                            const Text('Ongoing Treatments', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.teal)),
+                            const SizedBox(height: 8),
+                            ...treatments.map((t) => _buildSimpleItem(t, Icons.healing_outlined, Colors.teal)),
                             const SizedBox(height: 16),
                           ],
                           if (_timeline.isNotEmpty) ...[
@@ -213,7 +256,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
                               return _buildSimpleItem('${n['note']} • $date', Icons.note, Colors.purple);
                             }),
                           ],
-                          if (_timeline.isEmpty && _notes.isEmpty && diseases.isEmpty)
+                          if (_timeline.isEmpty && _notes.isEmpty && diseases.isEmpty && currentDiseases.isEmpty && chronicDiseases.isEmpty && pastDiseases.isEmpty && surgeries.isEmpty && treatments.isEmpty)
                             Center(child: Padding(padding: const EdgeInsets.all(32), child: Text('No history yet.', style: TextStyle(color: Colors.grey[400])))),
                         ],
                       ),

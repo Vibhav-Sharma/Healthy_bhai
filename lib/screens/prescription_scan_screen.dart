@@ -4,6 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import '../services/gemini_service.dart';
 import '../services/firestore_service.dart';
 import '../services/reminder_service.dart';
+import '../services/med_abbreviation_service.dart';
+import '../services/calendar_service.dart';
 
 class PrescriptionScanScreen extends StatefulWidget {
   final String patientId;
@@ -74,27 +76,31 @@ class _PrescriptionScanScreenState extends State<PrescriptionScanScreen> {
         medicines: _extractedMedicines,
       );
 
-      // 2. Schedule Local Notifications
+      // 2. Schedule Local Notifications using smart abbreviation parsing
       int baseId = DateTime.now().millisecondsSinceEpoch ~/ 100000;
       for (int i = 0; i < _extractedMedicines.length; i++) {
         final med = _extractedMedicines[i];
-        final timings = List<String>.from(med['timings'] ?? []);
-        
-        if (timings.isNotEmpty) {
-          await ReminderService.scheduleMedicineReminder(
-            id: baseId + i,
-            medicineName: med['name'],
-            dosage: med['dosage'],
-            timings: timings,
-          );
-        }
+        final frequency = (med['frequency'] as String?) ?? '';
+        final timingContext = (med['timing_context'] as String?) ?? '';
+        final fallbackTimings = List<String>.from(med['timings'] ?? []);
+
+        await ReminderService.scheduleMedicineReminder(
+          id: baseId + i,
+          medicineName: med['name'] ?? 'Medicine',
+          dosage: med['dosage'] ?? '',
+          frequency: frequency,
+          timingContext: timingContext,
+          fallbackTimings: fallbackTimings,
+        );
       }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Medicines saved & reminders set!')),
         );
-        Navigator.pop(context); // Go back to dashboard
+
+        // 3. Offer Google Calendar integration
+        _showCalendarPrompt();
       }
     } catch (e) {
       if (mounted) {
@@ -103,6 +109,105 @@ class _PrescriptionScanScreenState extends State<PrescriptionScanScreen> {
           SnackBar(content: Text('Failed to save: $e')),
         );
       }
+    }
+  }
+
+  void _showCalendarPrompt() {
+    setState(() => _isProcessing = false);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.calendar_month, color: Colors.blue),
+            SizedBox(width: 8),
+            Expanded(child: Text('Add to Google Calendar?', style: TextStyle(fontSize: 16))),
+          ],
+        ),
+        content: const Text(
+          'Would you like to add these medicine reminders to your Google Calendar? '
+          'You\'ll get calendar alerts on all your devices!',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.pop(context); // Go back to dashboard
+            },
+            child: const Text('SKIP', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.calendar_today, size: 18),
+            label: const Text('ADD TO CALENDAR'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await _addToGoogleCalendar();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _addToGoogleCalendar() async {
+    setState(() => _isProcessing = true);
+
+    try {
+      int addedCount = 0;
+      for (final med in _extractedMedicines) {
+        final name = med['name'] ?? 'Medicine';
+        final dosage = med['dosage'] ?? '';
+        final frequency = (med['frequency'] as String?) ?? '';
+        final timingContext = (med['timing_context'] as String?) ?? '';
+        final duration = (med['duration'] as String?) ?? '';
+        final fallbackTimings = List<String>.from(med['timings'] ?? []);
+
+        // Resolve schedule times
+        List<ScheduleTime> schedule = MedAbbreviationService.resolve(frequency);
+        if (schedule.isEmpty && timingContext.isNotEmpty) {
+          schedule = MedAbbreviationService.resolve(timingContext);
+        }
+        if (schedule.isEmpty) {
+          for (final t in fallbackTimings) {
+            schedule.addAll(MedAbbreviationService.resolve(t));
+          }
+        }
+        if (schedule.isEmpty) {
+          schedule = [const ScheduleTime(hour: 9, minute: 0, label: 'Morning')];
+        }
+
+        // Parse duration into days
+        int durationDays = CalendarService.parseDurationToDays(duration);
+
+        for (final time in schedule) {
+          await CalendarService.addMedicineEvent(
+            medicineName: name,
+            dosage: dosage,
+            scheduleTime: time,
+            durationDays: durationDays,
+          );
+          addedCount++;
+        }
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Added $addedCount calendar events!')),
+        );
+        Navigator.pop(context); // Go back to dashboard
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Calendar error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 
@@ -235,7 +340,29 @@ class _PrescriptionScanScreenState extends State<PrescriptionScanScreen> {
   Widget _buildMedicineCard(Map<String, dynamic> med) {
     final name = med['name'] ?? 'Unknown';
     final dosage = med['dosage'] ?? 'N/A';
-    final timings = List<String>.from(med['timings'] ?? []).join(', ');
+    final frequency = (med['frequency'] as String?) ?? '';
+    final timingContext = (med['timing_context'] as String?) ?? '';
+    final duration = (med['duration'] as String?) ?? '';
+    final fallbackTimings = List<String>.from(med['timings'] ?? []);
+
+    // Resolve actual schedule times for display
+    List<ScheduleTime> schedule = MedAbbreviationService.resolve(frequency);
+    if (schedule.isEmpty && timingContext.isNotEmpty) {
+      schedule = MedAbbreviationService.resolve(timingContext);
+    }
+    if (schedule.isEmpty) {
+      for (final t in fallbackTimings) {
+        schedule.addAll(MedAbbreviationService.resolve(t));
+      }
+    }
+
+    final bool isAsNeeded = MedAbbreviationService.isAsNeeded(frequency);
+    final String? freqDescription = MedAbbreviationService.describe(frequency);
+    final scheduleText = isAsNeeded
+        ? 'Take as needed'
+        : schedule.isNotEmpty
+            ? schedule.map((s) => s.formatted).join(', ')
+            : fallbackTimings.join(', ');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -248,32 +375,77 @@ class _PrescriptionScanScreenState extends State<PrescriptionScanScreen> {
           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(10)),
-            child: const Icon(Icons.medication, color: Colors.green),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xff1E293B))),
-                const SizedBox(height: 4),
-                Text('Dosage: $dosage', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
-                const SizedBox(height: 2),
-                Row(
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.medication, color: Colors.green),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.access_time, size: 14, color: Colors.grey[500]),
-                    const SizedBox(width: 4),
-                    Text(timings, style: TextStyle(fontSize: 13, color: Colors.grey[600], fontWeight: FontWeight.w500)),
+                    Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xff1E293B))),
+                    const SizedBox(height: 4),
+                    Text('Dosage: $dosage', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
                   ],
                 ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Frequency badge
+          if (frequency.isNotEmpty)
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                _infoBadge(Icons.repeat, frequency.toUpperCase(), Colors.blue),
+                if (freqDescription != null)
+                  _infoBadge(Icons.info_outline, freqDescription, Colors.indigo),
+                if (timingContext.isNotEmpty)
+                  _infoBadge(Icons.restaurant, timingContext.toUpperCase(), Colors.orange),
+                if (duration.isNotEmpty)
+                  _infoBadge(Icons.date_range, duration, Colors.purple),
               ],
             ),
+          const SizedBox(height: 8),
+          // Schedule times
+          Row(
+            children: [
+              Icon(Icons.access_time, size: 14, color: Colors.grey[500]),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  scheduleText,
+                  style: TextStyle(fontSize: 13, color: isAsNeeded ? Colors.orange[700] : Colors.grey[600], fontWeight: FontWeight.w500),
+                ),
+              ),
+            ],
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoBadge(IconData icon, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(text, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600)),
         ],
       ),
     );
