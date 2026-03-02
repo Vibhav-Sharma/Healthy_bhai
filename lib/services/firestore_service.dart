@@ -1,29 +1,46 @@
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'encryption_service.dart';
 
 class FirestoreService {
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  // ─── FIELDS TO ENCRYPT PER COLLECTION ───
+  static const List<String> _patientEncryptedFields = [
+    'name', 'phone', 'emergencyContact',
+    'allergies', 'pastDiseases', 'currentDiseases', 'chronicDiseases', 
+    'currentMedicines', 'oldMedicines', 'surgeries', 'treatments',
+  ];
+
+  static const List<String> _doctorEncryptedFields = [
+    'name', 'phone', 'email',
+  ];
+
+  static const List<String> _reportEncryptedFields = [
+    'fileUrl', 'fileName',
+  ];
+
   // ─── PATIENTS ───
 
-  /// Get all registered patients
+  /// Get all registered patients (returns decrypted data)
   static Future<List<Map<String, dynamic>>> getAllPatients() async {
     final query = await _db.collection('patients').get();
     return query.docs.map((doc) {
-      final data = doc.data();
+      var data = doc.data();
       data['uid'] = doc.id;
+      data = EncryptionService.decryptFields(data, _patientEncryptedFields);
       return data;
     }).toList();
   }
 
-  /// Get patient document by Firebase Auth UID
+  /// Get patient document by Firebase Auth UID (returns decrypted data)
   static Future<Map<String, dynamic>?> getPatientByUid(String uid) async {
     final doc = await _db.collection('patients').doc(uid).get();
     if (!doc.exists) return null;
-    return doc.data();
+    return EncryptionService.decryptFields(doc.data()!, _patientEncryptedFields);
   }
 
-  /// Get patient document by PatientID (e.g., "HB-8429-XT")
+  /// Get patient document by PatientID (returns decrypted data)
   static Future<Map<String, dynamic>?> getPatientByPatientId(
       String patientId) async {
     final query = await _db
@@ -32,18 +49,19 @@ class FirestoreService {
         .limit(1)
         .get();
     if (query.docs.isEmpty) return null;
-    return query.docs.first.data();
+    return EncryptionService.decryptFields(query.docs.first.data(), _patientEncryptedFields);
   }
 
-  /// Update patient profile fields
+  /// Update patient profile fields (encrypts sensitive fields before saving)
   static Future<void> updatePatientProfile(
       String uid, Map<String, dynamic> data) async {
-    await _db.collection('patients').doc(uid).update(data);
+    final encryptedData = EncryptionService.encryptFields(data, _patientEncryptedFields);
+    await _db.collection('patients').doc(uid).update(encryptedData);
   }
 
   // ─── REPORTS ───
 
-  /// Save report metadata after file upload
+  /// Save report metadata after file upload (encrypts sensitive fields)
   static Future<void> saveReport({
     required String patientId,
     required String fileUrl,
@@ -51,9 +69,9 @@ class FirestoreService {
     required String type,
   }) async {
     await _db.collection('reports').add({
-      'patientId': patientId,
-      'fileUrl': fileUrl,
-      'fileName': fileName,
+      'patientId': patientId, // Keep unencrypted for querying
+      'fileUrl': EncryptionService.encryptData(fileUrl),
+      'fileName': EncryptionService.encryptData(fileName),
       'date': FieldValue.serverTimestamp(),
       'type': type,
     });
@@ -70,8 +88,9 @@ class FirestoreService {
           .orderBy('date', descending: true)
           .get();
       return query.docs.map((doc) {
-        final data = doc.data();
+        var data = doc.data();
         data['id'] = doc.id;
+        data = EncryptionService.decryptFields(data, _reportEncryptedFields);
         return data;
       }).toList();
     } catch (e) {
@@ -82,8 +101,9 @@ class FirestoreService {
           .where('patientId', isEqualTo: patientId)
           .get();
       final list = query.docs.map((doc) {
-        final data = doc.data();
+        var data = doc.data();
         data['id'] = doc.id;
+        data = EncryptionService.decryptFields(data, _reportEncryptedFields);
         return data;
       }).toList();
       list.sort((a, b) {
@@ -248,12 +268,13 @@ class FirestoreService {
 
   // ─── DOCTORS LIST ───
 
-  /// Get all registered doctors
+  /// Get all registered doctors (returns decrypted data)
   static Future<List<Map<String, dynamic>>> getAllDoctors() async {
     final query = await _db.collection('doctors').get();
     return query.docs.map((doc) {
-      final data = doc.data();
+      var data = doc.data();
       data['uid'] = doc.id;
+      data = EncryptionService.decryptFields(data, _doctorEncryptedFields);
       return data;
     }).toList();
   }
@@ -335,9 +356,10 @@ class FirestoreService {
     // 3. Batch write both profile update and reminders collection
     final batch = _db.batch();
 
-    // Update Profile Array
+    // Update Profile Array (encrypt the names)
+    final encryptedNames = newMedicineNames.map((n) => EncryptionService.encryptData(n)).toList();
     batch.update(patientDoc.reference, {
-      'currentMedicines': FieldValue.arrayUnion(newMedicineNames),
+      'currentMedicines': FieldValue.arrayUnion(encryptedNames),
     });
 
     // Add reminders

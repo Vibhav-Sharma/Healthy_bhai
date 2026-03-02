@@ -25,39 +25,10 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Stack(
           children: [
-            // Top Bar Icons
-            Positioned(
-              top: 16,
-              left: 32,
-              right: 32,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    '9:41',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Icon(Icons.signal_cellular_4_bar, size: 18, color: Colors.black),
-                      const SizedBox(width: 4),
-                      Icon(Icons.wifi, size: 18, color: Colors.black),
-                      const SizedBox(width: 4),
-                      Icon(Icons.battery_full, size: 22, color: Colors.black),
-                    ],
-                  )
-                ],
-              ),
-            ),
-            
             // Center Logo & Title
             Center(
               child: Column(
@@ -84,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
@@ -203,23 +174,6 @@ class _SplashScreenState extends State<SplashScreen> {
                 ],
               ),
             ),
-            
-            // Home indicator
-            Positioned(
-              bottom: 8,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Container(
-                  width: 128,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[900]?.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-              ),
-            )
           ],
         ),
       ),

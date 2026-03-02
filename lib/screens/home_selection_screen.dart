@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../main.dart';
 import 'patient_login_screen.dart';
 import 'doctor_login_screen.dart';
 import 'settings_screen.dart';
@@ -9,7 +10,7 @@ class HomeSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Background Effects
@@ -56,11 +57,26 @@ class HomeSelectionScreen extends StatelessWidget {
           SafeArea(
             child: Column(
               children: [
-                const SizedBox(height: 48),
-                Expanded(
+                Align(
+                  alignment: Alignment.topRight,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
+                    padding: const EdgeInsets.only(right: 16.0, top: 8.0),
+                    child: IconButton(
+                      icon: Icon(
+                        themeNotifier.value == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode,
+                        color: Theme.of(context).colorScheme.inverseSurface,
+                      ),
+                      onPressed: () {
+                        themeNotifier.value = themeNotifier.value == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+                      },
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -151,13 +167,14 @@ class HomeSelectionScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                ),
                 
                 // Bottom Navigation Bar
                  Container(
                    decoration: BoxDecoration(
-                     color: Colors.white.withOpacity(0.95),
+                     color: Theme.of(context).scaffoldBackgroundColor,
                      border: Border(
-                       top: BorderSide(color: Colors.grey[100]!),
+                       top: BorderSide(color: Colors.grey[200]!),
                      ),
                      boxShadow: [
                        BoxShadow(
@@ -279,7 +296,7 @@ class HomeSelectionScreen extends StatelessWidget {
           Container(
             padding: isActive ? const EdgeInsets.symmetric(horizontal: 16, vertical: 4) : null,
           decoration: isActive ? BoxDecoration(
-             color: Colors.red[50],
+             color: Colors.red.withOpacity(0.1),
              borderRadius: BorderRadius.circular(20),
           ) : null,
           child: Icon(

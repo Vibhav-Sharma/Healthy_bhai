@@ -11,6 +11,7 @@ import 'patient_appointments_screen.dart';
 import 'nearby_hospitals_screen.dart';
 import 'book_appointment_screen.dart';
 import 'prescription_scan_screen.dart';
+import 'patient_settings_screen.dart';
 
 class PatientDashboard extends StatefulWidget {
   final String patientId;
@@ -27,6 +28,8 @@ class _PatientDashboardState extends State<PatientDashboard> {
   bool _isChatBotHovered = false;
   double? _fabX;
   double? _fabY;
+  bool _needsMedicalDetails = false;
+  Map<String, dynamic>? _patientData;
 
   @override
   void initState() {
@@ -39,7 +42,25 @@ class _PatientDashboardState extends State<PatientDashboard> {
     try {
       final data = await FirestoreService.getPatientByPatientId(widget.patientId);
       if (data != null && mounted) {
-        setState(() => _patientName = data['name'] ?? 'Patient');
+        setState(() {
+          _patientData = data;
+          _patientName = data['name'] ?? 'Patient';
+          
+          // Check if any medical history list is empty
+          final allergies = data['allergies'] as List? ?? [];
+          final pastDiseases = data['pastDiseases'] as List? ?? [];
+          final currentDiseases = data['currentDiseases'] as List? ?? [];
+          final chronicDiseases = data['chronicDiseases'] as List? ?? [];
+          final currentMedicines = data['currentMedicines'] as List? ?? [];
+          final oldMedicines = data['oldMedicines'] as List? ?? [];
+          final surgeries = data['surgeries'] as List? ?? [];
+          final treatments = data['treatments'] as List? ?? [];
+          
+          _needsMedicalDetails = allergies.isEmpty || pastDiseases.isEmpty || 
+                                 currentDiseases.isEmpty || chronicDiseases.isEmpty || 
+                                 currentMedicines.isEmpty || oldMedicines.isEmpty || 
+                                 surgeries.isEmpty || treatments.isEmpty;
+        });
       }
     } catch (_) {}
   }
@@ -77,7 +98,19 @@ class _PatientDashboardState extends State<PatientDashboard> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('My Profile'),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('My Profile'),
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.blue, size: 20),
+              onPressed: () {
+                Navigator.pop(ctx);
+                _showUpdateMedicalDetailsDialog();
+              },
+            ),
+          ],
+        ),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,8 +122,13 @@ class _PatientDashboardState extends State<PatientDashboard> {
               _profileRow('Blood Group', data['bloodGroup'] ?? '-'),
               _profileRow('Emergency Contact', data['emergencyContact'] ?? '-'),
               _profileRow('Allergies', (data['allergies'] as List?)?.join(', ') ?? 'None'),
-              _profileRow('Diseases', (data['diseases'] as List?)?.join(', ') ?? 'None'),
+              _profileRow('Past Diseases', (data['pastDiseases'] as List?)?.join(', ') ?? 'None'),
+              _profileRow('Current Diseases', (data['currentDiseases'] as List?)?.join(', ') ?? 'None'),
+              _profileRow('Chronic Diseases', (data['chronicDiseases'] as List?)?.join(', ') ?? 'None'),
               _profileRow('Current Medicines', (data['currentMedicines'] as List?)?.join(', ') ?? 'None'),
+              _profileRow('Past Medicines', (data['oldMedicines'] as List?)?.join(', ') ?? 'None'),
+              _profileRow('Surgeries', (data['surgeries'] as List?)?.join(', ') ?? 'None'),
+              _profileRow('Treatments', (data['treatments'] as List?)?.join(', ') ?? 'None'),
             ],
           ),
         ),
@@ -112,6 +150,108 @@ class _PatientDashboardState extends State<PatientDashboard> {
     );
   }
 
+  void _showUpdateMedicalDetailsDialog() {
+    if (_patientData == null) return;
+
+    final allergiesController = TextEditingController(text: (_patientData!['allergies'] as List?)?.join(', ') ?? '');
+    final pastDiseasesController = TextEditingController(text: (_patientData!['pastDiseases'] as List?)?.join(', ') ?? '');
+    final currentDiseasesController = TextEditingController(text: (_patientData!['currentDiseases'] as List?)?.join(', ') ?? '');
+    final chronicDiseasesController = TextEditingController(text: (_patientData!['chronicDiseases'] as List?)?.join(', ') ?? '');
+    final currentMedController = TextEditingController(text: (_patientData!['currentMedicines'] as List?)?.join(', ') ?? '');
+    final oldMedController = TextEditingController(text: (_patientData!['oldMedicines'] as List?)?.join(', ') ?? '');
+    final surgeriesController = TextEditingController(text: (_patientData!['surgeries'] as List?)?.join(', ') ?? '');
+    final treatmentsController = TextEditingController(text: (_patientData!['treatments'] as List?)?.join(', ') ?? '');
+    bool isSaving = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Update Medical History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Separate multiple items with commas.', style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic)),
+                    const SizedBox(height: 16),
+                    TextField(controller: allergiesController, decoration: const InputDecoration(labelText: 'Allergies', prefixIcon: Icon(Icons.warning_amber_rounded, size: 20))),
+                    const SizedBox(height: 12),
+                    TextField(controller: pastDiseasesController, decoration: const InputDecoration(labelText: 'Past Diseases (e.g., Jaundice)', prefixIcon: Icon(Icons.history, size: 20))),
+                    const SizedBox(height: 12),
+                    TextField(controller: currentDiseasesController, decoration: const InputDecoration(labelText: 'Current Diseases (e.g., Covid)', prefixIcon: Icon(Icons.coronavirus_outlined, size: 20))),
+                    const SizedBox(height: 12),
+                    TextField(controller: chronicDiseasesController, decoration: const InputDecoration(labelText: 'Chronic Diseases (e.g., Blood Pressure, Asthma)', prefixIcon: Icon(Icons.favorite_border, size: 20))),
+                    const SizedBox(height: 12),
+                    TextField(controller: currentMedController, decoration: const InputDecoration(labelText: 'Current Medicines (e.g., Metformin)', prefixIcon: Icon(Icons.medication, size: 20))),
+                    const SizedBox(height: 12),
+                    TextField(controller: oldMedController, decoration: const InputDecoration(labelText: 'Old Medicines', prefixIcon: Icon(Icons.medication_outlined, size: 20))),
+                    const SizedBox(height: 12),
+                    TextField(controller: surgeriesController, decoration: const InputDecoration(labelText: 'Past Surgeries', prefixIcon: Icon(Icons.content_cut_outlined, size: 20))),
+                    const SizedBox(height: 12),
+                    TextField(controller: treatmentsController, decoration: const InputDecoration(labelText: 'Ongoing Treatments', prefixIcon: Icon(Icons.healing_outlined, size: 20))),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              if (!isSaving)
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: Colors.grey))),
+              isSaving
+                  ? const Padding(padding: EdgeInsets.all(8.0), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
+                  : ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xffDC2626)),
+                      onPressed: () async {
+                        setDialogState(() => isSaving = true);
+
+                        List<String> parseList(String text) {
+                          if (text.trim().isEmpty) return [];
+                          return text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+                        }
+
+                        try {
+                          final uid = AuthService.currentUser?.uid;
+                          if (uid != null) {
+                            await FirestoreService.updatePatientProfile(uid, {
+                              'allergies': parseList(allergiesController.text),
+                              'pastDiseases': parseList(pastDiseasesController.text),
+                              'currentDiseases': parseList(currentDiseasesController.text),
+                              'chronicDiseases': parseList(chronicDiseasesController.text),
+                              'currentMedicines': parseList(currentMedController.text),
+                              'oldMedicines': parseList(oldMedController.text),
+                              'surgeries': parseList(surgeriesController.text),
+                              'treatments': parseList(treatmentsController.text),
+                            });
+                            
+                            // Log event
+                            await FirestoreService.addTimelineEvent(
+                              patientId: widget.patientId,
+                              event: 'Updated medical history profile details.',
+                            );
+
+                            await _loadPatientData();
+                            await _loadRecentActivity();
+                          }
+                          if (mounted) Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Medical history updated successfully!')));
+                        } catch (e) {
+                          setDialogState(() => isSaving = false);
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error updating profile: $e')));
+                        }
+                      },
+                      child: const Text('Save Details', style: TextStyle(color: Colors.white)),
+                    ),
+            ],
+          );
+        }
+      ),
+    );
+  }
+
   Widget _profileRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -128,9 +268,9 @@ class _PatientDashboardState extends State<PatientDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF3F4F6),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -158,6 +298,13 @@ class _PatientDashboardState extends State<PatientDashboard> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.grey),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => PatientSettingsScreen(patientId: widget.patientId)));
+            },
+          ),
           // Logout button
           IconButton(
             icon: const Icon(Icons.logout, color: Color(0xffDC2626)),
@@ -177,11 +324,47 @@ class _PatientDashboardState extends State<PatientDashboard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header
-                Text('Hello, $_patientName', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xff1E293B))),
+                Text('Hello, $_patientName', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.inverseSurface)),
                 const SizedBox(height: 4),
                 Text('ID: ${widget.patientId}', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.grey[500])),
 
                 const SizedBox(height: 24),
+
+                // Incomplete Profile Prompt Banner
+                if (_needsMedicalDetails)
+                  GestureDetector(
+                    onTap: _showUpdateMedicalDetailsDialog,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 24),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [Color(0xffF59E0B), Color(0xffD97706)]),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [BoxShadow(color: const Color(0xffF59E0B).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                            child: const Icon(Icons.warning_amber_rounded, color: Colors.white),
+                          ),
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Incomplete Profile', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                                SizedBox(height: 4),
+                                Text('Add allergies, past surgeries & more for precise AI insights.', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
 
                 // Grid Options
                 GridView.count(
@@ -209,7 +392,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Recent Activity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+                    Text('Recent Activity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.inverseSurface)),
                     GestureDetector(
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MedicalTimelineScreen(patientId: widget.patientId))),
                       child: const Text('View All', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xffDC2626))),
@@ -223,7 +406,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
                 if (_recentActivity.isEmpty)
                   Container(
                     padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[100]!)),
+                    decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[100]!)),
                     child: Center(child: Text('No recent activity yet.', style: TextStyle(color: Colors.grey[400]))),
                   )
                 else
@@ -236,6 +419,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
                     else if (eventText.contains('AI')) { icon = Icons.smart_toy; iconColor = Colors.purple[600]!; iconBg = Colors.purple[50]!; }
                     else if (eventText.contains('Note')) { icon = Icons.note; iconColor = Colors.orange[600]!; iconBg = Colors.orange[50]!; }
                     else if (eventText.contains('medicine') || eventText.contains('prescription') || eventText.contains('extracted')) { icon = Icons.medication; iconColor = Colors.teal[600]!; iconBg = Colors.teal[50]!; }
+
 
                     final dateObj = event['date'];
                     String dateStr = '';
@@ -262,7 +446,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
             child: Container(
               padding: const EdgeInsets.only(top: 16, bottom: 24, left: 24, right: 24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 border: Border(top: BorderSide(color: Colors.grey[200]!)),
                 boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 6, offset: const Offset(0, -4))],
               ),
@@ -331,7 +515,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey[100]!),
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 6, offset: const Offset(0, -1))],
@@ -355,7 +539,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MedicalTimelineScreen(patientId: widget.patientId))),
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[100]!)),
+        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[100]!)),
         child: Row(
           children: [
             Container(width: 40, height: 40, decoration: BoxDecoration(color: iconBgColor, shape: BoxShape.circle), child: Icon(icon, color: iconColor, size: 20)),
@@ -364,7 +548,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xff1E293B)), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.inverseSurface), maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 2),
                   Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
                 ],
