@@ -15,6 +15,45 @@ class DoctorPatientSearchScreen extends StatefulWidget {
 class _DoctorPatientSearchScreenState extends State<DoctorPatientSearchScreen> {
   final _searchController = TextEditingController();
   bool _isSearching = false;
+  
+  List<Map<String, dynamic>> _allPatients = [];
+  List<Map<String, dynamic>> _filteredPatients = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAllPatients();
+  }
+
+  Future<void> _loadAllPatients() async {
+    try {
+      final patients = await FirestoreService.getAllPatients();
+      if (mounted) {
+        setState(() {
+          _allPatients = patients;
+        });
+      }
+    } catch (_) {}
+  }
+
+  void _onSearchChanged(String query) {
+    if (query.trim().isEmpty) {
+      if (mounted) setState(() => _filteredPatients = []);
+      return;
+    }
+    final q = query.trim().toLowerCase();
+    final matches = _allPatients.where((p) {
+      final name = (p['name'] ?? '').toString().toLowerCase();
+      final id = (p['patientId'] ?? '').toString().toLowerCase();
+      final phone = (p['phone'] ?? '').toString().toLowerCase();
+      
+      return name.contains(q) || id.contains(q) || phone.contains(q);
+    }).toList();
+
+    if (mounted) {
+      setState(() => _filteredPatients = matches);
+    }
+  }
 
   @override
   void dispose() {
@@ -38,6 +77,10 @@ class _DoctorPatientSearchScreenState extends State<DoctorPatientSearchScreen> {
       if (data == null) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Patient not found. Check the ID and try again.')));
       } else {
+        await FirestoreService.addDoctorActivity(
+          doctorId: widget.doctorId,
+          action: 'Viewed Patient $patientId',
+        );
         Navigator.push(context, MaterialPageRoute(
           builder: (context) => DoctorPatientDetailScreen(patientId: patientId.trim(), doctorId: widget.doctorId),
         ));
@@ -134,8 +177,9 @@ class _DoctorPatientSearchScreenState extends State<DoctorPatientSearchScreen> {
                     Expanded(
                       child: TextField(
                         controller: _searchController,
+                        onChanged: _onSearchChanged,
                         decoration: InputDecoration(
-                          hintText: 'Enter Patient ID (e.g. HB-8429-XT)',
+                          hintText: 'Enter Name, ID or Phone',
                           hintStyle: TextStyle(color: Colors.grey[400]),
                           prefixIcon: const Icon(Icons.search, color: Colors.grey),
                           filled: true, fillColor: const Color(0xffF8FAFC),
@@ -177,20 +221,60 @@ class _DoctorPatientSearchScreenState extends State<DoctorPatientSearchScreen> {
           ),
 
           Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.search, size: 64, color: Colors.grey[300]),
-                  const SizedBox(height: 16),
-                  Text('Search for a patient by their ID', style: TextStyle(color: Colors.grey[400], fontSize: 16)),
-                  Text('or scan their QR code', style: TextStyle(color: Colors.grey[400], fontSize: 14)),
-                ],
-              ),
-            ),
+            child: _filteredPatients.isNotEmpty || _searchController.text.isNotEmpty
+                ? _buildDynamicSearchResults()
+                : Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.search, size: 64, color: Colors.grey[300]),
+                        const SizedBox(height: 16),
+                        Text('Search for a patient by Name, ID or Phone', style: TextStyle(color: Colors.grey[400], fontSize: 16)),
+                        Text('or scan their QR code', style: TextStyle(color: Colors.grey[400], fontSize: 14)),
+                      ],
+                    ),
+                  ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDynamicSearchResults() {
+    if (_filteredPatients.isEmpty) {
+      return Center(child: Text('No matching patients found.', style: TextStyle(color: Colors.grey[500])));
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      itemCount: _filteredPatients.length,
+      itemBuilder: (context, index) {
+        final p = _filteredPatients[index];
+        final id = p['patientId'] ?? '';
+        final name = p['name'] ?? 'Unknown';
+
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[100]!)),
+          elevation: 0,
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(16),
+            leading: CircleAvatar(
+              backgroundColor: Colors.red[50],
+              child: const Icon(Icons.person, color: Color(0xffDC2626)),
+            ),
+            title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+            subtitle: Text('ID: $id\nPhone: ${p['phone'] ?? 'N/A'}', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            isThreeLine: true,
+            onTap: () {
+              FocusScope.of(context).unfocus();
+              _searchController.text = id;
+              _searchPatient(id);
+            },
+          ),
+        );
+      },
     );
   }
 }
