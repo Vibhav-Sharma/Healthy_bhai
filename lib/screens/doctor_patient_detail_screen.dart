@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../services/firestore_service.dart';
 import 'doctor_notes_screen.dart';
+import 'patient_summary_screen.dart';
 
 class DoctorPatientDetailScreen extends StatefulWidget {
   final String patientId;
@@ -101,6 +102,21 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
         title: Text(widget.patientId, style: const TextStyle(color: Color(0xff1E293B), fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1)),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.auto_awesome, color: Color(0xffDC2626)),
+            tooltip: 'AI Summary',
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(
+                builder: (_) => PatientSummaryScreen(
+                  patientId: widget.patientId,
+                  patient: _patient,
+                  reports: _reports,
+                  notes: _notes,
+                  timeline: _timeline,
+                ),
+              ));
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.note_add, color: Colors.blue),
             onPressed: () async {

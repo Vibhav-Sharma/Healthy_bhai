@@ -121,4 +121,53 @@ class FirestoreService {
       return data;
     }).toList();
   }
+
+  // ─── REMINDERS / MEDICINES ───
+
+  /// Saves extracted medicines to Firestore.
+  /// 1. Appends the medicine list to the patient's `currentMedicines` array.
+  /// 2. Saves individual reminders to a `reminders` subcollection.
+  static Future<void> saveMedicinesFromPrescription({
+    required String patientId,
+    required List<Map<String, dynamic>> medicines,
+  }) async {
+    // 1. Get UID from Patient ID
+    final query = await _db.collection('patients').where('patientId', isEqualTo: patientId).limit(1).get();
+    if (query.docs.isEmpty) throw Exception('Patient not found');
+    
+    final patientDoc = query.docs.first;
+    final uid = patientDoc.id;
+
+    // 2. Extract just the names for the profile array
+    final List<String> newMedicineNames = medicines.map((m) => m['name'].toString()).toList();
+
+    // 3. Batch write both profile update and reminders collection
+    final batch = _db.batch();
+
+    // Update Profile Array
+    batch.update(patientDoc.reference, {
+      'currentMedicines': FieldValue.arrayUnion(newMedicineNames),
+    });
+
+    // Add reminders
+    for (var med in medicines) {
+      final reminderRef = patientDoc.reference.collection('reminders').doc();
+      batch.set(reminderRef, {
+        'name': med['name'],
+        'dosage': med['dosage'],
+        'timings': med['timings'],
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+
+    // Add timeline event
+    final timelineRef = _db.collection('timeline').doc();
+    batch.set(timelineRef, {
+      'patientId': patientId,
+      'event': 'AI extracted ${medicines.length} medicines from prescription.',
+      'date': FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
+  }
 }

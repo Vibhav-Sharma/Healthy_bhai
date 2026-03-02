@@ -5,8 +5,10 @@ import 'medical_timeline_screen.dart';
 import 'document_upload_screen.dart';
 import 'emergency_mode_screen.dart';
 import 'patient_qr_screen.dart';
+import 'patient_qr_screen.dart';
 import 'ai_assistant_screen.dart';
 import 'book_appointment_screen.dart';
+import 'prescription_scan_screen.dart';
 
 class PatientDashboard extends StatefulWidget {
   final String patientId;
@@ -188,6 +190,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
                   mainAxisSpacing: 16,
                   childAspectRatio: 0.9,
                   children: [
+                    _buildGridButton(context, icon: Icons.document_scanner, title: 'Scan Prescription', subtitle: 'AI automatically reads your medicines.', destination: PrescriptionScanScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.calendar_month, title: 'Book Appointment', subtitle: 'Schedule a visit with your doctor.', destination: BookAppointmentScreen()),
                     _buildGridButton(context, icon: Icons.history_edu, title: 'Medical History', subtitle: 'Detailed logs of your past treatments.', destination: MedicalTimelineScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.upload_file, title: 'Upload Reports', subtitle: 'Add new lab results or documents.', destination: DocumentUploadScreen(patientId: widget.patientId)),
