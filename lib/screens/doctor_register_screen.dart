@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'doctor_dashboard.dart';
+import '../services/auth_service.dart';
 
 class DoctorRegisterScreen extends StatefulWidget {
   const DoctorRegisterScreen({super.key});
@@ -79,19 +80,38 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Call your actual AuthService registration method here
-      await Future.delayed(const Duration(seconds: 2)); 
+      // 1. Send all the data to your updated AuthService
+      String newDoctorId = await AuthService.doctorSignup(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        phone: _phoneController.text.trim(),
+        password: _passwordController.text,
+        specialty: _selectedSpecialty,
+      );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Registration Successful!')));
+      
+      // 2. Show a success message with their new auto-generated ID!
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Registration Successful! Your ID is $newDoctorId'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+      
+      // 3. Navigate back to login screen so they can log in
       Navigator.pop(context); 
       
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      // Clean up the Firebase error message so it looks nice
+      String msg = e.toString().replaceAll('Exception: ', '').replaceAll('[firebase_auth/email-already-in-use]', '');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg.trim())));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+      
   }
 
   @override
