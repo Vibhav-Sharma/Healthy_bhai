@@ -4,7 +4,7 @@ import 'doctor_dashboard.dart';
 import 'doctor_register_screen.dart';
 
 class DoctorLoginScreen extends StatefulWidget {
-  const DoctorLoginScreen({super.key});
+  DoctorLoginScreen({super.key});
 
   @override
   State<DoctorLoginScreen> createState() => _DoctorLoginScreenState();
@@ -37,7 +37,7 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
   Future<void> _login() async {
     if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your email/Doctor ID and password.')),
+        SnackBar(content: Text('Please enter your email/Doctor ID and password.')),
       );
       return;
     }
@@ -105,16 +105,16 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white, elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xff1E293B)), onPressed: () => Navigator.pop(context)),
-        title: const Text('Healthy Bhai', style: TextStyle(color: Color(0xff1E293B), fontSize: 18, fontWeight: FontWeight.bold)),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, elevation: 0,
+        leading: IconButton(icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).colorScheme.inverseSurface), onPressed: () => Navigator.pop(context)),
+        title: Text('Healthy Bhai', style: TextStyle(color: Theme.of(context).colorScheme.inverseSurface, fontSize: 18, fontWeight: FontWeight.bold)),
         centerTitle: true,
-        bottom: PreferredSize(preferredSize: const Size.fromHeight(1), child: Container(color: Colors.grey[100], height: 1)),
+        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Container(color: Colors.grey.withValues(alpha: 0.2), height: 1)),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(
           children: [
             Center(
@@ -122,25 +122,25 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
                 children: [
                   Container(
                     width: 80, height: 80,
-                    decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.red[100]!)),
-                    child: const Icon(Icons.local_hospital, color: Color(0xffDC2626), size: 36),
+                    decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.red.withValues(alpha: 0.2))),
+                    child: Icon(Icons.local_hospital, color: Color(0xffDC2626), size: 36),
                   ),
-                  const SizedBox(height: 24),
-                  const Text('Doctor Login', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: Color(0xff1E293B), letterSpacing: -0.5)),
-                  const SizedBox(height: 8),
-                  const Text('Access patient records and manage notes', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey)),
+                  SizedBox(height: 24),
+                  Text('Doctor Login', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.inverseSurface, letterSpacing: -0.5)),
+                  SizedBox(height: 8),
+                  Text('Access patient records and manage notes', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey)),
                 ],
               ),
             ),
 
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
 
             Container(
-              padding: const EdgeInsets.all(32),
+              padding: EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: const Color(0xffF8FAFC),
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey[200]!),
+                border: Border.all(color: Theme.of(context).dividerColor, ),
               ),
               child: Column(
                 children: [
@@ -154,7 +154,7 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
                     onChanged: (val) => setState(() => _hasStartedTypingId = true),
                     bottomWidget: _buildIdCriteria(),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   
                   _buildInputField(
                     label: 'Password', 
@@ -163,65 +163,37 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
                     hintText: 'Enter your password', 
                     isPassword: true
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: 32),
 
                   _isLoading
-                      ? const CircularProgressIndicator(color: Color(0xffDC2626))
+                      ? CircularProgressIndicator(color: Color(0xffDC2626))
                       : ElevatedButton(
                           onPressed: _login,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xffDC2626),
-                            minimumSize: const Size(double.infinity, 56),
+                            backgroundColor: Color(0xffDC2626),
+                            minimumSize: Size(double.infinity, 56),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             elevation: 0,
                           ),
-                          child: const Text('Login', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                          child: Text('Login', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                         ),
 
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
 
                   OutlinedButton(
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const DoctorRegisterScreen())),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => DoctorRegisterScreen())),
                     style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 56),
-                      side: const BorderSide(color: Color(0xffDC2626)),
+                      minimumSize: Size(double.infinity, 56),
+                      side: BorderSide(color: Color(0xffDC2626)),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Register', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xffDC2626))),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  Row(
-                    children: [
-                      Expanded(child: Divider(color: Colors.grey[300])),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text('OR', style: TextStyle(color: Colors.grey[500], fontWeight: FontWeight.bold)),
-                      ),
-                      Expanded(child: Divider(color: Colors.grey[300])),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Google Sign In Button
-                  OutlinedButton.icon(
-                    onPressed: _isLoading ? null : _googleSignIn,
-                    icon: Image.network('https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/120px-Google_%22G%22_logo.svg.png', height: 24, width: 24),
-                    label: const Text('Continue with Google', style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w600)),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 56),
-                      backgroundColor: Colors.white,
-                      side: BorderSide(color: Colors.grey[300]!),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
+                    child: Text('Register', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xffDC2626))),
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
           ],
         ),
       ),
@@ -230,14 +202,14 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
 
   // --- REAL-TIME FEEDBACK WIDGET ---
   Widget _buildIdCriteria() {
-    if (!_hasStartedTypingId) return const SizedBox.shrink();
+    if (!_hasStartedTypingId) return SizedBox.shrink();
     String input = _emailController.text.trim();
     bool isValid = _isValidEmail(input) || _isValidDoctorId(input);
     
     return Row(
       children: [
         Icon(isValid ? Icons.check_circle : Icons.cancel, color: isValid ? Colors.green : Colors.red, size: 16),
-        const SizedBox(width: 6),
+        SizedBox(width: 6),
         Text(
           isValid ? 'Valid format' : 'Enter a valid Email or DR-XXXX-XX',
           style: TextStyle(color: isValid ? Colors.green : Colors.red, fontSize: 12, fontWeight: FontWeight.w500),
@@ -261,8 +233,8 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.inverseSurface)),
         ),
         TextField(
           controller: controller,
@@ -271,17 +243,17 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
           onChanged: onChanged,
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: TextStyle(color: Colors.grey[400]),
-            prefixIcon: Icon(prefixIcon, color: Colors.grey[400]),
-            suffixIcon: isPassword ? IconButton(icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Colors.grey[400]), onPressed: () => setState(() => _obscurePassword = !_obscurePassword)) : null,
-            filled: true, fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(vertical: 20),
+            hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
+            prefixIcon: Icon(prefixIcon, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
+            suffixIcon: isPassword ? IconButton(icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)), onPressed: () => setState(() => _obscurePassword = !_obscurePassword)) : null,
+            filled: true, fillColor: Theme.of(context).scaffoldBackgroundColor,
+            contentPadding: EdgeInsets.symmetric(vertical: 20),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
           ),
         ),
         if (bottomWidget != null) ...[
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           bottomWidget,
         ]
       ],

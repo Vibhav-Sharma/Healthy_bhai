@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import '../main.dart';
 import 'patient_login_screen.dart';
 import 'doctor_login_screen.dart';
 import 'settings_screen.dart';
 
 class HomeSelectionScreen extends StatelessWidget {
-  const HomeSelectionScreen({super.key});
+  HomeSelectionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Background Effects
@@ -21,7 +22,7 @@ class HomeSelectionScreen extends StatelessWidget {
               height: 500,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.red[50]?.withOpacity(0.6),
+                color: Colors.red.withValues(alpha: 0.1),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.red.withOpacity(0.1),
@@ -40,7 +41,7 @@ class HomeSelectionScreen extends StatelessWidget {
               height: 400,
                decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.grey[50]?.withOpacity(0.7),
+                color: Colors.grey.withValues(alpha: 0.1),
                  boxShadow: [
                   BoxShadow(
                     color: Colors.grey.withOpacity(0.1),
@@ -56,11 +57,26 @@ class HomeSelectionScreen extends StatelessWidget {
           SafeArea(
             child: Column(
               children: [
-                const SizedBox(height: 48),
-                Expanded(
+                Align(
+                  alignment: Alignment.topRight,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
+                    padding: EdgeInsets.only(right: 16.0, top: 8.0),
+                    child: IconButton(
+                      icon: Icon(
+                        themeNotifier.value == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode,
+                        color: Theme.of(context).colorScheme.inverseSurface,
+                      ),
+                      onPressed: () {
+                        themeNotifier.value = themeNotifier.value == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+                      },
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -68,19 +84,19 @@ class HomeSelectionScreen extends StatelessWidget {
                         Container(
                           width: 96,
                           height: 96,
-                          margin: const EdgeInsets.only(bottom: 32),
+                          margin: EdgeInsets.only(bottom: 32),
                           decoration: BoxDecoration(
-                            color: Colors.red[50],
+                            color: Colors.red.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.05),
                                 blurRadius: 20,
-                                offset: const Offset(0, 4),
+                                offset: Offset(0, 4),
                               )
                             ]
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.health_and_safety,
                             size: 48,
                             color: Color(0xffDC2626),
@@ -88,7 +104,7 @@ class HomeSelectionScreen extends StatelessWidget {
                         ),
                         
                         // Header
-                        const Text(
+                        Text(
                           'Healthy Bhai',
                           style: TextStyle(
                             fontSize: 48,
@@ -97,8 +113,8 @@ class HomeSelectionScreen extends StatelessWidget {
                             letterSpacing: -1,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                         const Text(
+                        SizedBox(height: 8),
+                         Text(
                           'DIGITAL MEDICAL RECORDS',
                           style: TextStyle(
                             fontSize: 14,
@@ -108,33 +124,34 @@ class HomeSelectionScreen extends StatelessWidget {
                           ),
                         ),
                         
-                        const SizedBox(height: 48),
+                        SizedBox(height: 48),
                         
-                        // Buttons
                         _buildSelectionButton(
+                          context,
                           title: 'Patient Login',
                           icon: Icons.person,
                           onPressed: () {
                              Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const PatientLoginScreen()),
+                              MaterialPageRoute(builder: (context) => PatientLoginScreen()),
                             );
                           },
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         _buildSelectionButton(
+                          context,
                           title: 'Doctor Login',
                           icon: Icons.medical_services,
                           onPressed: () {
                              Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const DoctorLoginScreen()),
+                              MaterialPageRoute(builder: (context) => DoctorLoginScreen()),
                             );
                           },
                         ),
                         
-                        const SizedBox(height: 48),
-                         const Padding(
+                        SizedBox(height: 48),
+                         Padding(
                            padding: EdgeInsets.symmetric(horizontal: 24),
                            child: Text(
                             'Securely manage your healthcare journey with encrypted digital records.',
@@ -151,29 +168,30 @@ class HomeSelectionScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                ),
                 
                 // Bottom Navigation Bar
                  Container(
                    decoration: BoxDecoration(
-                     color: Colors.white.withOpacity(0.95),
+                     color: Theme.of(context).scaffoldBackgroundColor,
                      border: Border(
-                       top: BorderSide(color: Colors.grey[100]!),
+                       top: BorderSide(color: Colors.grey[200]!),
                      ),
                      boxShadow: [
                        BoxShadow(
                          color: Colors.black.withOpacity(0.03),
                          blurRadius: 20,
-                         offset: const Offset(0, -5),
+                         offset: Offset(0, -5),
                        )
                      ]
                    ),
-                   padding: const EdgeInsets.only(top: 16, bottom: 32),
+                   padding: EdgeInsets.only(top: 16, bottom: 32),
                    child: Row(
                      mainAxisAlignment: MainAxisAlignment.spaceAround,
                      children: [
                        _buildNavItem(Icons.home, 'HOME', true, () {}),
                        _buildNavItem(Icons.settings, 'SETTINGS', false, () {
-                         Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
+                         Navigator.push(context, MaterialPageRoute(builder: (_) => SettingsScreen()));
                        }),
                      ],
                    ),
@@ -186,7 +204,7 @@ class HomeSelectionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSelectionButton({
+  Widget _buildSelectionButton(BuildContext context, {
     required String title,
     required IconData icon,
     required VoidCallback onPressed,
@@ -197,13 +215,13 @@ class HomeSelectionScreen extends StatelessWidget {
         height: 128,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: const Color(0xffDC2626),
+          color: Color(0xffDC2626),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
              BoxShadow(
-              color: const Color(0xffDC2626).withOpacity(0.15),
+              color: Color(0xffDC2626).withOpacity(0.15),
               blurRadius: 30,
-              offset: const Offset(0, 10),
+              offset: Offset(0, 10),
             )
           ]
         ),
@@ -218,7 +236,7 @@ class HomeSelectionScreen extends StatelessWidget {
                 height: 80,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
+                  color: Theme.of(context).cardColor.withOpacity(0.1),
                    boxShadow: [
                      BoxShadow(color: Colors.white.withOpacity(0.1), blurRadius: 20, spreadRadius: 10)
                    ]
@@ -233,7 +251,7 @@ class HomeSelectionScreen extends StatelessWidget {
                 height: 64,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
+                  color: Theme.of(context).cardColor.withOpacity(0.1),
                    boxShadow: [
                      BoxShadow(color: Colors.white.withOpacity(0.1), blurRadius: 20, spreadRadius: 10)
                    ]
@@ -246,10 +264,10 @@ class HomeSelectionScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(icon, color: Colors.white, size: 36),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -259,7 +277,7 @@ class HomeSelectionScreen extends StatelessWidget {
                 ],
               ),
             ),
-             const Positioned(
+             Positioned(
               bottom: 16,
               right: 20,
               child: Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 24),
@@ -277,22 +295,22 @@ class HomeSelectionScreen extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: isActive ? const EdgeInsets.symmetric(horizontal: 16, vertical: 4) : null,
+            padding: isActive ? EdgeInsets.symmetric(horizontal: 16, vertical: 4) : null,
           decoration: isActive ? BoxDecoration(
-             color: Colors.red[50],
+             color: Colors.red.withOpacity(0.1),
              borderRadius: BorderRadius.circular(20),
           ) : null,
           child: Icon(
             icon,
-            color: isActive ? const Color(0xffDC2626) : Colors.grey[400],
+            color: isActive ? Color(0xffDC2626) : Colors.grey[400],
             size: 24,
           ),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Text(
           label,
           style: TextStyle(
-            color: isActive ? const Color(0xffDC2626) : Colors.grey[400],
+            color: isActive ? Color(0xffDC2626) : Colors.grey[400],
             fontSize: 10,
             fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
             letterSpacing: 1,

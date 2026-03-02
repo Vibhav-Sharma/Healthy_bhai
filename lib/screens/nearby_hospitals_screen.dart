@@ -3,7 +3,7 @@ import '../services/location_service.dart';
 import '../services/places_service.dart';
 
 class NearbyHospitalsScreen extends StatefulWidget {
-  const NearbyHospitalsScreen({super.key});
+  NearbyHospitalsScreen({super.key});
 
   @override
   State<NearbyHospitalsScreen> createState() => _NearbyHospitalsScreenState();
@@ -63,15 +63,15 @@ class _NearbyHospitalsScreenState extends State<NearbyHospitalsScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         for (int i = 0; i < fullStars; i++)
-          const Icon(Icons.star, color: Colors.amber, size: 16),
+          Icon(Icons.star, color: Colors.amber, size: 16),
         if (hasHalf)
-          const Icon(Icons.star_half, color: Colors.amber, size: 16),
+          Icon(Icons.star_half, color: Colors.amber, size: 16),
         for (int i = 0; i < (5 - fullStars - (hasHalf ? 1 : 0)); i++)
-          Icon(Icons.star_border, color: Colors.grey[400], size: 16),
-        const SizedBox(width: 6),
+          Icon(Icons.star_border, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3), size: 16),
+        SizedBox(width: 6),
         Text(
           rating.toStringAsFixed(1),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
             color: Color(0xff64748B),
@@ -84,14 +84,14 @@ class _NearbyHospitalsScreenState extends State<NearbyHospitalsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
             // ─── Header ───
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              decoration: const BoxDecoration(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Color(0xffDC2626), Color(0xffB91C1C)],
                 ),
@@ -104,14 +104,14 @@ class _NearbyHospitalsScreenState extends State<NearbyHospitalsScreen> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Theme.of(context).cardColor.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                      child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  const Expanded(
+                  SizedBox(width: 12),
+                  Expanded(
                     child: Text(
                       '🏥 Nearby Hospitals',
                       style: TextStyle(
@@ -128,10 +128,10 @@ class _NearbyHospitalsScreenState extends State<NearbyHospitalsScreen> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Theme.of(context).cardColor.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.refresh, color: Colors.white, size: 20),
+                      child: Icon(Icons.refresh, color: Colors.white, size: 20),
                     ),
                   ),
                 ],
@@ -141,7 +141,7 @@ class _NearbyHospitalsScreenState extends State<NearbyHospitalsScreen> {
             // ─── Body ───
             Expanded(
               child: _isLoading
-                  ? const Center(
+                  ? Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -180,47 +180,47 @@ class _NearbyHospitalsScreenState extends State<NearbyHospitalsScreen> {
   Widget _buildErrorView() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: const Color(0xffFEF2F2),
+                color: Color(0xffFEF2F2),
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xffFECACA)),
+                border: Border.all(color: Color(0xffFECACA)),
               ),
-              child: const Icon(Icons.location_off, color: Color(0xffDC2626), size: 48),
+              child: Icon(Icons.location_off, color: Color(0xffDC2626), size: 48),
             ),
-            const SizedBox(height: 24),
-            const Text(
+            SizedBox(height: 24),
+            Text(
               'Unable to Find Hospitals',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Color(0xff1E293B),
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text(
               _error!,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 color: Color(0xff64748B),
                 height: 1.5,
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: _fetchHospitals,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+              icon: Icon(Icons.refresh),
+              label: Text('Try Again'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xffDC2626),
+                backgroundColor: Color(0xffDC2626),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -235,35 +235,35 @@ class _NearbyHospitalsScreenState extends State<NearbyHospitalsScreen> {
   Widget _buildEmptyView() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.local_hospital_outlined, color: Colors.grey[400], size: 64),
-            const SizedBox(height: 16),
-            const Text(
+            Icon(Icons.local_hospital_outlined, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3), size: 64),
+            SizedBox(height: 16),
+            Text(
               'No Hospitals Found Nearby',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xff1E293B),
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'No hospitals or clinics found within 5 km of your location.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: _fetchHospitals,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              icon: Icon(Icons.refresh),
+              label: Text('Retry'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xffDC2626),
+                backgroundColor: Color(0xffDC2626),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -281,11 +281,11 @@ class _NearbyHospitalsScreenState extends State<NearbyHospitalsScreen> {
         // Results count
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          color: const Color(0xffF1F5F9),
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          color: Theme.of(context).cardColor,
           child: Text(
             '${_hospitals.length} hospital${_hospitals.length != 1 ? 's' : ''} found within 5 km',
-            style: const TextStyle(
+            style: TextStyle(
               color: Color(0xff64748B),
               fontWeight: FontWeight.w500,
               fontSize: 13,
@@ -295,7 +295,7 @@ class _NearbyHospitalsScreenState extends State<NearbyHospitalsScreen> {
         // List
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             itemCount: _hospitals.length,
             itemBuilder: (context, index) {
               final hospital = _hospitals[index];
@@ -322,24 +322,24 @@ class _NearbyHospitalsScreenState extends State<NearbyHospitalsScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(e.toString()),
-                backgroundColor: const Color(0xffDC2626),
+                backgroundColor: Color(0xffDC2626),
               ),
             );
           }
         }
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        margin: EdgeInsets.only(bottom: 12),
+        padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xffE2E8F0)),
+          border: Border.all(color: Color(0xffE2E8F0)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
-              offset: const Offset(0, 2),
+              offset: Offset(0, 2),
             ),
           ],
         ),
@@ -350,16 +350,16 @@ class _NearbyHospitalsScreenState extends State<NearbyHospitalsScreen> {
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                color: const Color(0xffFEF2F2),
+                color: Color(0xffFEF2F2),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.local_hospital,
                 color: Color(0xffDC2626),
                 size: 28,
               ),
             ),
-            const SizedBox(width: 14),
+            SizedBox(width: 14),
             // Info
             Expanded(
               child: Column(
@@ -367,40 +367,40 @@ class _NearbyHospitalsScreenState extends State<NearbyHospitalsScreen> {
                 children: [
                   Text(
                     hospital['name'],
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xff1E293B),
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     hospital['address'],
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       color: Color(0xff64748B),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Row(
                     children: [
                       if ((hospital['rating'] as double) > 0)
                         _buildStarRating(hospital['rating']),
                       if ((hospital['rating'] as double) > 0)
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
                           color: isOpen
-                              ? Colors.green[50]
-                              : Colors.red[50],
+                              ? Colors.green.withValues(alpha: 0.1)
+                              : Colors.red.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -425,20 +425,20 @@ class _NearbyHospitalsScreenState extends State<NearbyHospitalsScreen> {
               children: [
                 Text(
                   _formatDistance(hospital['distance']),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: Color(0xffDC2626),
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xffDC2626),
+                    color: Color(0xffDC2626),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.navigation,
                     color: Colors.white,
                     size: 18,

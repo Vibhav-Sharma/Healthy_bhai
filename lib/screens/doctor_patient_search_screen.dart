@@ -6,7 +6,7 @@ import 'doctor_patient_detail_screen.dart';
 
 class DoctorPatientSearchScreen extends StatefulWidget {
   final String doctorId;
-  const DoctorPatientSearchScreen({super.key, required this.doctorId});
+  DoctorPatientSearchScreen({super.key, required this.doctorId});
 
   @override
   State<DoctorPatientSearchScreen> createState() => _DoctorPatientSearchScreenState();
@@ -63,7 +63,7 @@ class _DoctorPatientSearchScreenState extends State<DoctorPatientSearchScreen> {
 
   Future<void> _searchPatient(String patientId) async {
     if (patientId.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a Patient ID.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please enter a Patient ID.')));
       return;
     }
 
@@ -75,7 +75,7 @@ class _DoctorPatientSearchScreenState extends State<DoctorPatientSearchScreen> {
       if (!mounted) return;
 
       if (data == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Patient not found. Check the ID and try again.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Patient not found. Check the ID and try again.')));
       } else {
         await FirestoreService.addDoctorActivity(
           doctorId: widget.doctorId,
@@ -98,7 +98,7 @@ class _DoctorPatientSearchScreenState extends State<DoctorPatientSearchScreen> {
 
     Navigator.push(context, MaterialPageRoute(
       builder: (context) => Scaffold(
-        appBar: AppBar(title: const Text('Scan Patient QR'), backgroundColor: const Color(0xff1E293B)),
+        appBar: AppBar(title: Text('Scan Patient QR'), backgroundColor: Theme.of(context).colorScheme.onSurface),
         body: MobileScanner(
           onDetect: (capture) {
             if (hasNavigated) return; // prevent multiple navigations
@@ -128,7 +128,7 @@ class _DoctorPatientSearchScreenState extends State<DoctorPatientSearchScreen> {
                 // Not a Healthy Bhai QR — show error
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: const Row(
+                    content: Row(
                       children: [
                         Icon(Icons.warning_amber_rounded, color: Colors.white),
                         SizedBox(width: 12),
@@ -137,7 +137,7 @@ class _DoctorPatientSearchScreenState extends State<DoctorPatientSearchScreen> {
                     ),
                     backgroundColor: Colors.red[700],
                     behavior: SnackBarBehavior.floating,
-                    duration: const Duration(seconds: 4),
+                    duration: Duration(seconds: 4),
                   ),
                 );
               }
@@ -151,26 +151,26 @@ class _DoctorPatientSearchScreenState extends State<DoctorPatientSearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white, elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xff1E293B)), onPressed: () => Navigator.pop(context)),
-        title: const Text('Patient Search', style: TextStyle(color: Color(0xff1E293B), fontSize: 18, fontWeight: FontWeight.bold)),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, elevation: 0,
+        leading: IconButton(icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).colorScheme.onSurface), onPressed: () => Navigator.pop(context)),
+        title: Text('Patient Search', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
         centerTitle: true,
-        bottom: PreferredSize(preferredSize: const Size.fromHeight(1), child: Container(color: Colors.grey[100], height: 1)),
+        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Container(color: Colors.grey.withValues(alpha: 0.2), height: 1)),
       ),
       body: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(color: Colors.white),
+            padding: EdgeInsets.all(24),
+            decoration: BoxDecoration(color: Theme.of(context).cardColor),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Access Patient Records', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xff1E293B))),
-                const SizedBox(height: 8),
-                Text('Enter the Patient ID or scan their QR code.', style: TextStyle(fontSize: 14, color: Colors.grey[500])),
-                const SizedBox(height: 24),
+                Text('Access Patient Records', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
+                SizedBox(height: 8),
+                Text('Enter the Patient ID or scan their QR code.', style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
+                SizedBox(height: 24),
 
                 Row(
                   children: [
@@ -180,40 +180,40 @@ class _DoctorPatientSearchScreenState extends State<DoctorPatientSearchScreen> {
                         onChanged: _onSearchChanged,
                         decoration: InputDecoration(
                           hintText: 'Enter Name, ID or Phone',
-                          hintStyle: TextStyle(color: Colors.grey[400]),
-                          prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                          filled: true, fillColor: const Color(0xffF8FAFC),
+                          hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
+                          prefixIcon: Icon(Icons.search, color: Colors.grey),
+                          filled: true, fillColor: Color(0xffF8FAFC),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                         ),
                         onSubmitted: _searchPatient,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Container(
                       height: 56, width: 56,
-                      decoration: BoxDecoration(color: const Color(0xff1E293B), borderRadius: BorderRadius.circular(12)),
+                      decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface, borderRadius: BorderRadius.circular(12)),
                       child: IconButton(
-                        icon: const Icon(Icons.qr_code_scanner, color: Colors.white),
+                        icon: Icon(Icons.qr_code_scanner, color: Colors.white),
                         onPressed: _scanQR,
                       ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
 
                 SizedBox(
                   width: double.infinity,
                   child: _isSearching
-                      ? const Center(child: CircularProgressIndicator(color: Color(0xffDC2626)))
+                      ? Center(child: CircularProgressIndicator(color: Color(0xffDC2626)))
                       : ElevatedButton(
                           onPressed: () => _searchPatient(_searchController.text),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xffDC2626),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            backgroundColor: Color(0xffDC2626),
+                            padding: EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          child: const Text('SEARCH', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                          child: Text('SEARCH', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
                         ),
                 ),
               ],
@@ -227,10 +227,10 @@ class _DoctorPatientSearchScreenState extends State<DoctorPatientSearchScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.search, size: 64, color: Colors.grey[300]),
-                        const SizedBox(height: 16),
-                        Text('Search for a patient by Name, ID or Phone', style: TextStyle(color: Colors.grey[400], fontSize: 16)),
-                        Text('or scan their QR code', style: TextStyle(color: Colors.grey[400], fontSize: 14)),
+                        Icon(Icons.search, size: 64, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
+                        SizedBox(height: 16),
+                        Text('Search for a patient by Name, ID or Phone', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3), fontSize: 16)),
+                        Text('or scan their QR code', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3), fontSize: 14)),
                       ],
                     ),
                   ),
@@ -242,11 +242,11 @@ class _DoctorPatientSearchScreenState extends State<DoctorPatientSearchScreen> {
 
   Widget _buildDynamicSearchResults() {
     if (_filteredPatients.isEmpty) {
-      return Center(child: Text('No matching patients found.', style: TextStyle(color: Colors.grey[500])));
+      return Center(child: Text('No matching patients found.', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))));
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       itemCount: _filteredPatients.length,
       itemBuilder: (context, index) {
         final p = _filteredPatients[index];
@@ -254,18 +254,18 @@ class _DoctorPatientSearchScreenState extends State<DoctorPatientSearchScreen> {
         final name = p['name'] ?? 'Unknown';
 
         return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[100]!)),
+          margin: EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
           elevation: 0,
           child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
+            contentPadding: EdgeInsets.all(16),
             leading: CircleAvatar(
-              backgroundColor: Colors.red[50],
-              child: const Icon(Icons.person, color: Color(0xffDC2626)),
+              backgroundColor: Colors.red.withValues(alpha: 0.1),
+              child: Icon(Icons.person, color: Color(0xffDC2626)),
             ),
-            title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
-            subtitle: Text('ID: $id\nPhone: ${p['phone'] ?? 'N/A'}', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            title: Text(name, style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
+            subtitle: Text('ID: $id\nPhone: ${p['phone'] ?? 'N/A'}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 12)),
+            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
             isThreeLine: true,
             onTap: () {
               FocusScope.of(context).unfocus();

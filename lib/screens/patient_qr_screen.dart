@@ -7,7 +7,7 @@ import '../services/qr_crypto_service.dart';
 
 class PatientQRScreen extends StatefulWidget {
   final String patientId;
-  const PatientQRScreen({super.key, required this.patientId});
+  PatientQRScreen({super.key, required this.patientId});
 
   @override
   State<PatientQRScreen> createState() => _PatientQRScreenState();
@@ -115,33 +115,33 @@ class _PatientQRScreenState extends State<PatientQRScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xff1E293B),
+      backgroundColor: Theme.of(context).colorScheme.onSurface,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
+          icon: Icon(Icons.close, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Center(
         child: _isLoading
-            ? const CircularProgressIndicator(color: Color(0xffDC2626))
+            ? CircularProgressIndicator(color: Color(0xffDC2626))
             : _error != null
                 ? Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, color: Colors.redAccent, size: 64),
-                      const SizedBox(height: 16),
-                      Text(_error!, style: const TextStyle(color: Colors.white70, fontSize: 16)),
-                      const SizedBox(height: 24),
+                      Icon(Icons.error_outline, color: Colors.redAccent, size: 64),
+                      SizedBox(height: 16),
+                      Text(_error!, style: TextStyle(color: Colors.white70, fontSize: 16)),
+                      SizedBox(height: 24),
                       OutlinedButton(
                         onPressed: () {
                           setState(() { _isLoading = true; _error = null; });
                           _loadAndEncryptPatientData();
                         },
-                        style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.white24)),
-                        child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                        style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.white24)),
+                        child: Text('Retry', style: TextStyle(color: Colors.white)),
                       ),
                     ],
                   )
@@ -154,23 +154,23 @@ class _PatientQRScreenState extends State<PatientQRScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text('Patient ID QR', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 1)),
-        const SizedBox(height: 8),
+        Text('Patient ID QR', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 1)),
+        SizedBox(height: 8),
         Text(
           'Show this to your doctor \nto grant instant access to your records.',
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.grey[400], fontSize: 14, height: 1.5),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3), fontSize: 14, height: 1.5),
         ),
 
-        const SizedBox(height: 48),
+        SizedBox(height: 48),
 
         // QR Code Card
         Container(
-          padding: const EdgeInsets.all(32),
+          padding: EdgeInsets.all(32),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 30, offset: const Offset(0, 10))],
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 30, offset: Offset(0, 10))],
           ),
           child: Column(
             children: [
@@ -180,62 +180,64 @@ class _PatientQRScreenState extends State<PatientQRScreen> {
                 version: QrVersions.auto,
                 size: 200.0,
                 backgroundColor: Colors.white,
+                eyeStyle: const QrEyeStyle(color: Colors.black),
+                dataModuleStyle: const QrDataModuleStyle(color: Colors.black),
               ),
 
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
 
               // Secure badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.green[50],
+                  color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.lock, color: Colors.green[700], size: 14),
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6),
                     Text('Encrypted', style: TextStyle(color: Colors.green[700], fontSize: 12, fontWeight: FontWeight.w600)),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
 
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8)),
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
                 child: Text(
                   'ID: ${widget.patientId}',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 2, color: Color(0xffDC2626)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 2, color: Color(0xffDC2626)),
                 ),
               ),
             ],
           ),
         ),
 
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
 
         // Info text
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 48),
+          padding: EdgeInsets.symmetric(horizontal: 48),
           child: Text(
             'This QR can only be read by the Healthy Bhai app. Other scanners will see encrypted data.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[500], fontSize: 12, height: 1.5),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 12, height: 1.5),
           ),
         ),
 
-        const SizedBox(height: 32),
+        SizedBox(height: 32),
 
         OutlinedButton.icon(
           onPressed: () {},
-          icon: const Icon(Icons.share, color: Colors.white),
-          label: const Text('Share ID', style: TextStyle(color: Colors.white)),
+          icon: Icon(Icons.share, color: Colors.white),
+          label: Text('Share ID', style: TextStyle(color: Colors.white)),
           style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Colors.white24),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            side: BorderSide(color: Colors.white24),
+            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
           ),
         ),

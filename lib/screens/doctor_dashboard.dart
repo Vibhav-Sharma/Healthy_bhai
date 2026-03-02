@@ -1,438 +1,553 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
+import '../services/encryption_service.dart';
 import 'doctor_patient_search_screen.dart';
+import 'doctor_appointments_screen.dart';
+import 'doctor_appointment_requests_screen.dart';
 import 'doctor_patient_detail_screen.dart';
+import 'doctor_profile_screen.dart';
+import 'doctor_settings_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+import '../services/qr_crypto_service.dart';
 
 class DoctorDashboard extends StatefulWidget {
   final String doctorId;
-
-  const DoctorDashboard({super.key, required this.doctorId});
+  DoctorDashboard({super.key, required this.doctorId});
 
   @override
   State<DoctorDashboard> createState() => _DoctorDashboardState();
 }
 
 class _DoctorDashboardState extends State<DoctorDashboard> {
-  int _navIndex = 0;
-  final Map<String, String> _patientNameCache = {};
+  final int _navIndex = 0;
+  List<Map<String, dynamic>> _recentActivity = [];
+  List<Map<String, dynamic>> _allPatients = [];
+  String _doctorName = 'Doctor';
+  Map<String, dynamic>? _nextAppointment;
+  String? _nextPatientName;
 
-  Future<String> _getPatientName(String patientId) async {
-    if (_patientNameCache.containsKey(patientId)) {
-      return _patientNameCache[patientId]!;
-    }
-    final name = await FirestoreService.getPatientName(patientId);
-    _patientNameCache[patientId] = name;
-    return name;
+  @override
+  void initState() {
+    super.initState();
+    _loadDoctorProfile();
+    _loadRecentActivity();
+    _loadAllPatients();
+    _loadNextAppointment();
+    _expireOldAppointments();
   }
 
-  // ✅ SAFE DATE PARSER (Prevents Timestamp crash)
-  DateTime _parseDate(dynamic dateData) {
-    if (dateData == null) return DateTime.now();
-
-    if (dateData is Timestamp) return dateData.toDate();
-    if (dateData is DateTime) return dateData;
-
-    if (dateData is String) {
-      try {
-        return DateTime.parse(dateData);
-      } catch (_) {
-        return DateTime.now();
-      }
-    }
-
-    return DateTime.now();
-  }
-
-  String _formatDateTime(DateTime dateTime) {
-    List<String> months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-
-    String ampm = dateTime.hour >= 12 ? 'PM' : 'AM';
-    int hour = dateTime.hour % 12;
-    if (hour == 0) hour = 12;
-    String minute = dateTime.minute.toString().padLeft(2, '0');
-
-    return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year} at $hour:$minute $ampm';
-  }
-
-  // ✅ UPDATE STATUS (Approve / Reject / Cancel)
-  Future<void> _updateAppointmentStatus(
-      String appointmentId, String newStatus) async {
+  Future<void> _loadDoctorProfile() async {
     try {
-      if (newStatus == 'Cancelled') {
-        TextEditingController reasonController =
-            TextEditingController();
-
-        bool? confirm = await showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Cancel Appointment'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Provide cancellation reason:'),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: reasonController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'Doctor unavailable, emergency, etc.',
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Back'),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red),
-                onPressed: () {
-                  if (reasonController.text.trim().isEmpty) return;
-                  Navigator.pop(ctx, true);
-                },
-                child: const Text('Confirm',
-                    style: TextStyle(color: Colors.white)),
-              ),
-            ],
-          ),
-        );
-
-        if (confirm != true) return;
-
-        await FirebaseFirestore.instance
-            .collection('appointments')
-            .doc(appointmentId)
-            .update({
-          'status': 'Cancelled',
-          'cancelReason': reasonController.text.trim(),
-        });
-      } else {
-        await FirebaseFirestore.instance
-            .collection('appointments')
-            .doc(appointmentId)
-            .update({
-          'status': newStatus,
+      final profile = await FirestoreService.getDoctorProfile(widget.doctorId);
+      if (profile != null && mounted) {
+        setState(() {
+          _doctorName = profile['name']?.toString() ?? 'Doctor';
         });
       }
+    } catch (_) {}
+  }
 
-      if (!mounted) return;
+  Future<void> _loadNextAppointment() async {
+    try {
+      final next = await FirestoreService.getNextAppointment(widget.doctorId);
+      if (next != null && mounted) {
+        final patientId = next['patientId']?.toString() ?? '';
+        String name = next['patientName']?.toString() ?? '';
+        if (name.isEmpty) {
+          name = await FirestoreService.getPatientName(patientId);
+        }
+        setState(() {
+          _nextAppointment = next;
+          _nextPatientName = name;
+        });
+      }
+    } catch (_) {}
+  }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Appointment $newStatus successfully'),
-          backgroundColor:
-              newStatus == 'Upcoming' ? Colors.green : Colors.red,
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error updating: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+  Future<void> _expireOldAppointments() async {
+    try {
+      await FirestoreService.expirePastAppointments(widget.doctorId, isDoctor: true);
+    } catch (_) {}
+  }
+
+  Future<void> _loadAllPatients() async {
+    try {
+      final patients = await FirestoreService.getAllPatients();
+      if (mounted) setState(() => _allPatients = patients);
+    } catch (_) {}
+  }
+
+  Future<void> _refreshAll() async {
+    _loadDoctorProfile();
+    _loadNextAppointment();
+    _loadRecentActivity();
+    _loadAllPatients();
+    _expireOldAppointments();
+  }
+
+  Future<void> _loadRecentActivity() async {
+    try {
+      final events = await FirestoreService.getDoctorActivity(widget.doctorId);
+      if (mounted) {
+        setState(() => _recentActivity = events.take(3).toList());
+      }
+    } catch (_) {}
   }
 
   void _onNavTap(int index) {
-    if (index == _navIndex) return;
-
-    if (index == 0) {
-      setState(() {
-        _navIndex = 0;
-      });
-      return;
-    }
-
-    // for other indices we navigate but reset back to appointments once done
-    if (index == 1) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => DoctorPatientSearchScreen(doctorId: widget.doctorId),
-        ),
-      ).then((_) {
-        if (mounted) setState(() => _navIndex = 0);
-      });
-    } else if (index == 2) {
-      _showProfileDialog();
-      if (mounted) setState(() => _navIndex = 0);
+    switch (index) {
+      case 0: break;
+      case 1:
+        Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorPatientSearchScreen(doctorId: widget.doctorId)));
+        break;
+      case 2:
+        Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorProfileScreen(doctorId: widget.doctorId))).then((_) => _loadDoctorProfile());
+        break;
     }
   }
 
-  void _showProfileDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Doctor Profile'),
-        content: Text(
-            'Doctor ID: ${widget.doctorId}\nManage account settings.'),
+  void _openQRScanner() {
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => _QRScannerPage(
+        onPatientFound: (patientId) {
+          Navigator.push(context, MaterialPageRoute(
+            builder: (_) => DoctorPatientDetailScreen(patientId: patientId, doctorId: widget.doctorId),
+          ));
+        },
+      ),
+    ));
+  }
+
+  DateTime _parseDate(dynamic d) {
+    if (d is Timestamp) return d.toDate();
+    if (d is String) return DateTime.tryParse(d) ?? DateTime.now();
+    return DateTime.now();
+  }
+
+  String _formatCountdown(DateTime target) {
+    final diff = target.difference(DateTime.now());
+    if (diff.isNegative) return 'Now';
+    if (diff.inDays > 0) return 'in ${diff.inDays}d ${diff.inHours % 24}h';
+    if (diff.inHours > 0) return 'in ${diff.inHours}h ${diff.inMinutes % 60}m';
+    return 'in ${diff.inMinutes}m';
+  }
+
+  String _formatDateTime(DateTime dt) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final m = dt.minute.toString().padLeft(2, '0');
+    final ap = dt.hour >= 12 ? 'PM' : 'AM';
+    return '${months[dt.month - 1]} ${dt.day} at $h:$m $ap';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Container(color: Colors.grey[200], height: 1),
+        ),
+        titleSpacing: 20,
+        title: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(color: Color(0xffDC2626).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+              child: Icon(Icons.health_and_safety, color: Color(0xffDC2626), size: 24),
+            ),
+            SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Healthy Bhai', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xffDC2626), letterSpacing: -0.5)),
+                Text('Doctor Portal • ${widget.doctorId}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
+              ],
+            ),
+          ],
+        ),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Close')),
-          TextButton(
+          IconButton(
+            icon: Icon(Icons.settings, color: Colors.grey),
+            tooltip: 'Settings',
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorSettingsScreen(doctorId: widget.doctorId))),
+          ),
+          IconButton(
+            icon: Icon(Icons.logout, color: Color(0xffDC2626)),
             onPressed: () async {
-              Navigator.pop(ctx);
               await AuthService.signOut();
-              if (mounted) {
-                Navigator.of(context)
-                    .popUntil((route) => route.isFirst);
-              }
+              if (context.mounted) Navigator.of(context).popUntil((route) => route.isFirst);
             },
-            child: const Text('Logout',
-                style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Welcome with actual name
+                Text('Welcome, Dr. $_doctorName', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.inverseSurface)),
+                SizedBox(height: 4),
+                Text('Manage your patients and records.', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
+                SizedBox(height: 24),
+
+                // ─── Next Appointment Card ───
+                if (_nextAppointment != null)
+                  _buildNextAppointmentCard(),
+
+                if (_nextAppointment != null)
+                  SizedBox(height: 24),
+
+                // Search bar with QR scanner button
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Autocomplete<Map<String, dynamic>>(
+                      optionsBuilder: (TextEditingValue textEditingValue) {
+                        if (textEditingValue.text.isEmpty) {
+                          return const Iterable<Map<String, dynamic>>.empty();
+                        }
+                        final q = textEditingValue.text.toLowerCase();
+                        return _allPatients.where((p) {
+                          final name = (p['name'] ?? '').toString().toLowerCase();
+                          final id = (p['patientId'] ?? '').toString().toLowerCase();
+                          final phone = (p['phone'] ?? '').toString().toLowerCase();
+                          return name.contains(q) || id.contains(q) || phone.contains(q);
+                        });
+                      },
+                      displayStringForOption: (option) => option['name'] ?? 'Unknown',
+                      onSelected: (option) async {
+                        await FirestoreService.addDoctorActivity(
+                          doctorId: widget.doctorId,
+                          action: 'Viewed Patient ${option['patientId']}',
+                        );
+                        if (!context.mounted) return;
+                        Navigator.push(context, MaterialPageRoute(
+                          builder: (context) => DoctorPatientDetailScreen(patientId: option['patientId']!, doctorId: widget.doctorId),
+                        )).then((_) {
+                          _loadRecentActivity();
+                          _loadAllPatients();
+                        });
+                      },
+                      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                        return TextField(
+                          controller: controller,
+                          focusNode: focusNode,
+                          decoration: InputDecoration(
+                            hintText: 'Search by Name, ID or Phone...',
+                            hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
+                            prefixIcon: Icon(Icons.search, color: Colors.grey),
+                            suffixIcon: IconButton(
+                              icon: Icon(Icons.qr_code_scanner, color: Color(0xffDC2626)),
+                              tooltip: 'Scan Patient QR',
+                              onPressed: _openQRScanner,
+                            ),
+                            filled: true,
+                            fillColor: Theme.of(context).cardColor,
+                            contentPadding: EdgeInsets.symmetric(vertical: 14),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+                          ),
+                        );
+                      },
+                      optionsViewBuilder: (context, onSelected, options) {
+                        return Align(
+                          alignment: Alignment.topLeft,
+                          child: Material(
+                            elevation: 4,
+                            borderRadius: BorderRadius.circular(12),
+                            child: SizedBox(
+                              width: constraints.maxWidth,
+                              child: ListView.builder(
+                                padding: EdgeInsets.all(8),
+                                shrinkWrap: true,
+                                itemCount: options.length,
+                                itemBuilder: (context, index) {
+                                  final option = options.elementAt(index);
+                                  return ListTile(
+                                    leading: CircleAvatar(backgroundColor: Colors.red.withValues(alpha: 0.1), child: Icon(Icons.person, color: Color(0xffDC2626))),
+                                    title: Text(option['name'] ?? 'Unknown', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    subtitle: Text('ID: ${option['patientId']} • Phone: ${option['phone'] ?? 'N/A'}'),
+                                    onTap: () => onSelected(option),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }
+                ),
+
+                SizedBox(height: 32),
+
+                // Quick Actions
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildActionCard(
+                        context,
+                        icon: Icons.inbox,
+                        title: 'Requests',
+                        subtitle: 'Pending requests',
+                        color: Colors.orange,
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorAppointmentRequestsScreen(doctorId: widget.doctorId))).then((_) => _refreshAll()),
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: _buildActionCard(
+                        context,
+                        icon: Icons.calendar_today,
+                        title: 'Schedule',
+                        subtitle: 'All appointments',
+                        color: Colors.blue,
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorAppointmentsScreen(doctorId: widget.doctorId))).then((_) => _refreshAll()),
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 24),
+
+                Row(
+                  children: [
+                    Expanded(child: _buildStatCard('Your ID', widget.doctorId)),
+                  ],
+                ),
+
+                SizedBox(height: 32),
+
+                // Recent Activity
+                Text('Recent Activity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.inverseSurface)),
+                SizedBox(height: 16),
+
+                if (_recentActivity.isEmpty)
+                  Container(
+                    padding: EdgeInsets.all(24),
+                    decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: Theme.of(context).dividerColor, )),
+                    child: Center(child: Text('No recent activity yet.', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)))),
+                  )
+                else
+                  ...(_recentActivity.map((event) {
+                    final eventText = event['action'] ?? '';
+                    IconData icon = Icons.event_note;
+                    Color iconColor = Colors.blue[600]!;
+                    Color iconBg = Colors.blue.withValues(alpha: 0.1)!;
+                    if (eventText.contains('Viewed')) { icon = Icons.visibility; iconColor = Colors.green[600]!; iconBg = Colors.green.withValues(alpha: 0.1)!; }
+                    else if (eventText.contains('Note')) { icon = Icons.note; iconColor = Colors.orange[600]!; iconBg = Colors.orange.withValues(alpha: 0.1)!; }
+
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: Theme.of(context).dividerColor, )),
+                        child: Row(
+                          children: [
+                            Container(width: 40, height: 40, decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle), child: Icon(icon, color: iconColor, size: 20)),
+                            SizedBox(width: 16),
+                            Expanded(
+                              child: Text(eventText, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.inverseSurface), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  })),
+
+                SizedBox(height: 100),
+              ],
+            ),
+          ),
+
+          // Bottom nav
+          Positioned(
+            bottom: 0, left: 0, right: 0,
+            child: Container(
+              padding: EdgeInsets.only(top: 16, bottom: 24, left: 24, right: 24),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                border: Border(top: BorderSide(color: Colors.grey[200]!)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildNavItem(Icons.home, 'HOME', 0),
+                  _buildNavItem(Icons.search, 'SEARCH', 1),
+                  _buildNavItem(Icons.account_circle, 'PROFILE', 2),
+                ],
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xffF3F4F6),
-      appBar: AppBar(
-        backgroundColor: const Color(0xff1E293B),
-        title: const Text(
-          'Doctor Dashboard',
-          style: TextStyle(color: Colors.white),
-        ),
+  // ─── Next Appointment Widget ───
+  Widget _buildNextAppointmentCard() {
+    final data = _nextAppointment!;
+    final date = _parseDate(data['appointmentDate']);
+    final type = data['type']?.toString() ?? 'Offline';
+
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [Color(0xff3B82F6), Color(0xff1D4ED8)]),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Color(0xff3B82F6).withValues(alpha: 0.3), blurRadius: 12, offset: Offset(0, 4))],
       ),
-      body: _navIndex == 0
-          ? StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('appointments')
-                  .where('doctorId', isEqualTo: widget.doctorId)
-                  .orderBy('appointmentDate')
-                  .snapshots(),
-              builder: (context, snapshot) {
-          if (snapshot.connectionState ==
-              ConnectionState.waiting) {
-            return const Center(
-                child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-                child: Text('Error loading appointments: ${snapshot.error}'));
-          }
-
-          if (!snapshot.hasData ||
-              snapshot.data!.docs.isEmpty) {
-            return const Center(
-                child: Text('No appointments yet.'));
-          }
-
-          var appointments = snapshot.data!.docs;
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: appointments.length,
-            itemBuilder: (context, index) {
-              var doc = appointments[index];
-              var data =
-                  doc.data() as Map<String, dynamic>;
-
-              String appointmentId = doc.id;
-              String patientId =
-                  data['patientId']?.toString() ?? 'Unknown';
-              String status =
-                  data['status']?.toString() ?? 'Waiting';
-              String reason =
-                  data['reason']?.toString() ??
-                      'No reason provided';
-
-              DateTime date =
-                  _parseDate(data['appointmentDate']);
-
-              return Card(
-                margin:
-                    const EdgeInsets.only(bottom: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(12)),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment
-                                .spaceBetween,
-                        children: [
-                          Expanded(
-                            child: FutureBuilder<String>(
-                              future: _getPatientName(patientId),
-                              builder: (context, nameSnap) {
-                                String displayName = nameSnap.data ?? patientId;
-                                return Text(
-                                  displayName,
-                                  style: const TextStyle(
-                                      fontWeight:
-                                          FontWeight.bold),
-                                  overflow: TextOverflow.ellipsis,
-                                );
-                              },
-                            ),
-                          ),
-                          Text(
-                            status,
-                            style: TextStyle(
-                                fontWeight:
-                                    FontWeight.bold,
-                                color: status ==
-                                        'Upcoming'
-                                    ? Colors.green
-                                    : status ==
-                                            'Waiting'
-                                        ? Colors.orange
-                                        : Colors.red),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(_formatDateTime(date)),
-                      const SizedBox(height: 8),
-                      Text('Reason: $reason'),
-                      const SizedBox(height: 12),
-
-                      // ACTION BUTTONS
-                      if (status == 'Waiting')
-                        Row(
-                          children: [
-                            Expanded(
-                              child:
-                                  ElevatedButton(
-                                onPressed: () =>
-                                    _updateAppointmentStatus(
-                                        appointmentId,
-                                        'Upcoming'),
-                                style: ElevatedButton
-                                    .styleFrom(
-                                        backgroundColor:
-                                            Colors
-                                                .green),
-                                child: const Text(
-                                    'Approve',
-                                    style: TextStyle(
-                                        color: Colors
-                                            .white)),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child:
-                                  ElevatedButton(
-                                onPressed: () =>
-                                    _updateAppointmentStatus(
-                                        appointmentId,
-                                        'Rejected'),
-                                style: ElevatedButton
-                                    .styleFrom(
-                                        backgroundColor:
-                                            Colors.red),
-                                child: const Text(
-                                    'Reject',
-                                    style: TextStyle(
-                                        color: Colors
-                                            .white)),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                      if (status == 'Upcoming')
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton(
-                            onPressed: () =>
-                                _updateAppointmentStatus(
-                                    appointmentId,
-                                    'Cancelled'),
-                            style: OutlinedButton
-                                .styleFrom(
-                                    side:
-                                        const BorderSide(
-                                            color:
-                                                Colors
-                                                    .red)),
-                            child: const Text(
-                                'Cancel Appointment',
-                                style: TextStyle(
-                                    color:
-                                        Colors.red)),
-                          ),
-                        ),
-
-                      if (status == 'Cancelled' &&
-                          data['cancelReason'] !=
-                              null)
-                        Padding(
-                          padding:
-                              const EdgeInsets.only(
-                                  top: 8),
-                          child: Text(
-                            'Cancellation Reason: ${data['cancelReason']}',
-                            style: const TextStyle(
-                                color: Colors.red),
-                          ),
-                        ),
-
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: () =>
-                            Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                DoctorPatientDetailScreen(
-                              patientId: patientId,
-                              doctorId:
-                                  widget.doctorId,
-                            ),
-                          ),
-                        ),
-                        child: const Text(
-                            'View Patient Profile'),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      )
-          : const SizedBox.shrink(),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _navIndex,
-        onTap: _onNavTap,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.event_note),
-            label: 'Appointments',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.upcoming, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Text('Next Appointment', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
+              Spacer(),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(color: Theme.of(context).cardColor.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
+                child: Text(_formatCountdown(date), style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Search',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
+          SizedBox(height: 16),
+          Text(_nextPatientName ?? 'Patient', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(Icons.calendar_today, color: Colors.white70, size: 14),
+              SizedBox(width: 6),
+              Text(_formatDateTime(date), style: TextStyle(color: Colors.white70, fontSize: 13)),
+              SizedBox(width: 16),
+              Icon(type == 'Online' ? Icons.videocam : Icons.local_hospital, color: Colors.white70, size: 14),
+              SizedBox(width: 4),
+              Text(type, style: TextStyle(color: Colors.white70, fontSize: 13)),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildActionCard(BuildContext context, {required IconData icon, required String title, required String subtitle, required Color color, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.all(24),
+        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16), border: Border.all(color: Theme.of(context).dividerColor, )),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            SizedBox(height: 16),
+            Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+            SizedBox(height: 4),
+            Text(subtitle, style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, String value) {
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: Theme.of(context).dividerColor, )),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), letterSpacing: 1)),
+          SizedBox(height: 8),
+          Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.inverseSurface, letterSpacing: 1)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    final isActive = _navIndex == index;
+    return GestureDetector(
+      onTap: () => _onNavTap(index),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: isActive ? Theme.of(context).colorScheme.inverseSurface : Colors.grey[400], size: 24),
+          SizedBox(height: 6),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1, color: isActive ? Theme.of(context).colorScheme.inverseSurface : Colors.grey[400])),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── QR Scanner Page ───
+class _QRScannerPage extends StatefulWidget {
+  final Function(String patientId) onPatientFound;
+  const _QRScannerPage({required this.onPatientFound});
+
+  @override
+  State<_QRScannerPage> createState() => _QRScannerPageState();
+}
+
+class _QRScannerPageState extends State<_QRScannerPage> {
+  bool _scanned = false;
+
+  void _onDetect(BarcodeCapture capture) {
+    if (_scanned) return;
+    final barcode = capture.barcodes.firstOrNull;
+    if (barcode == null || barcode.rawValue == null) return;
+
+    setState(() => _scanned = true);
+
+    final raw = barcode.rawValue!;
+
+    // Try encrypted QR first
+    final decrypted = QrCryptoService.decrypt(raw);
+    if (decrypted != null && decrypted.containsKey('patientId')) {
+      Navigator.pop(context);
+      widget.onPatientFound(decrypted['patientId'].toString());
+      return;
+    }
+
+    // Fallback: raw text might be the patient ID directly
+    if (raw.startsWith('HB-')) {
+      Navigator.pop(context);
+      widget.onPatientFound(raw);
+      return;
+    }
+
+    // Unknown QR
+    setState(() => _scanned = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Not a valid patient QR code'), backgroundColor: Colors.red),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Scan Patient QR'),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        foregroundColor: Colors.black,
+        elevation: 1,
+      ),
+      body: MobileScanner(onDetect: _onDetect),
     );
   }
 }
