@@ -81,6 +81,32 @@ class AuthService {
     return doc.data()!['patientId'] as String;
   }
 
+  /// Login patient using PatientID (e.g., HB-8429-XT).
+  /// Looks up the email from Firestore, then signs in.
+  static Future<String> patientLoginWithId({
+    required String patientId,
+    required String password,
+  }) async {
+    // Look up email by patientId
+    final query = await _db
+        .collection('patients')
+        .where('patientId', isEqualTo: patientId)
+        .limit(1)
+        .get();
+    if (query.docs.isEmpty) {
+      throw Exception('No patient found with ID: $patientId');
+    }
+    final email = query.docs.first.data()['email'] as String;
+
+    // Sign in with the found email
+    return patientLogin(email: email, password: password);
+  }
+
+  /// Check if input looks like a PatientID (HB-XXXX-XX)
+  static bool isPatientId(String input) {
+    return RegExp(r'^HB-\d{4}-[A-Z]{2}$').hasMatch(input.toUpperCase());
+  }
+
   // ─── DOCTOR ───
 
   /// Generate a DoctorID like "DR-5281-KM"
@@ -137,6 +163,29 @@ class AuthService {
       throw Exception('Doctor profile not found. Please register first.');
     }
     return doc.data()!['doctorId'] as String;
+  }
+
+  /// Login doctor using DoctorID (e.g., DR-5281-KM).
+  static Future<String> doctorLoginWithId({
+    required String doctorId,
+    required String password,
+  }) async {
+    final query = await _db
+        .collection('doctors')
+        .where('doctorId', isEqualTo: doctorId)
+        .limit(1)
+        .get();
+    if (query.docs.isEmpty) {
+      throw Exception('No doctor found with ID: $doctorId');
+    }
+    final email = query.docs.first.data()['email'] as String;
+
+    return doctorLogin(email: email, password: password);
+  }
+
+  /// Check if input looks like a DoctorID (DR-XXXX-XX)
+  static bool isDoctorId(String input) {
+    return RegExp(r'^DR-\d{4}-[A-Z]{2}$').hasMatch(input.toUpperCase());
   }
 
   /// Get doctor name from doctorId field

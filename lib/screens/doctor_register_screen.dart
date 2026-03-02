@@ -15,6 +15,7 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
   final _hospitalController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -163,12 +164,12 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
         const SizedBox(height: 8),
         TextField(
           controller: controller,
-          obscureText: isPassword,
+          obscureText: isPassword ? _obscurePassword : false,
           decoration: InputDecoration(
             hintText: hintText,
             hintStyle: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.w500),
             prefixIcon: Icon(prefixIcon, color: Colors.grey[400]),
-            suffixIcon: isPassword ? Icon(Icons.visibility, color: Colors.grey[400]) : null,
+            suffixIcon: isPassword ? IconButton(icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Colors.grey[400]), onPressed: () => setState(() => _obscurePassword = !_obscurePassword)) : null,
             filled: true, fillColor: const Color(0xffF8FAFC),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
