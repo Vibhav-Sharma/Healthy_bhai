@@ -98,14 +98,14 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white, elevation: 0,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xff1E293B)),
+          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).colorScheme.inverseSurface),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Healthy Bhai', style: TextStyle(color: Color(0xff1E293B), fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text('Healthy Bhai', style: TextStyle(color: Theme.of(context).colorScheme.inverseSurface, fontSize: 18, fontWeight: FontWeight.bold)),
         centerTitle: true,
         bottom: PreferredSize(preferredSize: const Size.fromHeight(1), child: Container(color: Colors.grey[100], height: 1)),
       ),
@@ -121,11 +121,11 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
                     children: [
                       Container(
                         width: 80, height: 80,
-                        decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.red[100]!)),
+                        decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.red[100]!)),
                         child: const Icon(Icons.medical_services, color: Color(0xffDC2626), size: 36),
                       ),
                       const SizedBox(height: 24),
-                      const Text('Patient Login', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: Color(0xff1E293B), letterSpacing: -0.5)),
+                      Text('Patient Login', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.inverseSurface, letterSpacing: -0.5)),
                       const SizedBox(height: 8),
                       const Text('Access your medical records securely', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey)),
                     ],
@@ -138,7 +138,7 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
                 Container(
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
-                    color: const Color(0xffF8FAFC),
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.grey[200]!),
                   ),
@@ -148,9 +148,9 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Padding(
-                            padding: EdgeInsets.only(left: 4, bottom: 8),
-                            child: Text('Email or Patient ID', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4, bottom: 8),
+                            child: Text('Email or Patient ID', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.inverseSurface)),
                           ),
                           TextField(
                             controller: _emailController,
@@ -158,7 +158,7 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
                               hintText: 'name@example.com or HB-XXXX-XX',
                               hintStyle: TextStyle(color: Colors.grey[400]),
                               prefixIcon: Icon(Icons.mail, color: Colors.grey[400]),
-                              filled: true, fillColor: Colors.white,
+                              filled: true, fillColor: Theme.of(context).scaffoldBackgroundColor,
                               contentPadding: const EdgeInsets.symmetric(vertical: 20),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
                               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
@@ -173,9 +173,9 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Padding(
-                            padding: EdgeInsets.only(left: 4, bottom: 8),
-                            child: Text('Password', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4, bottom: 8),
+                            child: Text('Password', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.inverseSurface)),
                           ),
                           TextField(
                             controller: _passwordController,
@@ -185,7 +185,7 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
                               hintStyle: TextStyle(color: Colors.grey[400]),
                               prefixIcon: Icon(Icons.lock, color: Colors.grey[400]),
                               suffixIcon: IconButton(icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Colors.grey[400]), onPressed: () => setState(() => _obscurePassword = !_obscurePassword)),
-                              filled: true, fillColor: Colors.white,
+                              filled: true, fillColor: Theme.of(context).scaffoldBackgroundColor,
                               contentPadding: const EdgeInsets.symmetric(vertical: 20),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
                               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
@@ -247,7 +247,7 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
                         label: const Text('Continue with Google', style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w600)),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 56),
-                          backgroundColor: Colors.white,
+                          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                           side: BorderSide(color: Colors.grey[300]!),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
