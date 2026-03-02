@@ -208,4 +208,65 @@ Please provide a concise clinical summary for the attending doctor.
       throw Exception('Failed to extract medicines: $e');
     }
   }
+
+  /// Spell-checks / corrects medicine names extracted by OCR.
+  ///
+  /// Sends all names in one batch to Gemini and gets back the corrected
+  /// (or validated) medicine names.  Returns a Map of original → corrected.
+  static Future<Map<String, String>> correctMedicineNames(List<String> names) async {
+    if (names.isEmpty) return {};
+
+    try {
+      final model = GenerativeModel(
+        model: 'gemini-2.5-flash',
+        apiKey: dotenv.env['GEMINI_API_KEY'] ?? '',
+        generationConfig: GenerationConfig(
+          responseMimeType: 'application/json',
+        ),
+        systemInstruction: Content.system(
+          'You are a pharmaceutical spell-checker.\n\n'
+          'TASK:\n'
+          'Given a JSON array of medicine names extracted via OCR from a '
+          'handwritten prescription, verify each name:\n'
+          '- If the name is a valid, correctly-spelled medicine, keep it exactly as-is.\n'
+          '- If the name is misspelled or garbled, return the CLOSEST MATCHING '
+          'real pharmaceutical / brand / generic medicine name.\n'
+          '- Preserve the original casing style (e.g., if input is uppercase keep uppercase).\n\n'
+          'Return ONLY a valid JSON object with this schema:\n'
+          '{\n'
+          '  "corrections": [\n'
+          '    {"original": "Paracetamol", "corrected": "Paracetamol", "changed": false},\n'
+          '    {"original": "Amoxycilln", "corrected": "Amoxicillin", "changed": true}\n'
+          '  ]\n'
+          '}\n'
+          'RULES:\n'
+          '- One entry per input name, in the same order.\n'
+          '- "changed" is true only if you modified the name.\n'
+          '- Do NOT add medicines that were not in the input.\n'
+          '- Do NOT remove any medicines from the input.',
+        ),
+      );
+
+      final prompt = 'Verify and correct these medicine names:\n${jsonEncode(names)}';
+      final response = await model.generateContent([Content.text(prompt)]);
+
+      if (response.text == null || response.text!.isEmpty) return {};
+
+      final data = jsonDecode(response.text!) as Map<String, dynamic>;
+      final corrections = List<Map<String, dynamic>>.from(data['corrections'] ?? []);
+
+      final result = <String, String>{};
+      for (final c in corrections) {
+        final original = c['original']?.toString() ?? '';
+        final corrected = c['corrected']?.toString() ?? original;
+        if (original.isNotEmpty) {
+          result[original] = corrected;
+        }
+      }
+      return result;
+    } catch (e) {
+      // On failure, return empty map — caller will keep original names
+      return {};
+    }
+  }
 }
