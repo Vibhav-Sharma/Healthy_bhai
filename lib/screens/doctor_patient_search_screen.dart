@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../services/firestore_service.dart';
+import '../services/qr_crypto_service.dart';
 import 'doctor_patient_detail_screen.dart';
 
 class DoctorPatientSearchScreen extends StatefulWidget {
@@ -50,17 +51,53 @@ class _DoctorPatientSearchScreenState extends State<DoctorPatientSearchScreen> {
   }
 
   void _scanQR() {
+    bool hasNavigated = false;
+
     Navigator.push(context, MaterialPageRoute(
       builder: (context) => Scaffold(
         appBar: AppBar(title: const Text('Scan Patient QR'), backgroundColor: const Color(0xff1E293B)),
         body: MobileScanner(
           onDetect: (capture) {
+            if (hasNavigated) return; // prevent multiple navigations
+
             final barcodes = capture.barcodes;
             if (barcodes.isNotEmpty && barcodes.first.rawValue != null) {
               final code = barcodes.first.rawValue!;
+              hasNavigated = true;
               Navigator.pop(context); // close scanner
-              _searchController.text = code;
-              _searchPatient(code);
+
+              // Try to decrypt the QR data (encrypted by Healthy Bhai app)
+              final decryptedData = QrCryptoService.decrypt(code);
+
+              if (decryptedData != null && decryptedData.containsKey('patientId')) {
+                // Valid Healthy Bhai QR — use the embedded patient ID to navigate
+                final patientId = decryptedData['patientId'] as String;
+                _searchController.text = patientId;
+                // Navigate directly with QR data so name/age/etc show immediately
+                Navigator.push(context, MaterialPageRoute(
+                  builder: (context) => DoctorPatientDetailScreen(
+                    patientId: patientId,
+                    doctorId: widget.doctorId,
+                    qrData: decryptedData,
+                  ),
+                ));
+              } else {
+                // Not a Healthy Bhai QR — show error
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Row(
+                      children: [
+                        Icon(Icons.warning_amber_rounded, color: Colors.white),
+                        SizedBox(width: 12),
+                        Expanded(child: Text('Invalid QR code — not a Healthy Bhai patient QR.')),
+                      ],
+                    ),
+                    backgroundColor: Colors.red[700],
+                    behavior: SnackBarBehavior.floating,
+                    duration: const Duration(seconds: 4),
+                  ),
+                );
+              }
             }
           },
         ),
