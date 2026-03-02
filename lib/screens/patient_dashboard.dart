@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import 'medical_timeline_screen.dart';
@@ -6,6 +7,7 @@ import 'document_upload_screen.dart';
 import 'emergency_mode_screen.dart';
 import 'patient_qr_screen.dart';
 import 'ai_assistant_screen.dart';
+import 'patient_appointments_screen.dart';
 import 'nearby_hospitals_screen.dart';
 import 'book_appointment_screen.dart';
 import 'prescription_scan_screen.dart';
@@ -125,27 +127,29 @@ class _PatientDashboardState extends State<PatientDashboard> {
     return Scaffold(
       backgroundColor: const Color(0xffF3F4F6),
       appBar: AppBar(
-        backgroundColor: const Color(0xffDC2626),
-        elevation: 2,
-        shadowColor: Colors.black12,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: Colors.grey[200], height: 1),
+        ),
         titleSpacing: 20,
         title: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: const Color(0xffDC2626).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white.withOpacity(0.3)),
               ),
-              child: const Icon(Icons.monitor_heart, color: Colors.white, size: 24),
+              child: const Icon(Icons.health_and_safety, color: Color(0xffDC2626), size: 24),
             ),
             const SizedBox(width: 12),
             const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Healthy Bhai', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -0.5)),
-                Text('Patient Portal', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xffFEE2E2))),
+                Text('Healthy Bhai', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xffDC2626), letterSpacing: -0.5)),
+                Text('Patient Portal', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.grey)),
               ],
             ),
           ],
@@ -153,7 +157,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
         actions: [
           // Logout button
           IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white70),
+            icon: const Icon(Icons.logout, color: Color(0xffDC2626)),
             tooltip: 'Logout',
             onPressed: () async {
               await AuthService.signOut();
@@ -196,6 +200,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
                     _buildGridButton(context, icon: Icons.calendar_month, title: 'Book Appointment', subtitle: 'Schedule a visit with your doctor.', destination: BookAppointmentScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.history_edu, title: 'Medical History', subtitle: 'Detailed logs of your past treatments.', destination: MedicalTimelineScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.upload_file, title: 'Upload Reports', subtitle: 'Add new lab results or documents.', destination: DocumentUploadScreen(patientId: widget.patientId)),
+                    _buildGridButton(context, icon: Icons.calendar_today, title: 'Appointments', subtitle: 'Book or view your schedule.', destination: PatientAppointmentsScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.local_hospital, title: 'Emergency Info', subtitle: 'Critical medical data for responders.', destination: EmergencyModeScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.qr_code_2, title: 'My QR Code', subtitle: 'Your unique patient identifier.', destination: PatientQRScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.location_on, title: 'Nearby Hospitals', subtitle: 'Find hospitals & clinics near you.', destination: const NearbyHospitalsScreen()),
@@ -236,14 +241,12 @@ class _PatientDashboardState extends State<PatientDashboard> {
                     else if (eventText.contains('Note')) { icon = Icons.note; iconColor = Colors.orange[600]!; iconBg = Colors.orange[50]!; }
                     else if (eventText.contains('medicine') || eventText.contains('prescription') || eventText.contains('extracted')) { icon = Icons.medication; iconColor = Colors.teal[600]!; iconBg = Colors.teal[50]!; }
 
-                    // Format the Firestore Timestamp to a readable string
+
+                    final dateObj = event['date'];
                     String dateStr = '';
-                    try {
-                      if (event['date'] != null) {
-                        final dt = (event['date'] as dynamic).toDate();
-                        dateStr = '${dt.day}/${dt.month}/${dt.year}';
-                      }
-                    } catch (_) {}
+                    if (dateObj != null) {
+                      dateStr = DateFormat('MMM dd, yyyy - hh:mm a').format((dateObj as dynamic).toDate());
+                    }
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),

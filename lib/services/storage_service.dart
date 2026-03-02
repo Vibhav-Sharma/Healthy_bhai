@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
 
 class StorageService {
@@ -7,11 +8,13 @@ class StorageService {
   /// Upload a file to Firebase Storage.
   /// Returns the download URL of the uploaded file.
   ///
-  /// [file] - The file to upload
+  /// [file] - The file to upload (Mobile/Desktop)
+  /// [bytes] - The file bytes to upload (Web)
   /// [patientId] - Used to organize files by patient
   /// [fileName] - Original file name
   static Future<String> uploadFile({
-    required File file,
+    File? file,
+    Uint8List? bytes,
     required String patientId,
     required String fileName,
   }) async {
@@ -20,7 +23,16 @@ class StorageService {
     final path = 'reports/$patientId/${timestamp}_$fileName';
 
     final ref = _storage.ref().child(path);
-    final uploadTask = await ref.putFile(file);
+    TaskSnapshot uploadTask;
+    
+    if (bytes != null) {
+      uploadTask = await ref.putData(bytes);
+    } else if (file != null) {
+      uploadTask = await ref.putFile(file);
+    } else {
+      throw Exception('No file or bytes provided for upload');
+    }
+    
     final downloadUrl = await uploadTask.ref.getDownloadURL();
 
     return downloadUrl;

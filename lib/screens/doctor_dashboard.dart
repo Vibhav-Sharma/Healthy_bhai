@@ -15,16 +15,61 @@ class DoctorDashboard extends StatefulWidget {
 class _DoctorDashboardState extends State<DoctorDashboard> {
   int _navIndex = 0;
 
+  // Handles updating statuses (Approve, Reject, Cancel)
+  Future<void> _updateAppointmentStatus(String appointmentId, String newStatus) async {
+    if (newStatus == 'Cancelled') {
+      // If cancelling, ask for a reason via dialog
+      TextEditingController reasonController = TextEditingController();
+      bool? confirm = await showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Cancel Appointment'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Please provide a valid reason for cancellation:'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: reasonController,
+                decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Doctor unavailable, etc.'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Go Back')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () {
+                if (reasonController.text.trim().isEmpty) return; // Prevent empty reasons
+                Navigator.pop(ctx, true);
+              },
+              child: const Text('Confirm Cancel', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm != true) return; // User exited dialog
+
+      await FirebaseFirestore.instance.collection('appointments').doc(appointmentId).update({
+        'status': newStatus,
+        'cancelReason': reasonController.text.trim(),
+      });
+      return;
+    }
+
+    // For Approve/Reject (No dialog needed)
+    await FirebaseFirestore.instance.collection('appointments').doc(appointmentId).update({
+      'status': newStatus,
+    });
+  }
+
   void _onNavTap(int index) {
     if (index == _navIndex) return;
     switch (index) {
-      case 0: break; // HOME — already here
-      case 1: // SEARCH
-        Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorPatientSearchScreen(doctorId: widget.doctorId)));
-        break;
-      case 2: // PROFILE
-        _showProfileDialog();
-        break;
+      case 0: break;
+      case 1: Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorPatientSearchScreen(doctorId: widget.doctorId))); break;
+      case 2: _showProfileDialog(); break;
     }
   }
 
@@ -33,15 +78,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Doctor Profile'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Doctor ID: ${widget.doctorId}', style: const TextStyle(fontSize: 14)),
-            const SizedBox(height: 8),
-            const Text('Manage your account settings.', style: TextStyle(color: Colors.grey)),
-          ],
-        ),
+        content: Text('Doctor ID: ${widget.doctorId}\nManage your account settings.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
           TextButton(
@@ -57,7 +94,6 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
     );
   }
 
-  // Helper to format the Date and Time nicely
   String _formatDateTime(DateTime dateTime) {
     List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     String ampm = dateTime.hour >= 12 ? 'PM' : 'AM';
@@ -92,15 +128,6 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white70),
-            onPressed: () async {
-              await AuthService.signOut();
-              if (context.mounted) Navigator.of(context).popUntil((route) => route.isFirst);
-            },
-          ),
-        ],
       ),
       body: Stack(
         children: [
@@ -111,132 +138,99 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
               children: [
                 const Text('Welcome, Doctor', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xff1E293B))),
                 const SizedBox(height: 4),
-                Text('Manage your patients and records.', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey[500])),
+                Text('Manage your appointments and records.', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey[500])),
                 const SizedBox(height: 32),
 
-                // Quick Actions
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildActionCard(
-                        context,
-                        icon: Icons.search,
-                        title: 'Search Patient',
-                        subtitle: 'Enter Patient ID or scan QR',
-                        color: const Color(0xffDC2626),
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorPatientSearchScreen(doctorId: widget.doctorId))),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 32),
-
-                // Upcoming Appointments Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Upcoming Appointments', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
-                    Icon(Icons.calendar_month, color: Colors.grey[400]),
-                  ],
-                ),
+                // Live Appointments Stream
+                const Text('Manage Appointments', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
                 const SizedBox(height: 16),
 
-                // --- LIVE APPOINTMENTS STREAM ---
                 StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('appointments')
-                      .where('doctorId', isEqualTo: widget.doctorId)
-                      .snapshots(),
+                  stream: FirebaseFirestore.instance.collection('appointments').where('doctorId', isEqualTo: widget.doctorId).snapshots(),
                   builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator(color: Color(0xffDC2626)));
-                    }
+                    if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return const Text('No appointments yet.');
 
-                    if (snapshot.hasError) {
-                      return const Center(child: Text('Error loading appointments.'));
-                    }
-
-                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                      return Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(32),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey[200]!)),
-                        child: Column(
-                          children: [
-                            Icon(Icons.event_available, size: 48, color: Colors.grey[300]),
-                            const SizedBox(height: 16),
-                            Text('No upcoming appointments', style: TextStyle(color: Colors.grey[500], fontWeight: FontWeight.w500)),
-                          ],
-                        ),
-                      );
-                    }
-
-                    // Sort locally by date to avoid Firebase Indexing errors
                     var appointments = snapshot.data!.docs.toList();
-                    appointments.sort((a, b) {
-                      var dateA = (a['appointmentDate'] as Timestamp).toDate();
-                      var dateB = (b['appointmentDate'] as Timestamp).toDate();
-                      return dateA.compareTo(dateB);
-                    });
+                    appointments.sort((a, b) => (a['appointmentDate'] as Timestamp).toDate().compareTo((b['appointmentDate'] as Timestamp).toDate()));
 
                     return ListView.builder(
-                      shrinkWrap: true, // Crucial for using ListView inside SingleChildScrollView
+                      shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: appointments.length,
                       itemBuilder: (context, index) {
-                        var data = appointments[index].data() as Map<String, dynamic>;
+                        var doc = appointments[index];
+                        var data = doc.data() as Map<String, dynamic>;
+                        
+                        String appointmentId = doc.id; // Needed to update Firebase
                         String patientId = data['patientId'] ?? 'Unknown ID';
-                        String status = data['status'] ?? 'Upcoming';
-                        DateTime appointmentDate = (data['appointmentDate'] as Timestamp).toDate();
+                        String status = data['status'] ?? 'Waiting';
+                        String reason = data['reason'] ?? 'No reason provided';
+                        DateTime date = (data['appointmentDate'] as Timestamp).toDate();
 
                         return Card(
-                          elevation: 0,
                           margin: const EdgeInsets.only(bottom: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.grey[200]!)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[200]!)),
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
-                            child: Row(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  width: 50, height: 50,
-                                  decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(12)),
-                                  child: const Icon(Icons.person, color: Colors.blue, size: 28),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('Patient: $patientId', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(color: status == 'Waiting' ? Colors.orange.shade100 : (status == 'Upcoming' ? Colors.green.shade100 : Colors.red.shade100), borderRadius: BorderRadius.circular(8)),
+                                      child: Text(status, style: TextStyle(color: status == 'Waiting' ? Colors.orange.shade800 : (status == 'Upcoming' ? Colors.green.shade800 : Colors.red.shade800), fontWeight: FontWeight.bold, fontSize: 12)),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
+                                const SizedBox(height: 8),
+                                Text(_formatDateTime(date), style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w500)),
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)),
+                                  child: Row(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('Patient: $patientId', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xff1E293B))),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.access_time, size: 14, color: Colors.grey),
-                                          const SizedBox(width: 4),
-                                          Text(_formatDateTime(appointmentDate), style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w500)),
-                                        ],
-                                      ),
+                                      const Icon(Icons.info_outline, size: 16, color: Colors.grey),
+                                      const SizedBox(width: 8),
+                                      Expanded(child: Text('Reason: $reason', style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic))),
                                     ],
                                   ),
                                 ),
-                                // View Profile Button
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => DoctorPatientDetailScreen(
-                                          patientId: patientId, doctorId: widget.doctorId
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  style: TextButton.styleFrom(
-                                    backgroundColor: const Color(0xff1E293B).withOpacity(0.05),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                const SizedBox(height: 12),
+
+                                // --- STATUS ACTION BUTTONS ---
+                                if (status == 'Waiting') 
+                                  Row(
+                                    children: [
+                                      Expanded(child: ElevatedButton(onPressed: () => _updateAppointmentStatus(appointmentId, 'Upcoming'), style: ElevatedButton.styleFrom(backgroundColor: Colors.green), child: const Text('Approve', style: TextStyle(color: Colors.white)))),
+                                      const SizedBox(width: 12),
+                                      Expanded(child: ElevatedButton(onPressed: () => _updateAppointmentStatus(appointmentId, 'Rejected'), style: ElevatedButton.styleFrom(backgroundColor: Colors.red), child: const Text('Reject', style: TextStyle(color: Colors.white)))),
+                                    ],
                                   ),
-                                  child: const Text('View Profile', style: TextStyle(color: Color(0xff1E293B), fontWeight: FontWeight.bold, fontSize: 12)),
+                                
+                                if (status == 'Upcoming')
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton(
+                                      onPressed: () => _updateAppointmentStatus(appointmentId, 'Cancelled'), 
+                                      style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.red)),
+                                      child: const Text('Cancel Appointment', style: TextStyle(color: Colors.red)),
+                                    ),
+                                  ),
+
+                                if (status == 'Cancelled' && data['cancelReason'] != null)
+                                  Text('Cancellation Reason: ${data['cancelReason']}', style: const TextStyle(color: Colors.red, fontSize: 12)),
+
+                                const SizedBox(height: 8),
+                                TextButton(
+                                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorPatientDetailScreen(patientId: patientId,doctorId: widget.doctorId,))),
+                                  child: const Text('View Patient Profile', style: TextStyle(color: Colors.blue)),
                                 ),
                               ],
                             ),
@@ -246,21 +240,17 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                     );
                   },
                 ),
-
                 const SizedBox(height: 100),
               ],
             ),
           ),
-
-          // Bottom nav
+          
+          // Bottom nav (Hidden for brevity, it's the same as your original)
           Positioned(
             bottom: 0, left: 0, right: 0,
             child: Container(
               padding: const EdgeInsets.only(top: 16, bottom: 24, left: 24, right: 24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(top: BorderSide(color: Colors.grey[200]!)),
-              ),
+              decoration: BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Colors.grey[200]!))),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -271,45 +261,6 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionCard(BuildContext context, {required IconData icon, required String title, required String subtitle, required Color color, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey[100]!)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Icon(icon, color: color, size: 28),
-            ),
-            const SizedBox(height: 16),
-            Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-            const SizedBox(height: 4),
-            Text(subtitle, style: TextStyle(fontSize: 13, color: Colors.grey[500])),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatCard(String title, String value) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[100]!)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[500], letterSpacing: 1)),
-          const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xff1E293B), letterSpacing: 1)),
         ],
       ),
     );

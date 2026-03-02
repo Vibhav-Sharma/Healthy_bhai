@@ -37,15 +37,32 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+      withData: true,
     );
 
-    if (result == null || result.files.single.path == null) return;
+    if (result == null || result.files.isEmpty) return;
+
+    final platformFile = result.files.single;
+
+    // Check file size (5MB = 5 * 1024 * 1024 bytes)
+    final fileSize = platformFile.size;
+    if (fileSize > 5 * 1024 * 1024) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('File size must be less than 5MB. Please choose a smaller file.')),
+      );
+      return;
+    }
 
     setState(() => _isUploading = true);
 
     try {
-      final file = File(result.files.single.path!);
-      final fileName = result.files.single.name;
+      File? file;
+      if (platformFile.path != null) {
+        file = File(platformFile.path!);
+      }
+      final bytes = platformFile.bytes;
+      final fileName = platformFile.name;
 
       // Determine type from extension
       final ext = fileName.split('.').last.toLowerCase();
@@ -56,6 +73,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
       // Upload to Firebase Storage
       final fileUrl = await StorageService.uploadFile(
         file: file,
+        bytes: bytes,
         patientId: widget.patientId,
         fileName: fileName,
       );
@@ -78,7 +96,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('File uploaded successfully!')),
       );
-      _loadReports(); // Refresh list
+      await _loadReports(); // Refresh list and await completion before releasing loading state
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
