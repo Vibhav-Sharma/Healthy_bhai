@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'patient_login_screen.dart';
 import 'doctor_login_screen.dart';
+import 'settings_screen.dart';
 
 class HomeSelectionScreen extends StatelessWidget {
   const HomeSelectionScreen({super.key});
@@ -170,8 +171,10 @@ class HomeSelectionScreen extends StatelessWidget {
                    child: Row(
                      mainAxisAlignment: MainAxisAlignment.spaceAround,
                      children: [
-                       _buildNavItem(Icons.home, 'HOME', true),
-                       _buildNavItem(Icons.settings, 'SETTINGS', false),
+                       _buildNavItem(Icons.home, 'HOME', true, () {}),
+                       _buildNavItem(Icons.settings, 'SETTINGS', false, () {
+                         Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
+                       }),
                      ],
                    ),
                  )
@@ -267,12 +270,14 @@ class HomeSelectionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, bool isActive) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: isActive ? const EdgeInsets.symmetric(horizontal: 16, vertical: 4) : null,
+  Widget _buildNavItem(IconData icon, String label, bool isActive, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: isActive ? const EdgeInsets.symmetric(horizontal: 16, vertical: 4) : null,
           decoration: isActive ? BoxDecoration(
              color: Colors.red[50],
              borderRadius: BorderRadius.circular(20),
@@ -294,6 +299,7 @@ class HomeSelectionScreen extends StatelessWidget {
           ),
         )
       ],
+      ),
     );
   }
 }
