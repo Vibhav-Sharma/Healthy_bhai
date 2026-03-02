@@ -6,6 +6,7 @@ import 'document_upload_screen.dart';
 import 'emergency_mode_screen.dart';
 import 'patient_qr_screen.dart';
 import 'ai_assistant_screen.dart';
+import 'nearby_hospitals_screen.dart';
 
 class PatientDashboard extends StatefulWidget {
   final String patientId;
@@ -191,6 +192,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
                     _buildGridButton(context, icon: Icons.upload_file, title: 'Upload Reports', subtitle: 'Add new lab results or documents.', destination: DocumentUploadScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.local_hospital, title: 'Emergency Info', subtitle: 'Critical medical data for responders.', destination: EmergencyModeScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.qr_code_2, title: 'My QR Code', subtitle: 'Your unique patient identifier.', destination: PatientQRScreen(patientId: widget.patientId)),
+                    _buildGridButton(context, icon: Icons.location_on, title: 'Nearby Hospitals', subtitle: 'Find hospitals & clinics near you.', destination: const NearbyHospitalsScreen()),
                   ],
                 ),
 
