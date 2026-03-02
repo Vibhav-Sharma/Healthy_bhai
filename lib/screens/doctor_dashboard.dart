@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
 import 'doctor_patient_search_screen.dart';
+import 'doctor_patient_detail_screen.dart';
 
 class DoctorDashboard extends StatefulWidget {
   final String doctorId;
@@ -53,6 +55,16 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
         ],
       ),
     );
+  }
+
+  // Helper to format the Date and Time nicely
+  String _formatDateTime(DateTime dateTime) {
+    List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    String ampm = dateTime.hour >= 12 ? 'PM' : 'AM';
+    int hour = dateTime.hour % 12;
+    if (hour == 0) hour = 12;
+    String minute = dateTime.minute.toString().padLeft(2, '0');
+    return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year} at $hour:$minute $ampm';
   }
 
   @override
@@ -118,12 +130,121 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                   ],
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
 
+                // Upcoming Appointments Header
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(child: _buildStatCard('Your ID', widget.doctorId)),
+                    const Text('Upcoming Appointments', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+                    Icon(Icons.calendar_month, color: Colors.grey[400]),
                   ],
+                ),
+                const SizedBox(height: 16),
+
+                // --- LIVE APPOINTMENTS STREAM ---
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('appointments')
+                      .where('doctorId', isEqualTo: widget.doctorId)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(color: Color(0xffDC2626)));
+                    }
+
+                    if (snapshot.hasError) {
+                      return const Center(child: Text('Error loading appointments.'));
+                    }
+
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey[200]!)),
+                        child: Column(
+                          children: [
+                            Icon(Icons.event_available, size: 48, color: Colors.grey[300]),
+                            const SizedBox(height: 16),
+                            Text('No upcoming appointments', style: TextStyle(color: Colors.grey[500], fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                      );
+                    }
+
+                    // Sort locally by date to avoid Firebase Indexing errors
+                    var appointments = snapshot.data!.docs.toList();
+                    appointments.sort((a, b) {
+                      var dateA = (a['appointmentDate'] as Timestamp).toDate();
+                      var dateB = (b['appointmentDate'] as Timestamp).toDate();
+                      return dateA.compareTo(dateB);
+                    });
+
+                    return ListView.builder(
+                      shrinkWrap: true, // Crucial for using ListView inside SingleChildScrollView
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: appointments.length,
+                      itemBuilder: (context, index) {
+                        var data = appointments[index].data() as Map<String, dynamic>;
+                        String patientId = data['patientId'] ?? 'Unknown ID';
+                        String status = data['status'] ?? 'Upcoming';
+                        DateTime appointmentDate = (data['appointmentDate'] as Timestamp).toDate();
+
+                        return Card(
+                          elevation: 0,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.grey[200]!)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 50, height: 50,
+                                  decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(12)),
+                                  child: const Icon(Icons.person, color: Colors.blue, size: 28),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Patient: $patientId', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xff1E293B))),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.access_time, size: 14, color: Colors.grey),
+                                          const SizedBox(width: 4),
+                                          Text(_formatDateTime(appointmentDate), style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w500)),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // View Profile Button
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => DoctorPatientDetailScreen(
+                                          patientId: patientId, doctorId: widget.doctorId
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: const Color(0xff1E293B).withOpacity(0.05),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                  child: const Text('View Profile', style: TextStyle(color: Color(0xff1E293B), fontWeight: FontWeight.bold, fontSize: 12)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 100),
