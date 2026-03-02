@@ -1,0 +1,209 @@
+import 'package:flutter/material.dart';
+
+class SplashScreen extends StatelessWidget {
+  const SplashScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // Top Bar Icons
+            Positioned(
+              top: 16,
+              left: 32,
+              right: 32,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    '9:41',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Icon(Icons.signal_cellular_4_bar, size: 18, color: Colors.black),
+                      const SizedBox(width: 4),
+                      Icon(Icons.wifi, size: 18, color: Colors.black),
+                      const SizedBox(width: 4),
+                      Icon(Icons.battery_full, size: 22, color: Colors.black),
+                    ],
+                  )
+                ],
+              ),
+            ),
+            
+            // Center Logo & Title
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        width: 192,
+                        height: 192,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.red[50],
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.red.withOpacity(0.1),
+                              blurRadius: 30,
+                              spreadRadius: 10,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xffD32F2F).withOpacity(0.15),
+                              blurRadius: 40,
+                              offset: const Offset(0, 10),
+                            )
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.local_hospital,
+                          size: 80,
+                          color: Color(0xffD32F2F),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  const Text(
+                    'Healthy Bhai',
+                    style: TextStyle(
+                      color: Color(0xffB71C1C),
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                      fontFamily: 'serif',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'MEDICAL RECORDS MANAGER',
+                    style: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                    ),
+                  )
+                ],
+              ),
+            ),
+
+            // Background Blur Circles
+            Positioned(
+              top: -50,
+              right: -50,
+              child: Container(
+                width: 320,
+                height: 320,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.red[50]?.withOpacity(0.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.red.withOpacity(0.05),
+                      blurRadius: 60,
+                      spreadRadius: 30,
+                    )
+                  ]
+                ),
+              ),
+            ),
+             Positioned(
+              bottom: -50,
+              left: -50,
+              child: Container(
+                width: 256,
+                height: 256,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                   color: Colors.red[50]?.withOpacity(0.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.red.withOpacity(0.05),
+                      blurRadius: 60,
+                      spreadRadius: 30,
+                    )
+                  ]
+                ),
+              ),
+            ),
+            
+            // Bottom Secure Badge
+            Positioned(
+              bottom: 48,
+              left: 0,
+              right: 0,
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.red[50],
+                      borderRadius: BorderRadius.circular(32),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                         const Icon(
+                          Icons.verified_user,
+                          color: Color(0xffD32F2F),
+                          size: 14,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'SECURE & CONFIDENTIAL',
+                          style: TextStyle(
+                            color: Color(0xffB71C1C),
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.5,
+                          ),
+                        )
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            ),
+            
+            // Home indicator
+            Positioned(
+              bottom: 8,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  width: 128,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[900]?.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
