@@ -1,5 +1,7 @@
-// Store your Gemini API key here.
-// Get your key from: https://aistudio.google.com/app/apikey
-// IMPORTANT: Do NOT commit this file to version control.
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-const String GEMINI_API_KEY = "AIzaSyCqZpD1EeIi1rB47q29B7IDUvtEvmiLuDk";
+/// Reads API keys from the .env file at runtime.
+/// NEVER hardcode secrets here — use the .env file instead.
+
+String get GEMINI_API_KEY =>
+    dotenv.env['GEMINI_API_KEY'] ?? '';
