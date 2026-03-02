@@ -359,7 +359,7 @@ class DoctorListScreen extends StatelessWidget {
 }
 
 // ------------------------------------------------------------------------
-// NEW: DOCTOR DETAIL & BOOKING SCREEN
+// NEW: DOCTOR DETAIL & BOOKING SCREEN (UPDATED)
 // ------------------------------------------------------------------------
 
 class DoctorDetailBookingScreen extends StatefulWidget {
@@ -379,20 +379,30 @@ class DoctorDetailBookingScreen extends StatefulWidget {
 }
 
 class _DoctorDetailBookingScreenState extends State<DoctorDetailBookingScreen> {
+  final TextEditingController _reasonController = TextEditingController();
+  final TextEditingController _reviewController = TextEditingController();
+  int _selectedRating = 5;
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    _reviewController.dispose();
+    super.dispose();
+  }
 
   Future<void> _bookAppointment() async {
+    if (_reasonController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please provide a reason for your visit.')));
+      return;
+    }
+
     // 1. Pick a Date
     DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now().add(const Duration(days: 1)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 30)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(colorScheme: const ColorScheme.light(primary: Colors.red)),
-          child: child!,
-        );
-      },
+      builder: (context, child) => Theme(data: Theme.of(context).copyWith(colorScheme: const ColorScheme.light(primary: Colors.red)), child: child!),
     );
 
     if (pickedDate == null) return; 
@@ -402,12 +412,7 @@ class _DoctorDetailBookingScreenState extends State<DoctorDetailBookingScreen> {
     TimeOfDay? pickedTime = await showTimePicker(
       context: context,
       initialTime: const TimeOfDay(hour: 10, minute: 0),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(colorScheme: const ColorScheme.light(primary: Colors.red)),
-          child: child!,
-        );
-      },
+      builder: (context, child) => Theme(data: Theme.of(context).copyWith(colorScheme: const ColorScheme.light(primary: Colors.red)), child: child!),
     );
 
     if (pickedTime == null) return; 
@@ -426,23 +431,80 @@ class _DoctorDetailBookingScreenState extends State<DoctorDetailBookingScreen> {
         'specialty': widget.doctorData['specialty'],
         'hospital': widget.doctorData['hospital'] ?? 'Not specified',
         'appointmentDate': appointmentDateTime,
-        'status': 'Upcoming', 
+        'reason': _reasonController.text.trim(), // <-- Saved Reason
+        'status': 'Waiting', // <-- New Default Status
         'createdAt': FieldValue.serverTimestamp(),
       });
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Appointment booked with ${widget.doctorData['name']}!'), backgroundColor: Colors.green),
+        SnackBar(content: Text('Appointment request sent to ${widget.doctorData['name']}!'), backgroundColor: Colors.green),
       );
       
-      // Pops all screens until the user is back at the Home Dashboard!
       Navigator.of(context).popUntil((route) => route.isFirst);
       
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to book: $e'), backgroundColor: Colors.red),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to book: $e'), backgroundColor: Colors.red));
     }
+  }
+
+  // --- REVIEW SYSTEM ---
+  void _showWriteReviewDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Rate this Doctor'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      return IconButton(
+                        icon: Icon(index < _selectedRating ? Icons.star : Icons.star_border, color: Colors.amber, size: 32),
+                        onPressed: () => setDialogState(() => _selectedRating = index + 1),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _reviewController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      hintText: 'Share your experience...',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  onPressed: () async {
+                    if (_reviewController.text.trim().isEmpty) return;
+                    
+                    await FirebaseFirestore.instance.collection('doctors').doc(widget.doctorId).collection('reviews').add({
+                      'patientId': widget.patientId,
+                      'rating': _selectedRating,
+                      'comment': _reviewController.text.trim(),
+                      'createdAt': FieldValue.serverTimestamp(),
+                    });
+                    
+                    _reviewController.clear();
+                    if (mounted) Navigator.pop(context);
+                  },
+                  child: const Text('Submit', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -450,9 +512,7 @@ class _DoctorDetailBookingScreenState extends State<DoctorDetailBookingScreen> {
     String name = widget.doctorData['name'] ?? 'Unknown';
     String specialty = widget.doctorData['specialty'] ?? 'Specialty not listed';
     String hospital = widget.doctorData['hospital'] ?? 'Hospital not listed';
-    String email = widget.doctorData['email'] ?? 'Email not provided';
-    String phone = widget.doctorData['phone'] ?? 'Phone not provided';
-
+    
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -464,49 +524,101 @@ class _DoctorDetailBookingScreenState extends State<DoctorDetailBookingScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Profile Header
             Center(
-              child: Container(
-                width: 100, height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.red.shade100, width: 2),
-                ),
-                child: const Icon(Icons.person, color: Colors.red, size: 50),
+              child: Column(
+                children: [
+                  Container(
+                    width: 100, height: 100,
+                    decoration: BoxDecoration(color: Colors.red.shade50, shape: BoxShape.circle, border: Border.all(color: Colors.red.shade100, width: 2)),
+                    child: const Icon(Icons.person, color: Colors.red, size: 50),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+                  Text(specialty, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.red)),
+                  Text(hospital, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            Text(name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
-            const SizedBox(height: 4),
-            Text(specialty, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.red)),
             
             const SizedBox(height: 32),
 
-            // Information Cards
-            _buildInfoCard(Icons.local_hospital, 'Hospital / Clinic', hospital),
-            const SizedBox(height: 16),
-            _buildInfoCard(Icons.phone, 'Contact Number', phone),
-            const SizedBox(height: 16),
-            _buildInfoCard(Icons.email, 'Email Address', email),
-            const SizedBox(height: 32),
-            
-            // About Section Placeholder
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text('About', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+            // --- REASON FOR APPOINTMENT ---
+            const Text('Reason for Appointment', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _reasonController,
+              maxLines: 2,
+              decoration: InputDecoration(
+                hintText: 'Briefly describe your symptoms or reason for visit...',
+                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                filled: true, fillColor: const Color(0xffF8FAFC),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
+              ),
+            ),
+
+            const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Divider()),
+
+            // --- REVIEWS SECTION ---
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Patient Reviews', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+                TextButton.icon(
+                  onPressed: _showWriteReviewDialog, 
+                  icon: const Icon(Icons.edit, size: 16, color: Colors.red), 
+                  label: const Text('Write a Review', style: TextStyle(color: Colors.red)),
+                )
+              ],
             ),
             const SizedBox(height: 8),
-            Text(
-              '$name is a dedicated professional specializing in $specialty. They are currently practicing at $hospital and are committed to providing the best care for their patients.',
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade600, height: 1.5),
+
+            // StreamBuilder to fetch live reviews
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance.collection('doctors').doc(widget.doctorId).collection('reviews').orderBy('createdAt', descending: true).snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text('No reviews yet. Be the first to review!', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
+                  );
+                }
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) {
+                    var review = snapshot.data!.docs[index].data() as Map<String, dynamic>;
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(color: const Color(0xffF8FAFC), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: List.generate(5, (starIndex) => Icon(
+                              starIndex < (review['rating'] ?? 5) ? Icons.star : Icons.star_border, 
+                              color: Colors.amber, size: 16
+                            )),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(review['comment'] ?? '', style: const TextStyle(fontSize: 14, color: Color(0xff1E293B))),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
             ),
+            const SizedBox(height: 100), // Spacing for bottom button
           ],
         ),
       ),
       
-      // Floating Booking Button stuck to bottom
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -516,38 +628,10 @@ class _DoctorDetailBookingScreenState extends State<DoctorDetailBookingScreen> {
               backgroundColor: Colors.red,
               minimumSize: const Size(double.infinity, 56),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              elevation: 0,
             ),
-            child: const Text('Book Appointment', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+            child: const Text('Request Appointment', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildInfoCard(IconData icon, String title, String value) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xffF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.grey.shade500),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 4),
-                Text(value, style: const TextStyle(fontSize: 14, color: Color(0xff1E293B), fontWeight: FontWeight.w500)),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -204,6 +205,80 @@ class AuthService {
 
   /// Sign out
   static Future<void> signOut() async {
+    await GoogleSignIn().signOut();
     await _auth.signOut();
+  }
+
+  // ─── GOOGLE SIGN IN ───
+
+  /// Sign in with Google for Patients
+  static Future<String> patientGoogleSignIn() async {
+    final GoogleSignInAccount? gUser = await GoogleSignIn().signIn();
+    if (gUser == null) throw Exception('Google sign in aborted');
+
+    final GoogleSignInAuthentication gAuth = await gUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      accessToken: gAuth.accessToken,
+      idToken: gAuth.idToken,
+    );
+    final userCredential = await _auth.signInWithCredential(credential);
+    final uid = userCredential.user!.uid;
+
+    final doc = await _db.collection('patients').doc(uid).get();
+    if (doc.exists) {
+      return doc.data()!['patientId'] as String;
+    } else {
+      // Create new patient profile
+      final patientId = _generatePatientId();
+      await _db.collection('patients').doc(uid).set({
+        'patientId': patientId,
+        'name': gUser.displayName ?? 'Unknown',
+        'age': '',
+        'bloodGroup': '',
+        'phone': '',
+        'emergencyContact': '',
+        'allergies': [],
+        'diseases': [],
+        'currentMedicines': [],
+        'oldMedicines': [],
+        'surgeries': [],
+        'treatments': [],
+        'email': gUser.email,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      return patientId;
+    }
+  }
+
+  /// Sign in with Google for Doctors
+  static Future<String> doctorGoogleSignIn() async {
+    final GoogleSignInAccount? gUser = await GoogleSignIn().signIn();
+    if (gUser == null) throw Exception('Google sign in aborted');
+
+    final GoogleSignInAuthentication gAuth = await gUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      accessToken: gAuth.accessToken,
+      idToken: gAuth.idToken,
+    );
+    final userCredential = await _auth.signInWithCredential(credential);
+    final uid = userCredential.user!.uid;
+
+    final doc = await _db.collection('doctors').doc(uid).get();
+    if (doc.exists) {
+      return doc.data()!['doctorId'] as String;
+    } else {
+      // Create new doctor profile
+      final doctorId = _generateDoctorId();
+      await _db.collection('doctors').doc(uid).set({
+        'doctorId': doctorId,
+        'name': gUser.displayName ?? 'Unknown Doctor',
+        'specialization': 'General Update Specialization',
+        'hospital': 'Update Hospital Profile',
+        'phone': '',
+        'email': gUser.email,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      return doctorId;
+    }
   }
 }

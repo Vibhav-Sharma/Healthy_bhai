@@ -6,8 +6,7 @@ class PatientAppointmentsScreen extends StatelessWidget {
 
   const PatientAppointmentsScreen({Key? key, required this.patientId}) : super(key: key);
 
-  // A handy helper function to format the Firebase timestamp into readable text
-  // (e.g., "Oct 12, 2026 at 10:30 AM") without needing extra packages!
+  // Helper to format the Date and Time nicely
   String _formatDateTime(DateTime dateTime) {
     List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     String ampm = dateTime.hour >= 12 ? 'PM' : 'AM';
@@ -65,13 +64,12 @@ class PatientAppointmentsScreen extends StatelessWidget {
             );
           }
 
-          // Convert Firebase docs to a list so we can sort them by date locally
-          // (Sorting locally prevents a common Firebase Indexing error!)
+          // Sort locally by date to avoid Firebase Indexing errors
           var appointments = snapshot.data!.docs.toList();
           appointments.sort((a, b) {
             var dateA = (a['appointmentDate'] as Timestamp).toDate();
             var dateB = (b['appointmentDate'] as Timestamp).toDate();
-            return dateA.compareTo(dateB);
+            return dateB.compareTo(dateA); // Newest / furthest out first
           });
 
           return ListView.builder(
@@ -83,16 +81,29 @@ class PatientAppointmentsScreen extends StatelessWidget {
               String doctorName = data['doctorName'] ?? 'Unknown Doctor';
               String specialty = data['specialty'] ?? '';
               String hospital = data['hospital'] ?? 'Hospital not listed';
-              String status = data['status'] ?? 'Upcoming';
+              String status = data['status'] ?? 'Waiting';
+              String reason = data['reason'] ?? 'Not provided';
+              String? cancelReason = data['cancelReason']; // Might be null
               
-              // Safely convert Firebase Timestamp to Dart DateTime
               DateTime appointmentDate = (data['appointmentDate'] as Timestamp).toDate();
               
-              // Color code the status pill
-              Color statusColor = Colors.blue;
-              if (status == 'Upcoming') statusColor = Colors.orange;
-              if (status == 'Completed') statusColor = Colors.green;
-              if (status == 'Cancelled') statusColor = Colors.red;
+              // Dynamic Color coding for the Status Pill
+              Color statusColor = Colors.grey;
+              Color statusBgColor = Colors.grey.shade100;
+              
+              if (status == 'Waiting') {
+                statusColor = Colors.orange.shade800;
+                statusBgColor = Colors.orange.shade100;
+              } else if (status == 'Upcoming') {
+                statusColor = Colors.green.shade800;
+                statusBgColor = Colors.green.shade100;
+              } else if (status == 'Cancelled' || status == 'Rejected') {
+                statusColor = Colors.red.shade800;
+                statusBgColor = Colors.red.shade100;
+              } else if (status == 'Completed') {
+                statusColor = Colors.blue.shade800;
+                statusBgColor = Colors.blue.shade100;
+              }
 
               return Card(
                 elevation: 0,
@@ -131,7 +142,7 @@ class PatientAppointmentsScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: statusColor.withOpacity(0.1),
+                              color: statusBgColor,
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
@@ -147,7 +158,7 @@ class PatientAppointmentsScreen extends StatelessWidget {
                         child: Divider(height: 1),
                       ),
                       
-                      // Bottom Row: Date, Time & Location
+                      // Middle Row: Date & Location
                       Row(
                         children: [
                           const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
@@ -172,6 +183,49 @@ class PatientAppointmentsScreen extends StatelessWidget {
                           ),
                         ],
                       ),
+                      
+                      const SizedBox(height: 12),
+
+                      // Bottom Row: Reason for Visit
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xffF8FAFC),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Reason for visit:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                            const SizedBox(height: 4),
+                            Text(reason, style: const TextStyle(fontSize: 13, color: Color(0xff1E293B), fontStyle: FontStyle.italic)),
+                          ],
+                        ),
+                      ),
+
+                      // Conditional: Show Doctor's Cancellation Reason if applicable
+                      if (status == 'Cancelled' && cancelReason != null && cancelReason.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.red.shade100),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Cancellation Reason from Doctor:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.red)),
+                              const SizedBox(height: 4),
+                              Text(cancelReason, style: TextStyle(fontSize: 13, color: Colors.red.shade900)),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
