@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../services/firestore_service.dart';
 import 'doctor_notes_screen.dart';
@@ -201,8 +202,9 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
                             ? [Center(child: Padding(padding: const EdgeInsets.all(32), child: Text('No reports uploaded.', style: TextStyle(color: Colors.grey[400]))))]
                             : _reports.map((r) {
                                 final fileName = r['fileName'] ?? 'Unknown';
+                                final fileUrl = r['fileUrl'] ?? '';
                                 final date = r['date'] != null ? DateFormat('MMM dd, yyyy').format((r['date'] as dynamic).toDate()) : '';
-                                return _buildReportCard('$fileName${date.isNotEmpty ? ' ($date)' : ''}');
+                                return _buildReportCard('$fileName${date.isNotEmpty ? ' ($date)' : ''}', fileUrl);
                               }).toList(),
                       ),
                     ],
@@ -252,7 +254,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
     );
   }
 
-  Widget _buildReportCard(String title) {
+  Widget _buildReportCard(String title, String fileUrl) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -262,7 +264,15 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
           Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.picture_as_pdf, color: Colors.red)),
           const SizedBox(width: 16),
           Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xff1E293B)))),
-          Icon(Icons.download, color: Colors.grey[400]),
+          IconButton(
+            icon: Icon(Icons.download, color: Colors.grey[400]),
+            onPressed: fileUrl.isNotEmpty ? () {
+              Clipboard.setData(ClipboardData(text: fileUrl));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Download URL copied to clipboard!')),
+              );
+            } : null,
+          ),
         ],
       ),
     );
