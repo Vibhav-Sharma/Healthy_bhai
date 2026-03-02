@@ -49,3 +49,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Secrets – NEVER commit these
+.env
+lib/config/api_keys.dart
