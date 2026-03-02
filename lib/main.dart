@@ -8,6 +8,7 @@ import 'screens/home_selection_screen.dart';
 import 'screens/patient_dashboard.dart';
 import 'screens/patient_login_screen.dart';
 import 'screens/splash_screen.dart';
+import 'screens/ai_assistant_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -137,6 +138,24 @@ class HomePage extends StatelessWidget {
                 );
               },
               child: const Text('Go to Patient Login Screen', style: TextStyle(fontSize: 18)),
+            ),
+
+            const SizedBox(height: 20),
+
+            // AI Emergency Assistant Button
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AiAssistantScreen()),
+                );
+              },
+              child: const Text('AI Emergency Assistant', style: TextStyle(fontSize: 18)),
             ),
 
           ],
