@@ -9,7 +9,7 @@ class PatientSummaryScreen extends StatefulWidget {
   final List<Map<String, dynamic>> notes;
   final List<Map<String, dynamic>> timeline;
 
-  const PatientSummaryScreen({
+  PatientSummaryScreen({
     super.key,
     required this.patientId,
     required this.patient,
@@ -60,11 +60,11 @@ class _PatientSummaryScreenState extends State<PatientSummaryScreen> {
     final name = widget.patient['name'] ?? 'Unknown';
 
     return Scaffold(
-      backgroundColor: const Color(0xffF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xff1E293B),
+        backgroundColor: Theme.of(context).colorScheme.onSurface,
         foregroundColor: Colors.white,
-        title: Text('Summary • $name', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        title: Text('Summary • $name', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: _isLoading
@@ -72,90 +72,90 @@ class _PatientSummaryScreenState extends State<PatientSummaryScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const CircularProgressIndicator(color: Color(0xffDC2626)),
-                  const SizedBox(height: 16),
-                  Text('Generating AI summary...', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
-                  const SizedBox(height: 4),
-                  Text('Analysing ${widget.patientId}', style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+                  CircularProgressIndicator(color: Color(0xffDC2626)),
+                  SizedBox(height: 16),
+                  Text('Generating AI summary...', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 14)),
+                  SizedBox(height: 4),
+                  Text('Analysing ${widget.patientId}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3), fontSize: 12)),
                 ],
               ),
             )
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: _hasError ? const Color(0xffFEF2F2) : const Color(0xffF0FDF4),
-                      border: Border.all(color: _hasError ? const Color(0xffFECACA) : const Color(0xffBBF7D0)),
+                      color: _hasError ? Colors.red.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
+                      border: Border.all(color: _hasError ? Color(0xffFECACA) : Colors.green.withValues(alpha: 0.3)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
                         Icon(
                           _hasError ? Icons.error_outline : Icons.auto_awesome,
-                          color: _hasError ? const Color(0xffDC2626) : const Color(0xff16A34A),
+                          color: _hasError ? Color(0xffDC2626) : Color(0xff16A34A),
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             _hasError ? 'Failed to Generate Summary' : 'AI-Generated Clinical Summary',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: _hasError ? const Color(0xffDC2626) : const Color(0xff16A34A),
+                              color: _hasError ? Color(0xffDC2626) : Color(0xff16A34A),
                             ),
                           ),
                         ),
                         if (_hasError)
                           TextButton(
                             onPressed: _generateSummary,
-                            child: const Text('Retry', style: TextStyle(color: Color(0xffDC2626))),
+                            child: Text('Retry', style: TextStyle(color: Color(0xffDC2626))),
                           ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
 
                   // Summary content
                   Card(
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: Colors.grey[200]!),
+                      side: BorderSide(color: Theme.of(context).dividerColor),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(20),
+                      padding: EdgeInsets.all(20),
                       child: MarkdownBody(
                         data: _summary,
                         selectable: true,
                         styleSheet: MarkdownStyleSheet(
-                          p: const TextStyle(fontSize: 14, height: 1.6, color: Color(0xff334155)),
-                          h1: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xff1E293B)),
-                          h2: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xff1E293B)),
-                          h3: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xff1E293B)),
-                          listBullet: const TextStyle(fontSize: 14, color: Color(0xff334155)),
-                          strong: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xffDC2626)),
+                          p: TextStyle(fontSize: 14, height: 1.6, color: Theme.of(context).colorScheme.onSurface),
+                          h1: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+                          h2: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+                          h3: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+                          listBullet: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface),
+                          strong: TextStyle(fontWeight: FontWeight.bold, color: Color(0xffDC2626)),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Disclaimer
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.amber[50],
+                      color: Colors.amber.withValues(alpha: 0.1),
                       border: Border.all(color: Colors.amber[200]!),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       children: [
                         Icon(Icons.info_outline, color: Colors.amber[700], size: 18),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'AI-generated summary. Always verify with original records.',

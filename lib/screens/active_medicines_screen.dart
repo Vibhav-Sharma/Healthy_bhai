@@ -6,7 +6,7 @@ import '../services/med_abbreviation_service.dart';
 
 class ActiveMedicinesScreen extends StatefulWidget {
   final String patientId;
-  const ActiveMedicinesScreen({super.key, required this.patientId});
+  ActiveMedicinesScreen({super.key, required this.patientId});
 
   @override
   State<ActiveMedicinesScreen> createState() => _ActiveMedicinesScreenState();
@@ -55,21 +55,21 @@ class _ActiveMedicinesScreenState extends State<ActiveMedicinesScreen> with Sing
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('My Medicines',
-            style: TextStyle(color: Color(0xff1E293B), fontSize: 18, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text('My Medicines',
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xff1E293B)),
+          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: const Color(0xff16A34A),
+          labelColor: Color(0xff16A34A),
           unselectedLabelColor: Colors.grey,
-          indicatorColor: const Color(0xff16A34A),
+          indicatorColor: Color(0xff16A34A),
           tabs: [
             Tab(text: 'ACTIVE (${_activeMeds.length})'),
             Tab(text: 'EXPIRED (${_expiredMeds.length})'),
@@ -77,7 +77,7 @@ class _ActiveMedicinesScreenState extends State<ActiveMedicinesScreen> with Sing
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xff16A34A)))
+          ? Center(child: CircularProgressIndicator(color: Color(0xff16A34A)))
           : TabBarView(
               controller: _tabController,
               children: [
@@ -97,19 +97,19 @@ class _ActiveMedicinesScreenState extends State<ActiveMedicinesScreen> with Sing
             Icon(
               isActive ? Icons.medication_outlined : Icons.history,
               size: 64,
-              color: Colors.grey[300],
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               isActive ? 'No active medicines' : 'No expired medicines',
-              style: TextStyle(fontSize: 16, color: Colors.grey[500], fontWeight: FontWeight.w500),
+              style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w500),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               isActive
                   ? 'Scan a prescription to add medicines.'
                   : 'Completed prescriptions will appear here.',
-              style: TextStyle(fontSize: 13, color: Colors.grey[400]),
+              style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
             ),
           ],
         ),
@@ -119,7 +119,7 @@ class _ActiveMedicinesScreenState extends State<ActiveMedicinesScreen> with Sing
     return RefreshIndicator(
       onRefresh: _loadMedicines,
       child: ListView.builder(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(20),
         itemCount: meds.length,
         itemBuilder: (context, index) => _buildMedicineCard(meds[index], isActive: isActive),
       ),
@@ -168,18 +168,18 @@ class _ActiveMedicinesScreenState extends State<ActiveMedicinesScreen> with Sing
       }
     }
 
-    final accentColor = isActive ? const Color(0xff16A34A) : Colors.grey;
-    final bgColor = isActive ? Colors.green[50]! : Colors.grey[50]!;
+    final accentColor = isActive ? Color(0xff16A34A) : Colors.grey;
+    final bgColor = isActive ? Colors.green.withValues(alpha: 0.1)! : Colors.grey.withValues(alpha: 0.1)!;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: isActive ? Colors.green[200]! : Colors.grey[300]!, width: 1.5),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2)),
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: Offset(0, 2)),
         ],
       ),
       child: Column(
@@ -189,26 +189,26 @@ class _ActiveMedicinesScreenState extends State<ActiveMedicinesScreen> with Sing
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: EdgeInsets.all(10),
                 decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(12)),
                 child: Icon(Icons.medication, color: accentColor, size: 28),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: isActive ? const Color(0xff1E293B) : Colors.grey)),
-                    const SizedBox(height: 2),
-                    Text('Dosage: $dosage', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                    Text(name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: isActive ? Color(0xff1E293B) : Colors.grey)),
+                    SizedBox(height: 2),
+                    Text('Dosage: $dosage', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
                   ],
                 ),
               ),
               // Status chip
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isActive ? Colors.green[50] : Colors.red[50],
+                  color: isActive ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -219,7 +219,7 @@ class _ActiveMedicinesScreenState extends State<ActiveMedicinesScreen> with Sing
             ],
           ),
 
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
 
           // Frequency, Timing Context, Duration badges
           if (frequency.isNotEmpty || timingContext.isNotEmpty || duration.isNotEmpty)
@@ -239,51 +239,51 @@ class _ActiveMedicinesScreenState extends State<ActiveMedicinesScreen> with Sing
             ),
 
           if (frequency.isNotEmpty || timingContext.isNotEmpty || duration.isNotEmpty)
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
 
           // Schedule times
           if (!isAsNeeded && schedule.isNotEmpty) ...[
             Row(
               children: [
-                Icon(Icons.access_time, size: 15, color: Colors.grey[500]),
-                const SizedBox(width: 6),
+                Icon(Icons.access_time, size: 15, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
+                SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     schedule.map((s) => '${s.label} (${s.formatted})').join('  •  '),
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w500),
+                    style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w500),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
           ] else if (isAsNeeded) ...[
             Row(
               children: [
                 Icon(Icons.access_time, size: 15, color: Colors.orange[600]),
-                const SizedBox(width: 6),
+                SizedBox(width: 6),
                 Text('Take as needed', style: TextStyle(fontSize: 12, color: Colors.orange[600], fontWeight: FontWeight.w600)),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
           ],
 
           // Date range
           Divider(color: Colors.grey[200], height: 1),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Row(
             children: [
-              Icon(Icons.calendar_today, size: 14, color: Colors.grey[400]),
-              const SizedBox(width: 6),
+              Icon(Icons.calendar_today, size: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
+              SizedBox(width: 6),
               Text(
                 startStr.isNotEmpty ? '$startStr → $expiresStr' : 'No date info',
-                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
               ),
-              const Spacer(),
+              Spacer(),
               if (daysLeft.isNotEmpty)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.blue[50],
+                    color: Colors.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(daysLeft, style: TextStyle(fontSize: 11, color: Colors.blue[700], fontWeight: FontWeight.w600)),
@@ -297,7 +297,7 @@ class _ActiveMedicinesScreenState extends State<ActiveMedicinesScreen> with Sing
 
   Widget _infoBadge(IconData icon, String text, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
@@ -306,7 +306,7 @@ class _ActiveMedicinesScreenState extends State<ActiveMedicinesScreen> with Sing
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 13, color: color),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           Text(text, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
         ],
       ),

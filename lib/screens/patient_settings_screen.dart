@@ -6,7 +6,7 @@ import 'home_selection_screen.dart';
 class PatientSettingsScreen extends StatefulWidget {
   final String patientId;
 
-  const PatientSettingsScreen({super.key, required this.patientId});
+  PatientSettingsScreen({super.key, required this.patientId});
 
   @override
   State<PatientSettingsScreen> createState() => _PatientSettingsScreenState();
@@ -20,9 +20,9 @@ class _PatientSettingsScreenState extends State<PatientSettingsScreen> {
   Widget build(BuildContext context) {
     // Listen to theme to adjust text colors
     final isDark = themeNotifier.value == ThemeMode.dark;
-    final bgColor = isDark ? const Color(0xff121212) : const Color(0xffF3F4F6);
-    final cardColor = isDark ? const Color(0xff1E1E1E) : Colors.white;
-    final textColor = isDark ? Colors.white : const Color(0xff1E293B);
+    final bgColor = isDark ? Color(0xff121212) : Color(0xffF3F4F6);
+    final cardColor = isDark ? Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Color(0xff1E293B);
     final subheadColor = isDark ? Colors.grey[400] : Colors.grey[600];
 
     return Scaffold(
@@ -33,12 +33,12 @@ class _PatientSettingsScreenState extends State<PatientSettingsScreen> {
         iconTheme: IconThemeData(color: textColor),
         title: Text('Settings', style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
+          preferredSize: Size.fromHeight(1),
           child: Container(color: isDark ? Colors.grey[800] : Colors.grey[200], height: 1),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -57,7 +57,7 @@ class _PatientSettingsScreenState extends State<PatientSettingsScreen> {
                 textColor: textColor,
               ),
             ]),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             _buildSectionHeader('Emergency Setup', subheadColor),
             _buildCardGroup(cardColor, [
@@ -68,11 +68,11 @@ class _PatientSettingsScreenState extends State<PatientSettingsScreen> {
                 subtitle: 'Manage trusted contacts',
                 textColor: textColor,
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feature coming soon!')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Feature coming soon!')));
                 },
               ),
             ]),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             _buildSectionHeader('Notifications', subheadColor),
             _buildCardGroup(cardColor, [
@@ -94,7 +94,7 @@ class _PatientSettingsScreenState extends State<PatientSettingsScreen> {
                 textColor: textColor,
               ),
             ]),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             _buildSectionHeader('Data & Privacy', subheadColor),
             _buildCardGroup(cardColor, [
@@ -105,7 +105,7 @@ class _PatientSettingsScreenState extends State<PatientSettingsScreen> {
                 subtitle: 'Reset assistant conversation',
                 textColor: textColor,
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('AI memory cleared!')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('AI memory cleared!')));
                 },
               ),
               _buildDivider(isDark),
@@ -116,11 +116,11 @@ class _PatientSettingsScreenState extends State<PatientSettingsScreen> {
                 subtitle: 'Download your timeline data',
                 textColor: textColor,
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exporting records...')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Exporting records...')));
                 },
               ),
             ]),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             _buildSectionHeader('Account', subheadColor),
             _buildCardGroup(cardColor, [
@@ -130,7 +130,7 @@ class _PatientSettingsScreenState extends State<PatientSettingsScreen> {
                 title: 'Change Password',
                 textColor: textColor,
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password reset link sent!')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Password reset link sent!')));
                 },
               ),
               _buildDivider(isDark),
@@ -143,7 +143,7 @@ class _PatientSettingsScreenState extends State<PatientSettingsScreen> {
                   await AuthService.signOut();
                   if (context.mounted) {
                     Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => const HomeSelectionScreen()),
+                      MaterialPageRoute(builder: (_) => HomeSelectionScreen()),
                       (route) => false,
                     );
                   }
@@ -151,11 +151,11 @@ class _PatientSettingsScreenState extends State<PatientSettingsScreen> {
               ),
             ]),
 
-            const SizedBox(height: 48),
+            SizedBox(height: 48),
             Center(
               child: Text(
                 'Healthy Bhai v1.0.0',
-                style: TextStyle(color: Colors.grey[500], fontSize: 13, fontWeight: FontWeight.w500),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 13, fontWeight: FontWeight.w500),
               ),
             ),
           ],
@@ -166,7 +166,7 @@ class _PatientSettingsScreenState extends State<PatientSettingsScreen> {
 
   Widget _buildSectionHeader(String title, Color color) {
     return Padding(
-      padding: const EdgeInsets.only(left: 8, bottom: 8),
+      padding: EdgeInsets.only(left: 8, bottom: 8),
       child: Text(
         title.toUpperCase(),
         style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2),
@@ -179,7 +179,7 @@ class _PatientSettingsScreenState extends State<PatientSettingsScreen> {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: Offset(0, 4))],
       ),
       child: Column(children: children),
     );
@@ -188,8 +188,8 @@ class _PatientSettingsScreenState extends State<PatientSettingsScreen> {
   Widget _buildDivider(bool isDark) {
     return Container(
       height: 1,
-      margin: const EdgeInsets.only(left: 56),
-      color: isDark ? Colors.grey[800] : Colors.grey[100],
+      margin: EdgeInsets.only(left: 56),
+      color: isDark ? Colors.grey[800] : Colors.grey.withValues(alpha: 0.2),
     );
   }
 
@@ -204,13 +204,13 @@ class _PatientSettingsScreenState extends State<PatientSettingsScreen> {
     return ListTile(
       onTap: onTap,
       leading: Container(
-        padding: const EdgeInsets.all(8),
+        padding: EdgeInsets.all(8),
         decoration: BoxDecoration(color: iconColor.withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
         child: Icon(icon, color: iconColor, size: 20),
       ),
       title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, color: textColor)),
-      subtitle: subtitle != null ? Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500])) : null,
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+      subtitle: subtitle != null ? Text(subtitle, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))) : null,
+      trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
     );
   }
 
@@ -224,7 +224,7 @@ class _PatientSettingsScreenState extends State<PatientSettingsScreen> {
   }) {
     return ListTile(
       leading: Container(
-        padding: const EdgeInsets.all(8),
+        padding: EdgeInsets.all(8),
         decoration: BoxDecoration(color: iconColor.withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
         child: Icon(icon, color: iconColor, size: 20),
       ),
@@ -233,7 +233,7 @@ class _PatientSettingsScreenState extends State<PatientSettingsScreen> {
         value: value,
         onChanged: onChanged,
         activeColor: Colors.white,
-        activeTrackColor: const Color(0xffDC2626),
+        activeTrackColor: Color(0xffDC2626),
       ),
     );
   }

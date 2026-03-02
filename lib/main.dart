@@ -33,18 +33,84 @@ class MyApp extends StatelessWidget {
           title: 'Healthy Bhai',
           debugShowCheckedModeBanner: false,
           themeMode: currentMode,
+
+          // ─── LIGHT THEME ───
           theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xffDC2626)),
+            brightness: Brightness.light,
             useMaterial3: true,
-          ),
-          darkTheme: ThemeData.dark().copyWith(
             colorScheme: ColorScheme.fromSeed(
-              brightness: Brightness.dark,
-              seedColor: const Color(0xffDC2626), 
+              seedColor: const Color(0xffDC2626),
+              brightness: Brightness.light,
             ),
-            useMaterial3: true,
+            scaffoldBackgroundColor: Colors.white,
+            cardColor: Colors.white,
+            dividerColor: Colors.grey.shade200,
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Colors.white,
+              foregroundColor: Color(0xff1E293B),
+              elevation: 0,
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade200),
+              ),
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
           ),
-          home: const SplashScreen(),
+
+          // ─── DARK THEME ───
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xffDC2626),
+              brightness: Brightness.dark,
+            ),
+            scaffoldBackgroundColor: const Color(0xff121212),
+            cardColor: const Color(0xff1E1E1E),
+            dividerColor: Colors.grey.shade800,
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color(0xff1E1E1E),
+              foregroundColor: Colors.white,
+              elevation: 0,
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: const Color(0xff2A2A2A),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade700),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade700),
+              ),
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            dialogTheme: const DialogThemeData(
+              backgroundColor: Color(0xff1E1E1E),
+            ),
+            bottomSheetTheme: const BottomSheetThemeData(
+              backgroundColor: Color(0xff1E1E1E),
+            ),
+          ),
+
+          home: SplashScreen(),
         );
       },
     );

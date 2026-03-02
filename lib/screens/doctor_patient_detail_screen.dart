@@ -9,7 +9,7 @@ class DoctorPatientDetailScreen extends StatefulWidget {
   final String patientId;
   final String doctorId;
   final Map<String, dynamic>? qrData;
-  const DoctorPatientDetailScreen({super.key, required this.patientId, required this.doctorId, this.qrData});
+  DoctorPatientDetailScreen({super.key, required this.patientId, required this.doctorId, this.qrData});
 
   @override
   State<DoctorPatientDetailScreen> createState() => _DoctorPatientDetailScreenState();
@@ -95,7 +95,6 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
     final pastDiseases = List<String>.from(_patient['pastDiseases'] ?? []);
     final currentDiseases = List<String>.from(_patient['currentDiseases'] ?? []);
     final chronicDiseases = List<String>.from(_patient['chronicDiseases'] ?? []);
-    final diseases = List<String>.from(_patient['diseases'] ?? []);
     final surgeries = List<String>.from(_patient['surgeries'] ?? []);
     final treatments = List<String>.from(_patient['treatments'] ?? []);
     final currentMeds = List<String>.from(_patient['currentMedicines'] ?? []);
@@ -108,15 +107,15 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
     final subtitleStr = subtitleParts.join(' • ');
 
     return Scaffold(
-      backgroundColor: const Color(0xffF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white, elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xff1E293B)), onPressed: () => Navigator.pop(context)),
-        title: Text(widget.patientId, style: const TextStyle(color: Color(0xff1E293B), fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1)),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, elevation: 0,
+        leading: IconButton(icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).colorScheme.onSurface), onPressed: () => Navigator.pop(context)),
+        title: Text(widget.patientId, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1)),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.auto_awesome, color: Color(0xffDC2626)),
+            icon: Icon(Icons.auto_awesome, color: Color(0xffDC2626)),
             tooltip: 'AI Summary',
             onPressed: () {
               Navigator.push(context, MaterialPageRoute(
@@ -131,7 +130,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
             },
           ),
           IconButton(
-            icon: const Icon(Icons.note_add, color: Colors.blue),
+            icon: Icon(Icons.note_add, color: Colors.blue),
             onPressed: () async {
               await Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorNotesScreen(patientId: widget.patientId, doctorId: widget.doctorId)));
               _loadAll(); // Refresh after adding note
@@ -140,24 +139,24 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : Column(
               children: [
                 // Patient Header
                 Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: const BoxDecoration(color: Colors.white),
+                  padding: EdgeInsets.all(24),
+                  decoration: BoxDecoration(color: Theme.of(context).cardColor),
                   child: Row(
                     children: [
-                      Container(width: 64, height: 64, decoration: BoxDecoration(color: Colors.blue[50], shape: BoxShape.circle), child: const Icon(Icons.person, size: 32, color: Colors.blue)),
-                      const SizedBox(width: 16),
+                      Container(width: 64, height: 64, decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), shape: BoxShape.circle), child: Icon(Icons.person, size: 32, color: Colors.blue)),
+                      SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
-                            const SizedBox(height: 4),
-                            Text(subtitleStr, style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500)),
+                            Text(name, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
+                            SizedBox(height: 4),
+                            Text(subtitleStr, style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500)),
                           ],
                         ),
                       ),
@@ -168,28 +167,28 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
                 // Allergies alert
                 if (allergies.isNotEmpty)
                   Container(
-                    margin: const EdgeInsets.all(16),
+                    margin: EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xffFEF2F2),
-                      border: Border.all(color: const Color(0xffFECACA)),
+                      color: Colors.red.withValues(alpha: 0.1),
+                      border: Border.all(color: Color(0xffFECACA)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: ListTile(
-                      leading: const Icon(Icons.warning_amber_rounded, color: Color(0xffDC2626)),
-                      title: const Text('SEVERE ALLERGIES', style: TextStyle(color: Color(0xffDC2626), fontSize: 12, fontWeight: FontWeight.bold)),
-                      subtitle: Text(allergies.join(', '), style: const TextStyle(color: Color(0xff991B1B), fontWeight: FontWeight.w600)),
+                      leading: Icon(Icons.warning_amber_rounded, color: Color(0xffDC2626)),
+                      title: Text('SEVERE ALLERGIES', style: TextStyle(color: Color(0xffDC2626), fontSize: 12, fontWeight: FontWeight.bold)),
+                      subtitle: Text(allergies.join(', '), style: TextStyle(color: Color(0xffDC2626), fontWeight: FontWeight.w600)),
                       minTileHeight: 60,
                     ),
                   ),
 
                 // Tabs
                 Container(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   child: TabBar(
                     controller: _tabController,
-                    labelColor: const Color(0xffDC2626),
+                    labelColor: Color(0xffDC2626),
                     unselectedLabelColor: Colors.grey[500],
-                    indicatorColor: const Color(0xffDC2626),
+                    indicatorColor: Color(0xffDC2626),
                     tabs: const [Tab(text: 'HISTORY'), Tab(text: 'MEDICINES'), Tab(text: 'REPORTS')],
                   ),
                 ),
@@ -201,91 +200,86 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
                     children: [
                       // 1. History — timeline + notes
                       ListView(
-                        padding: const EdgeInsets.all(24),
+                        padding: EdgeInsets.all(24),
                         children: [
                           if (currentDiseases.isNotEmpty) ...[
-                            const Text('Current Diseases', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.orange)),
-                            const SizedBox(height: 8),
+                            Text('Current Diseases', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.orange)),
+                            SizedBox(height: 8),
                             ...currentDiseases.map((d) => _buildSimpleItem(d, Icons.coronavirus_outlined, Colors.orange)),
-                            const SizedBox(height: 16),
+                            SizedBox(height: 16),
                           ],
                           if (chronicDiseases.isNotEmpty) ...[
-                            const Text('Chronic Diseases', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.red)),
-                            const SizedBox(height: 8),
+                            Text('Chronic Diseases', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.red)),
+                            SizedBox(height: 8),
                             ...chronicDiseases.map((d) => _buildSimpleItem(d, Icons.favorite_border, Colors.red)),
-                            const SizedBox(height: 16),
+                            SizedBox(height: 16),
                           ],
-                          if (diseases.isNotEmpty) ...[
-                            const Text('Other Diseases', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.deepOrange)),
-                            const SizedBox(height: 8),
-                            ...diseases.map((d) => _buildSimpleItem(d, Icons.coronavirus_outlined, Colors.deepOrange)),
-                            const SizedBox(height: 16),
-                          ],
+
                           if (pastDiseases.isNotEmpty) ...[
-                            const Text('Past Diseases', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey)),
-                            const SizedBox(height: 8),
+                            Text('Past Diseases', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey)),
+                            SizedBox(height: 8),
                             ...pastDiseases.map((d) => _buildSimpleItem(d, Icons.history, Colors.grey)),
-                            const SizedBox(height: 16),
+                            SizedBox(height: 16),
                           ],
                           if (surgeries.isNotEmpty) ...[
-                            const Text('Past Surgeries', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.indigo)),
-                            const SizedBox(height: 8),
+                            Text('Past Surgeries', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.indigo)),
+                            SizedBox(height: 8),
                             ...surgeries.map((s) => _buildSimpleItem(s, Icons.content_cut_outlined, Colors.indigo)),
-                            const SizedBox(height: 16),
+                            SizedBox(height: 16),
                           ],
                           if (treatments.isNotEmpty) ...[
-                            const Text('Ongoing Treatments', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.teal)),
-                            const SizedBox(height: 8),
+                            Text('Ongoing Treatments', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.teal)),
+                            SizedBox(height: 8),
                             ...treatments.map((t) => _buildSimpleItem(t, Icons.healing_outlined, Colors.teal)),
-                            const SizedBox(height: 16),
+                            SizedBox(height: 16),
                           ],
                           if (_timeline.isNotEmpty) ...[
-                            const Text('Timeline Events', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.blue)),
-                            const SizedBox(height: 8),
+                            Text('Timeline Events', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.blue)),
+                            SizedBox(height: 8),
                             ..._timeline.map((e) {
                               final date = e['date'] != null ? DateFormat('MMM dd, yyyy').format((e['date'] as dynamic).toDate()) : '';
                               return _buildSimpleItem('${e['event']}${date.isNotEmpty ? ' • $date' : ''}', Icons.event_note, Colors.blue);
                             }),
                           ],
                           if (_notes.isNotEmpty) ...[
-                            const SizedBox(height: 16),
-                            const Text('Doctor Notes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.purple)),
-                            const SizedBox(height: 8),
+                            SizedBox(height: 16),
+                            Text('Doctor Notes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.purple)),
+                            SizedBox(height: 8),
                             ..._notes.map((n) {
                               final date = n['date'] != null ? DateFormat('MMM dd').format((n['date'] as dynamic).toDate()) : '';
                               return _buildSimpleItem('${n['note']} • $date', Icons.note, Colors.purple);
                             }),
                           ],
-                          if (_timeline.isEmpty && _notes.isEmpty && diseases.isEmpty && currentDiseases.isEmpty && chronicDiseases.isEmpty && pastDiseases.isEmpty && surgeries.isEmpty && treatments.isEmpty)
-                            Center(child: Padding(padding: const EdgeInsets.all(32), child: Text('No history yet.', style: TextStyle(color: Colors.grey[400])))),
+                          if (_timeline.isEmpty && _notes.isEmpty && currentDiseases.isEmpty && chronicDiseases.isEmpty && pastDiseases.isEmpty && surgeries.isEmpty && treatments.isEmpty)
+                            Center(child: Padding(padding: EdgeInsets.all(32), child: Text('No history yet.', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3))))),
                         ],
                       ),
 
                       // 2. Medicines
                       ListView(
-                        padding: const EdgeInsets.all(24),
+                        padding: EdgeInsets.all(24),
                         children: [
                           if (currentMeds.isNotEmpty) ...[
-                            const Text('Current Medicines', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.blue)),
-                            const SizedBox(height: 8),
+                            Text('Current Medicines', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.blue)),
+                            SizedBox(height: 8),
                             ...currentMeds.map((m) => _buildMedicineCard(m, 'Active', inactive: false)),
                           ],
                           if (oldMeds.isNotEmpty) ...[
-                            const SizedBox(height: 16),
-                            const Text('Old Medicines', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey)),
-                            const SizedBox(height: 8),
+                            SizedBox(height: 16),
+                            Text('Old Medicines', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey)),
+                            SizedBox(height: 8),
                             ...oldMeds.map((m) => _buildMedicineCard(m, 'Completed', inactive: true)),
                           ],
                           if (currentMeds.isEmpty && oldMeds.isEmpty)
-                            Center(child: Padding(padding: const EdgeInsets.all(32), child: Text('No medicines listed.', style: TextStyle(color: Colors.grey[400])))),
+                            Center(child: Padding(padding: EdgeInsets.all(32), child: Text('No medicines listed.', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3))))),
                         ],
                       ),
 
                       // 3. Reports
                       ListView(
-                        padding: const EdgeInsets.all(24),
+                        padding: EdgeInsets.all(24),
                         children: _reports.isEmpty
-                            ? [Center(child: Padding(padding: const EdgeInsets.all(32), child: Text('No reports uploaded.', style: TextStyle(color: Colors.grey[400]))))]
+                            ? [Center(child: Padding(padding: EdgeInsets.all(32), child: Text('No reports uploaded.', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)))))]
                             : _reports.map((r) {
                                 final fileName = r['fileName'] ?? 'Unknown';
                                 final fileUrl = r['fileUrl'] ?? '';
@@ -303,14 +297,14 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
 
   Widget _buildSimpleItem(String text, IconData icon, Color color) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.grey[200]!)),
+      margin: EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(10), border: Border.all(color: Theme.of(context).dividerColor, )),
       child: Row(
         children: [
           Icon(icon, color: color, size: 20),
-          const SizedBox(width: 12),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 14, color: Color(0xff1E293B)))),
+          SizedBox(width: 12),
+          Expanded(child: Text(text, style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface))),
         ],
       ),
     );
@@ -318,20 +312,20 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
 
   Widget _buildMedicineCard(String name, String status, {bool inactive = false}) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: inactive ? Colors.grey[50] : Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[200]!)),
+      margin: EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(color: inactive ? Colors.grey.withValues(alpha: 0.1) : Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: Theme.of(context).dividerColor, )),
       child: Row(
         children: [
           Icon(Icons.medication, color: inactive ? Colors.grey : Colors.blue),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: inactive ? Colors.grey : const Color(0xff1E293B))),
-                const SizedBox(height: 4),
-                Text(status, style: TextStyle(fontSize: 14, color: Colors.grey[500])),
+                Text(name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: inactive ? Colors.grey : Theme.of(context).colorScheme.onSurface)),
+                SizedBox(height: 4),
+                Text(status, style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
               ],
             ),
           ),
@@ -342,20 +336,20 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
 
   Widget _buildReportCard(String title, String fileUrl) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[200]!)),
+      margin: EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: Theme.of(context).dividerColor, )),
       child: Row(
         children: [
-          Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.picture_as_pdf, color: Colors.red)),
-          const SizedBox(width: 16),
-          Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xff1E293B)))),
+          Container(padding: EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Icon(Icons.picture_as_pdf, color: Colors.red)),
+          SizedBox(width: 16),
+          Expanded(child: Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Theme.of(context).colorScheme.onSurface))),
           IconButton(
-            icon: Icon(Icons.download, color: Colors.grey[400]),
+            icon: Icon(Icons.download, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
             onPressed: fileUrl.isNotEmpty ? () {
               Clipboard.setData(ClipboardData(text: fileUrl));
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Download URL copied to clipboard!')),
+                SnackBar(content: Text('Download URL copied to clipboard!')),
               );
             } : null,
           ),
