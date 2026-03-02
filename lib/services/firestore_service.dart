@@ -328,7 +328,6 @@ class FirestoreService {
     if (query.docs.isEmpty) throw Exception('Patient not found');
     
     final patientDoc = query.docs.first;
-    final uid = patientDoc.id;
 
     // 2. Extract just the names for the profile array
     final List<String> newMedicineNames = medicines.map((m) => m['name'].toString()).toList();
