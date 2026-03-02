@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FirestoreService {
@@ -49,18 +50,40 @@ class FirestoreService {
   }
 
   /// Get all reports for a patient, ordered by date (newest first)
+  /// Falls back to unordered query if composite index is missing.
   static Future<List<Map<String, dynamic>>> getReports(
       String patientId) async {
-    final query = await _db
-        .collection('reports')
-        .where('patientId', isEqualTo: patientId)
-        .orderBy('date', descending: true)
-        .get();
-    return query.docs.map((doc) {
-      final data = doc.data();
-      data['id'] = doc.id;
-      return data;
-    }).toList();
+    try {
+      final query = await _db
+          .collection('reports')
+          .where('patientId', isEqualTo: patientId)
+          .orderBy('date', descending: true)
+          .get();
+      return query.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+    } catch (e) {
+      debugPrint('[FirestoreService] getReports ordered query failed (missing index?): $e');
+      // Fallback: fetch without orderBy and sort client-side
+      final query = await _db
+          .collection('reports')
+          .where('patientId', isEqualTo: patientId)
+          .get();
+      final list = query.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+      list.sort((a, b) {
+        final aDate = a['date'];
+        final bDate = b['date'];
+        if (aDate == null || bDate == null) return 0;
+        return (bDate as dynamic).toDate().compareTo((aDate as dynamic).toDate());
+      });
+      return list;
+    }
   }
 
   // ─── NOTES ───
@@ -80,17 +103,38 @@ class FirestoreService {
   }
 
   /// Get all notes for a patient, ordered by date (newest first)
+  /// Falls back to unordered query if composite index is missing.
   static Future<List<Map<String, dynamic>>> getNotes(String patientId) async {
-    final query = await _db
-        .collection('notes')
-        .where('patientId', isEqualTo: patientId)
-        .orderBy('date', descending: true)
-        .get();
-    return query.docs.map((doc) {
-      final data = doc.data();
-      data['id'] = doc.id;
-      return data;
-    }).toList();
+    try {
+      final query = await _db
+          .collection('notes')
+          .where('patientId', isEqualTo: patientId)
+          .orderBy('date', descending: true)
+          .get();
+      return query.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+    } catch (e) {
+      debugPrint('[FirestoreService] getNotes ordered query failed (missing index?): $e');
+      final query = await _db
+          .collection('notes')
+          .where('patientId', isEqualTo: patientId)
+          .get();
+      final list = query.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+      list.sort((a, b) {
+        final aDate = a['date'];
+        final bDate = b['date'];
+        if (aDate == null || bDate == null) return 0;
+        return (bDate as dynamic).toDate().compareTo((aDate as dynamic).toDate());
+      });
+      return list;
+    }
   }
 
   // ─── TIMELINE ───
@@ -108,18 +152,40 @@ class FirestoreService {
   }
 
   /// Get timeline events for a patient, ordered by date (newest first)
+  /// Falls back to unordered query if composite index is missing.
   static Future<List<Map<String, dynamic>>> getTimeline(
       String patientId) async {
-    final query = await _db
-        .collection('timeline')
-        .where('patientId', isEqualTo: patientId)
-        .orderBy('date', descending: true)
-        .get();
-    return query.docs.map((doc) {
-      final data = doc.data();
-      data['id'] = doc.id;
-      return data;
-    }).toList();
+    try {
+      final query = await _db
+          .collection('timeline')
+          .where('patientId', isEqualTo: patientId)
+          .orderBy('date', descending: true)
+          .get();
+      return query.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+    } catch (e) {
+      debugPrint('[FirestoreService] getTimeline ordered query failed (missing index?): $e');
+      // Fallback: fetch without orderBy and sort client-side
+      final query = await _db
+          .collection('timeline')
+          .where('patientId', isEqualTo: patientId)
+          .get();
+      final list = query.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+      list.sort((a, b) {
+        final aDate = a['date'];
+        final bDate = b['date'];
+        if (aDate == null || bDate == null) return 0;
+        return (bDate as dynamic).toDate().compareTo((aDate as dynamic).toDate());
+      });
+      return list;
+    }
   }
 
   // ─── REMINDERS / MEDICINES ───
