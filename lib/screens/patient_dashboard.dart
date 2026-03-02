@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:intl/intl.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
@@ -15,6 +16,7 @@ import 'notification_settings_screen.dart';
 import 'active_medicines_screen.dart';
 import 'patient_profile_screen.dart';
 import 'patient_settings_screen.dart';
+import 'health_sync_screen.dart';
 
 class PatientDashboard extends StatefulWidget {
   final String patientId;
@@ -216,6 +218,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
                     _buildGridButton(context, icon: Icons.calendar_today, title: 'Appointments', subtitle: 'Book or view your schedule.', destination: PatientAppointmentsScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.local_hospital, title: 'Emergency Info', subtitle: 'Critical medical data for responders.', destination: EmergencyModeScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.location_on, title: 'Nearby Hospitals', subtitle: 'Find hospitals & clinics near you.', destination: const NearbyHospitalsScreen()),
+                    _buildGridButton(context, icon: Icons.monitor_heart, title: 'Health Sync', subtitle: 'Sync smartwatch data from Health Connect.', destination: HealthSyncScreen(patientId: widget.patientId)),
                   ],
                 ),
 
@@ -267,6 +270,33 @@ class _PatientDashboardState extends State<PatientDashboard> {
                       child: _buildActivityCard(icon: icon, iconColor: iconColor, iconBgColor: iconBg, title: eventText, subtitle: dateStr),
                     );
                   })),
+
+                const SizedBox(height: 24),
+
+                // Lottie animation at bottom
+                Center(
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.22,
+                    child: Lottie.network(
+                      'https://assets2.lottiefiles.com/packages/lf20_5njp3vgg.json',
+                      fit: BoxFit.contain,
+                      repeat: true,
+                      animate: true,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: const Color(0xffDC2626).withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.health_and_safety, size: 48, color: Color(0xffDC2626)),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
 
                 const SizedBox(height: 100),
               ],
