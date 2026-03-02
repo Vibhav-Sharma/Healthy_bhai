@@ -6,7 +6,8 @@ import 'doctor_notes_screen.dart';
 class DoctorPatientDetailScreen extends StatefulWidget {
   final String patientId;
   final String doctorId;
-  const DoctorPatientDetailScreen({super.key, required this.patientId, required this.doctorId});
+  final Map<String, dynamic>? qrData;
+  const DoctorPatientDetailScreen({super.key, required this.patientId, required this.doctorId, this.qrData});
 
   @override
   State<DoctorPatientDetailScreen> createState() => _DoctorPatientDetailScreenState();
@@ -29,23 +30,49 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> w
   }
 
   Future<void> _loadAll() async {
-    try {
-      final patient = await FirestoreService.getPatientByPatientId(widget.patientId);
-      final reports = await FirestoreService.getReports(widget.patientId);
-      final notes = await FirestoreService.getNotes(widget.patientId);
-      final timeline = await FirestoreService.getTimeline(widget.patientId);
+    // Fetch each piece of data independently so one failure doesn't break everything
+    Map<String, dynamic>? patient;
+    List<Map<String, dynamic>> reports = [];
+    List<Map<String, dynamic>> notes = [];
+    List<Map<String, dynamic>> timeline = [];
 
-      if (mounted) {
-        setState(() {
-          _patient = patient ?? {};
-          _reports = reports;
-          _notes = notes;
-          _timeline = timeline;
-          _isLoading = false;
-        });
-      }
+    try {
+      patient = await FirestoreService.getPatientByPatientId(widget.patientId);
     } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
+      debugPrint('[Detail] Error fetching patient: $e');
+    }
+
+    try {
+      reports = await FirestoreService.getReports(widget.patientId);
+    } catch (e) {
+      debugPrint('[Detail] Error fetching reports: $e');
+    }
+
+    try {
+      notes = await FirestoreService.getNotes(widget.patientId);
+    } catch (e) {
+      debugPrint('[Detail] Error fetching notes: $e');
+    }
+
+    try {
+      timeline = await FirestoreService.getTimeline(widget.patientId);
+    } catch (e) {
+      debugPrint('[Detail] Error fetching timeline: $e');
+    }
+
+    // Merge: start with QR data (if any), then overlay Firestore data
+    final merged = <String, dynamic>{};
+    if (widget.qrData != null) merged.addAll(widget.qrData!);
+    if (patient != null) merged.addAll(patient);
+
+    if (mounted) {
+      setState(() {
+        _patient = merged;
+        _reports = reports;
+        _notes = notes;
+        _timeline = timeline;
+        _isLoading = false;
+      });
     }
   }
 
