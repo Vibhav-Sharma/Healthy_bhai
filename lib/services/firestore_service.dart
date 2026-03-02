@@ -1,29 +1,46 @@
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'encryption_service.dart';
 
 class FirestoreService {
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  // ─── FIELDS TO ENCRYPT PER COLLECTION ───
+  static const List<String> _patientEncryptedFields = [
+    'name', 'phone', 'emergencyContact',
+    'allergies', 'pastDiseases', 'currentDiseases', 'chronicDiseases', 
+    'currentMedicines', 'oldMedicines', 'surgeries', 'treatments',
+  ];
+
+  static const List<String> _doctorEncryptedFields = [
+    'name', 'phone', 'email',
+  ];
+
+  static const List<String> _reportEncryptedFields = [
+    'fileUrl', 'fileName',
+  ];
+
   // ─── PATIENTS ───
 
-  /// Get all registered patients
+  /// Get all registered patients (returns decrypted data)
   static Future<List<Map<String, dynamic>>> getAllPatients() async {
     final query = await _db.collection('patients').get();
     return query.docs.map((doc) {
-      final data = doc.data();
+      var data = doc.data();
       data['uid'] = doc.id;
+      data = EncryptionService.decryptFields(data, _patientEncryptedFields);
       return data;
     }).toList();
   }
 
-  /// Get patient document by Firebase Auth UID
+  /// Get patient document by Firebase Auth UID (returns decrypted data)
   static Future<Map<String, dynamic>?> getPatientByUid(String uid) async {
     final doc = await _db.collection('patients').doc(uid).get();
     if (!doc.exists) return null;
-    return doc.data();
+    return EncryptionService.decryptFields(doc.data()!, _patientEncryptedFields);
   }
 
-  /// Get patient document by PatientID (e.g., "HB-8429-XT")
+  /// Get patient document by PatientID (returns decrypted data)
   static Future<Map<String, dynamic>?> getPatientByPatientId(
       String patientId) async {
     final query = await _db
@@ -32,18 +49,19 @@ class FirestoreService {
         .limit(1)
         .get();
     if (query.docs.isEmpty) return null;
-    return query.docs.first.data();
+    return EncryptionService.decryptFields(query.docs.first.data(), _patientEncryptedFields);
   }
 
-  /// Update patient profile fields
+  /// Update patient profile fields (encrypts sensitive fields before saving)
   static Future<void> updatePatientProfile(
       String uid, Map<String, dynamic> data) async {
-    await _db.collection('patients').doc(uid).update(data);
+    final encryptedData = EncryptionService.encryptFields(data, _patientEncryptedFields);
+    await _db.collection('patients').doc(uid).update(encryptedData);
   }
 
   // ─── REPORTS ───
 
-  /// Save report metadata after file upload
+  /// Save report metadata after file upload (encrypts sensitive fields)
   static Future<void> saveReport({
     required String patientId,
     required String fileUrl,
@@ -51,9 +69,9 @@ class FirestoreService {
     required String type,
   }) async {
     await _db.collection('reports').add({
-      'patientId': patientId,
-      'fileUrl': fileUrl,
-      'fileName': fileName,
+      'patientId': patientId, // Keep unencrypted for querying
+      'fileUrl': EncryptionService.encryptData(fileUrl),
+      'fileName': EncryptionService.encryptData(fileName),
       'date': FieldValue.serverTimestamp(),
       'type': type,
     });
@@ -70,8 +88,9 @@ class FirestoreService {
           .orderBy('date', descending: true)
           .get();
       return query.docs.map((doc) {
-        final data = doc.data();
+        var data = doc.data();
         data['id'] = doc.id;
+        data = EncryptionService.decryptFields(data, _reportEncryptedFields);
         return data;
       }).toList();
     } catch (e) {
@@ -82,8 +101,9 @@ class FirestoreService {
           .where('patientId', isEqualTo: patientId)
           .get();
       final list = query.docs.map((doc) {
-        final data = doc.data();
+        var data = doc.data();
         data['id'] = doc.id;
+        data = EncryptionService.decryptFields(data, _reportEncryptedFields);
         return data;
       }).toList();
       list.sort((a, b) {
@@ -248,12 +268,13 @@ class FirestoreService {
 
   // ─── DOCTORS LIST ───
 
-  /// Get all registered doctors
+  /// Get all registered doctors (returns decrypted data)
   static Future<List<Map<String, dynamic>>> getAllDoctors() async {
     final query = await _db.collection('doctors').get();
     return query.docs.map((doc) {
-      final data = doc.data();
+      var data = doc.data();
       data['uid'] = doc.id;
+      data = EncryptionService.decryptFields(data, _doctorEncryptedFields);
       return data;
     }).toList();
   }
@@ -267,6 +288,7 @@ class FirestoreService {
     required String doctorName,
     required DateTime appointmentDate,
     required String reason,
+    String patientName = '',
     String specialty = '',
     String hospital = '',
     String type = 'Offline',
@@ -274,6 +296,7 @@ class FirestoreService {
   }) async {
     await _db.collection('appointments').add({
       'patientId': patientId,
+      'patientName': patientName,
       'doctorId': doctorId,
       'doctorName': doctorName,
       'specialty': specialty,
@@ -331,13 +354,14 @@ class FirestoreService {
   }
 
   /// Get a patient's display name from their patientId field
+  /// Handles decryption since patient names are stored encrypted.
   static Future<String> getPatientName(String patientId) async {
     try {
       // First try: patientId might be the document ID (Firebase Auth UID)
       final doc = await _db.collection('patients').doc(patientId).get();
       if (doc.exists) {
-        final data = doc.data();
-        return data?['name']?.toString() ?? patientId;
+        final data = EncryptionService.decryptFields(doc.data()!, _patientEncryptedFields);
+        return data['name']?.toString() ?? patientId;
       }
       // Second try: patientId might be the custom ID field (e.g. "HB-8429-XT")
       final query = await _db
@@ -346,7 +370,8 @@ class FirestoreService {
           .limit(1)
           .get();
       if (query.docs.isNotEmpty) {
-        return query.docs.first.data()['name']?.toString() ?? patientId;
+        final data = EncryptionService.decryptFields(query.docs.first.data(), _patientEncryptedFields);
+        return data['name']?.toString() ?? patientId;
       }
       return patientId; // Fallback to raw ID
     } catch (_) {
@@ -375,18 +400,30 @@ class FirestoreService {
     // 3. Batch write both profile update and reminders collection
     final batch = _db.batch();
 
-    // Update Profile Array
+    // Update Profile Array (encrypt the names)
+    final encryptedNames = newMedicineNames.map((n) => EncryptionService.encryptData(n)).toList();
     batch.update(patientDoc.reference, {
-      'currentMedicines': FieldValue.arrayUnion(newMedicineNames),
+      'currentMedicines': FieldValue.arrayUnion(encryptedNames),
     });
 
-    // Add reminders
+    // Add reminders with full prescription data + expiry
+    final now = DateTime.now();
     for (var med in medicines) {
+      final durationStr = (med['duration'] as String?) ?? '';
+      int durationDays = _parseDurationToDays(durationStr);
+      final expiresAt = now.add(Duration(days: durationDays));
+
       final reminderRef = patientDoc.reference.collection('reminders').doc();
       batch.set(reminderRef, {
         'name': med['name'],
         'dosage': med['dosage'],
-        'timings': med['timings'],
+        'frequency': med['frequency'] ?? '',
+        'timingContext': med['timing_context'] ?? '',
+        'duration': durationStr,
+        'timings': med['timings'] ?? [],
+        'startDate': Timestamp.fromDate(now),
+        'expiresAt': Timestamp.fromDate(expiresAt),
+        'active': true,
         'createdAt': FieldValue.serverTimestamp(),
       });
     }
@@ -400,6 +437,255 @@ class FirestoreService {
     });
 
     await batch.commit();
+  }
+
+  /// Get all medicines (reminders) for a patient, sorted by creation date.
+  /// Also auto-deactivates expired ones.
+  static Future<List<Map<String, dynamic>>> getMedicines(String patientId) async {
+    final query = await _db.collection('patients').where('patientId', isEqualTo: patientId).limit(1).get();
+    if (query.docs.isEmpty) return [];
+
+    final patientDoc = query.docs.first;
+    final snapshot = await patientDoc.reference
+        .collection('reminders')
+        .orderBy('createdAt', descending: true)
+        .get();
+
+    final now = DateTime.now();
+    final List<Map<String, dynamic>> result = [];
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      data['id'] = doc.id;
+
+      // Auto-deactivate expired medicines
+      final expiresAt = (data['expiresAt'] as Timestamp?)?.toDate();
+      if (expiresAt != null && expiresAt.isBefore(now) && data['active'] == true) {
+        await doc.reference.update({'active': false});
+        data['active'] = false;
+      }
+
+      result.add(data);
+    }
+
+    return result;
+  }
+
+  /// Deactivate all expired medicines for a patient.
+  static Future<int> deactivateExpiredMedicines(String patientId) async {
+    final query = await _db.collection('patients').where('patientId', isEqualTo: patientId).limit(1).get();
+    if (query.docs.isEmpty) return 0;
+
+    final patientDoc = query.docs.first;
+    final snapshot = await patientDoc.reference
+        .collection('reminders')
+        .where('active', isEqualTo: true)
+        .get();
+
+    final now = DateTime.now();
+    int deactivated = 0;
+
+    for (final doc in snapshot.docs) {
+      final expiresAt = (doc.data()['expiresAt'] as Timestamp?)?.toDate();
+      if (expiresAt != null && expiresAt.isBefore(now)) {
+        await doc.reference.update({'active': false});
+        deactivated++;
+      }
+    }
+
+    return deactivated;
+  }
+
+  /// Parse duration string into days (helper).
+  static int _parseDurationToDays(String duration) {
+    if (duration.isEmpty) return 7; // Default 7 days
+    final lower = duration.toLowerCase().trim();
+    final numMatch = RegExp(r'(\d+)').firstMatch(lower);
+    final num = numMatch != null ? int.tryParse(numMatch.group(1)!) ?? 1 : 1;
+    if (lower.contains('day')) return num;
+    if (lower.contains('week')) return num * 7;
+    if (lower.contains('month')) return num * 30;
+    if (lower.contains('year')) return num * 365;
+    return 7;
+  }
+
+  // ─── DOCTOR PROFILE ───
+
+  /// Get a doctor's full profile (decrypted) by their custom doctorId (DR-XXXX-XX)
+  static Future<Map<String, dynamic>?> getDoctorProfile(String doctorId) async {
+    // Try custom doctorId field first
+    final query = await _db
+        .collection('doctors')
+        .where('doctorId', isEqualTo: doctorId)
+        .limit(1)
+        .get();
+    if (query.docs.isNotEmpty) {
+      var data = query.docs.first.data();
+      data['uid'] = query.docs.first.id;
+      return EncryptionService.decryptFields(data, _doctorEncryptedFields);
+    }
+    // Fallback: doctorId might be the Firebase UID
+    final doc = await _db.collection('doctors').doc(doctorId).get();
+    if (doc.exists) {
+      var data = doc.data()!;
+      data['uid'] = doc.id;
+      return EncryptionService.decryptFields(data, _doctorEncryptedFields);
+    }
+    return null;
+  }
+
+  /// Update a doctor's profile fields (encrypts sensitive fields before saving)
+  static Future<void> updateDoctorProfile(String doctorId, Map<String, dynamic> updates) async {
+    // Find the doctor document
+    final query = await _db
+        .collection('doctors')
+        .where('doctorId', isEqualTo: doctorId)
+        .limit(1)
+        .get();
+    if (query.docs.isEmpty) return;
+
+    // Encrypt sensitive fields
+    final encrypted = EncryptionService.encryptFields(updates, _doctorEncryptedFields);
+    await query.docs.first.reference.update(encrypted);
+  }
+
+  // ─── APPOINTMENT UTILITIES ───
+
+  /// Auto-expire past appointments: changes 'Upcoming' → 'Completed' when date has passed
+  static Future<int> expirePastAppointments(String userId, {bool isDoctor = false}) async {
+    final field = isDoctor ? 'doctorId' : 'patientId';
+    final query = await _db
+        .collection('appointments')
+        .where(field, isEqualTo: userId)
+        .where('status', isEqualTo: 'Upcoming')
+        .get();
+
+    final now = DateTime.now();
+    int expired = 0;
+
+    for (final doc in query.docs) {
+      final data = doc.data();
+      final dateData = data['appointmentDate'];
+      DateTime appointmentDate;
+      if (dateData is Timestamp) {
+        appointmentDate = dateData.toDate();
+      } else if (dateData is String) {
+        appointmentDate = DateTime.tryParse(dateData) ?? now;
+      } else {
+        continue;
+      }
+
+      if (appointmentDate.isBefore(now)) {
+        await doc.reference.update({'status': 'Completed'});
+        expired++;
+      }
+    }
+    return expired;
+  }
+
+  /// Check if a doctor already has an appointment within ±30 min of the given time
+  static Future<bool> hasTimeConflict({
+    required String doctorId,
+    required DateTime proposedTime,
+    String? excludeAppointmentId,
+  }) async {
+    final query = await _db
+        .collection('appointments')
+        .where('doctorId', isEqualTo: doctorId)
+        .get();
+
+    final windowStart = proposedTime.subtract(const Duration(minutes: 30));
+    final windowEnd = proposedTime.add(const Duration(minutes: 30));
+
+    for (final doc in query.docs) {
+      if (excludeAppointmentId != null && doc.id == excludeAppointmentId) continue;
+
+      final data = doc.data();
+      final status = data['status']?.toString() ?? '';
+      if (status == 'Cancelled' || status == 'Rejected' || status == 'Completed') continue;
+
+      final dateData = data['appointmentDate'];
+      DateTime existingDate;
+      if (dateData is Timestamp) {
+        existingDate = dateData.toDate();
+      } else if (dateData is String) {
+        existingDate = DateTime.tryParse(dateData) ?? DateTime(2000);
+      } else {
+        continue;
+      }
+
+      if (existingDate.isAfter(windowStart) && existingDate.isBefore(windowEnd)) {
+        return true; // Conflict found
+      }
+    }
+    return false;
+  }
+
+  /// Get completed appointments for a patient (limited, sorted newest first)
+  static Future<List<Map<String, dynamic>>> getCompletedAppointments(String patientId, {int limit = 3}) async {
+    final query = await _db
+        .collection('appointments')
+        .where('patientId', isEqualTo: patientId)
+        .where('status', isEqualTo: 'Completed')
+        .get();
+
+    final docs = query.docs.map((doc) {
+      final data = doc.data();
+      data['id'] = doc.id;
+      return data;
+    }).toList();
+
+    // Sort newest first
+    docs.sort((a, b) {
+      final dA = a['appointmentDate'] is Timestamp ? (a['appointmentDate'] as Timestamp).toDate() : DateTime(2000);
+      final dB = b['appointmentDate'] is Timestamp ? (b['appointmentDate'] as Timestamp).toDate() : DateTime(2000);
+      return dB.compareTo(dA);
+    });
+
+    return docs.take(limit).toList();
+  }
+
+  /// Upload a prescription URL for an appointment
+  static Future<void> uploadPrescription(String appointmentId, String prescriptionUrl) async {
+    await _db.collection('appointments').doc(appointmentId).update({
+      'prescriptionUrl': prescriptionUrl,
+      'prescriptionUploadedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Get the next upcoming appointment for a doctor
+  static Future<Map<String, dynamic>?> getNextAppointment(String doctorId) async {
+    final query = await _db
+        .collection('appointments')
+        .where('doctorId', isEqualTo: doctorId)
+        .where('status', isEqualTo: 'Upcoming')
+        .get();
+
+    if (query.docs.isEmpty) return null;
+
+    final now = DateTime.now();
+    Map<String, dynamic>? nearest;
+    DateTime? nearestDate;
+
+    for (final doc in query.docs) {
+      final data = doc.data();
+      data['id'] = doc.id;
+      final dateData = data['appointmentDate'];
+      DateTime appointmentDate;
+      if (dateData is Timestamp) {
+        appointmentDate = dateData.toDate();
+      } else {
+        continue;
+      }
+
+      if (appointmentDate.isAfter(now)) {
+        if (nearestDate == null || appointmentDate.isBefore(nearestDate)) {
+          nearestDate = appointmentDate;
+          nearest = data;
+        }
+      }
+    }
+    return nearest;
   }
 }
 

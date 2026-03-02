@@ -6,7 +6,7 @@ import '../services/firestore_service.dart';
 class AiAssistantScreen extends StatefulWidget {
   final String? patientId;
 
-  const AiAssistantScreen({super.key, this.patientId});
+  AiAssistantScreen({super.key, this.patientId});
 
   @override
   State<AiAssistantScreen> createState() => _AiAssistantScreenState();
@@ -90,19 +90,19 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Emergency Assistant'),
+        title: Text('AI Emergency Assistant'),
         backgroundColor: Colors.redAccent,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header Card
             Card(
               color: Colors.red.shade50,
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.all(12.0),
                 child: Row(
                   children: [
@@ -118,64 +118,64 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Patient Info Section
             Row(
               children: [
-                const Text('Patient Information', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text('Patient Information', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 if (_isLoadingPatient) ...[
-                  const SizedBox(width: 8),
-                  const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
-                  const SizedBox(width: 4),
-                  Text('Loading...', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                  SizedBox(width: 8),
+                  SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                  SizedBox(width: 4),
+                  Text('Loading...', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
                 ] else if (widget.patientId != null) ...[
-                  const SizedBox(width: 8),
-                  const Icon(Icons.check_circle, color: Colors.green, size: 16),
-                  const SizedBox(width: 4),
+                  SizedBox(width: 8),
+                  Icon(Icons.check_circle, color: Colors.green, size: 16),
+                  SizedBox(width: 4),
                   Text('Auto-filled', style: TextStyle(fontSize: 12, color: Colors.green[700])),
                 ],
               ],
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             _buildTextField(_bloodGroupController, 'Blood Group', 'e.g., O+'),
             _buildTextField(_diseasesController, 'Known Diseases', 'e.g., Diabetes'),
             _buildTextField(_allergiesController, 'Allergies', 'e.g., Penicillin'),
             _buildTextField(_medicinesController, 'Current Medicines', 'e.g., Metformin'),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Symptoms
-            const Text('Describe Your Symptoms *', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
+            Text('Describe Your Symptoms *', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
             TextField(
               controller: _symptomsController,
               maxLines: 3,
               decoration: InputDecoration(
                 hintText: 'e.g., Fever and headache since 2 days',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.redAccent, width: 2)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.redAccent, width: 2)),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Get Advice Button
             SizedBox(
               width: double.infinity, height: 50,
               child: ElevatedButton.icon(
                 onPressed: _isLoading ? null : _getAdvice,
-                icon: const Icon(Icons.health_and_safety),
-                label: const Text('Get Advice', style: TextStyle(fontSize: 16)),
+                icon: Icon(Icons.health_and_safety),
+                label: Text('Get Advice', style: TextStyle(fontSize: 16)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.redAccent, foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
 
             // Loading
             if (_isLoading)
-              const Center(child: Column(children: [CircularProgressIndicator(color: Colors.redAccent), SizedBox(height: 10), Text('Analyzing symptoms...')])),
+              Center(child: Column(children: [CircularProgressIndicator(color: Colors.redAccent), SizedBox(height: 10), Text('Analyzing symptoms...')])),
 
             // Response
             if (_aiResponse.isNotEmpty && !_isLoading)
@@ -186,25 +186,25 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                   side: BorderSide(color: _hasError ? Colors.red : Colors.green, width: 1),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(children: [
                         Icon(_hasError ? Icons.error_outline : Icons.check_circle_outline, color: _hasError ? Colors.red : Colors.green),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Text(_hasError ? 'Error' : 'AI Advice', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _hasError ? Colors.red : Colors.green)),
                       ]),
-                      const Divider(),
+                      Divider(),
                       MarkdownBody(
                         data: _aiResponse,
                         selectable: true,
                         styleSheet: MarkdownStyleSheet(
-                          p: const TextStyle(fontSize: 14, height: 1.5),
-                          h1: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                          h2: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          h3: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          listBullet: const TextStyle(fontSize: 14),
+                          p: TextStyle(fontSize: 14, height: 1.5),
+                          h1: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          h2: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          h3: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          listBullet: TextStyle(fontSize: 14),
                         ),
                       ),
                     ],
@@ -219,13 +219,13 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
 
   Widget _buildTextField(TextEditingController controller, String label, String hint) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: EdgeInsets.only(bottom: 10),
       child: TextField(
         controller: controller,
         decoration: InputDecoration(
           labelText: label, hintText: hint,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         ),
       ),
     );

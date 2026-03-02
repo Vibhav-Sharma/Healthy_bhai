@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'home_selection_screen.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -15,9 +15,9 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     // Simulate initial loading and auto-navigate
-    Timer(const Duration(seconds: 2), () {
+    Timer(Duration(seconds: 2), () {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeSelectionScreen())
+        MaterialPageRoute(builder: (_) => HomeSelectionScreen())
       );
     });
   }
@@ -25,39 +25,10 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Stack(
           children: [
-            // Top Bar Icons
-            Positioned(
-              top: 16,
-              left: 32,
-              right: 32,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    '9:41',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Icon(Icons.signal_cellular_4_bar, size: 18, color: Colors.black),
-                      const SizedBox(width: 4),
-                      Icon(Icons.wifi, size: 18, color: Colors.black),
-                      const SizedBox(width: 4),
-                      Icon(Icons.battery_full, size: 22, color: Colors.black),
-                    ],
-                  )
-                ],
-              ),
-            ),
-            
             // Center Logo & Title
             Center(
               child: Column(
@@ -71,7 +42,7 @@ class _SplashScreenState extends State<SplashScreen> {
                         height: 192,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.red[50],
+                          color: Colors.red.withValues(alpha: 0.1),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.red.withOpacity(0.1),
@@ -82,19 +53,19 @@ class _SplashScreenState extends State<SplashScreen> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xffD32F2F).withOpacity(0.15),
+                              color: Color(0xffD32F2F).withOpacity(0.15),
                               blurRadius: 40,
-                              offset: const Offset(0, 10),
+                              offset: Offset(0, 10),
                             )
                           ],
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.local_hospital,
                           size: 80,
                           color: Color(0xffD32F2F),
@@ -102,8 +73,8 @@ class _SplashScreenState extends State<SplashScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 32),
-                  const Text(
+                  SizedBox(height: 32),
+                  Text(
                     'Healthy Bhai',
                     style: TextStyle(
                       color: Color(0xffB71C1C),
@@ -112,11 +83,11 @@ class _SplashScreenState extends State<SplashScreen> {
                       fontFamily: 'serif',
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Text(
                     'MEDICAL RECORDS MANAGER',
                     style: TextStyle(
-                      color: Colors.grey[500],
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 2,
@@ -135,7 +106,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 height: 320,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.red[50]?.withOpacity(0.5),
+                  color: Colors.red.withValues(alpha: 0.1),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.red.withOpacity(0.05),
@@ -154,7 +125,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 height: 256,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                   color: Colors.red[50]?.withOpacity(0.5),
+                   color: Colors.red.withValues(alpha: 0.1),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.red.withOpacity(0.05),
@@ -174,21 +145,21 @@ class _SplashScreenState extends State<SplashScreen> {
               child: Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.red[50],
+                      color: Colors.red.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(32),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                         const Icon(
+                         Icon(
                           Icons.verified_user,
                           color: Color(0xffD32F2F),
                           size: 14,
                         ),
-                        const SizedBox(width: 8),
-                        const Text(
+                        SizedBox(width: 8),
+                        Text(
                           'SECURE & CONFIDENTIAL',
                           style: TextStyle(
                             color: Color(0xffB71C1C),
@@ -203,23 +174,6 @@ class _SplashScreenState extends State<SplashScreen> {
                 ],
               ),
             ),
-            
-            // Home indicator
-            Positioned(
-              bottom: 8,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Container(
-                  width: 128,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[900]?.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-              ),
-            )
           ],
         ),
       ),

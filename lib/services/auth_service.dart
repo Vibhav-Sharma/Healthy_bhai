@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'encryption_service.dart';
 
 class AuthService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -30,7 +31,17 @@ class AuthService {
     required String name,
     required String age,
     required String bloodGroup,
+    required String height,
+    required String weight,
     required String emergencyContact,
+    String? allergies,
+    String? pastDiseases,
+    String? currentDiseases,
+    String? chronicDiseases,
+    String? currentMedicines,
+    String? oldMedicines,
+    String? surgeries,
+    String? treatments,
   }) async {
     // 1. Create Firebase Auth account
     final credential = await _auth.createUserWithEmailAndPassword(
@@ -42,20 +53,35 @@ class AuthService {
     // 2. Generate unique PatientID
     final patientId = _generatePatientId();
 
-    // 3. Create Firestore patient document
+    // Helper to safely split and encrypt comma-separated input
+    List<String> parseAndEncryptItems(String? input) {
+      if (input == null || input.trim().isEmpty) return [];
+      return input
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .map((e) => EncryptionService.encryptData(e))
+          .toList();
+    }
+
+    // 3. Create Firestore patient document (encrypt sensitive fields)
     await _db.collection('patients').doc(uid).set({
       'patientId': patientId,
-      'name': name,
+      'name': EncryptionService.encryptData(name),
       'age': age,
       'bloodGroup': bloodGroup,
+      'height': height,
+      'weight': weight,
       'phone': '',
-      'emergencyContact': emergencyContact,
-      'allergies': [],
-      'diseases': [],
-      'currentMedicines': [],
-      'oldMedicines': [],
-      'surgeries': [],
-      'treatments': [],
+      'emergencyContact': EncryptionService.encryptData(emergencyContact),
+      'allergies': parseAndEncryptItems(allergies),
+      'pastDiseases': parseAndEncryptItems(pastDiseases),
+      'currentDiseases': parseAndEncryptItems(currentDiseases),
+      'chronicDiseases': parseAndEncryptItems(chronicDiseases),
+      'currentMedicines': parseAndEncryptItems(currentMedicines),
+      'oldMedicines': parseAndEncryptItems(oldMedicines),
+      'surgeries': parseAndEncryptItems(surgeries),
+      'treatments': parseAndEncryptItems(treatments),
       'email': email,
       'createdAt': FieldValue.serverTimestamp(),
     });
@@ -97,7 +123,9 @@ class AuthService {
     if (query.docs.isEmpty) {
       throw Exception('No patient found with ID: $patientId');
     }
-    final email = query.docs.first.data()['email'] as String;
+    // Decrypt email in case it's encrypted (backward compatible — returns plain text as-is)
+    final rawEmail = query.docs.first.data()['email'] as String;
+    final email = EncryptionService.decryptData(rawEmail);
 
     // Sign in with the found email
     return patientLogin(email: email, password: password);
@@ -138,11 +166,11 @@ class AuthService {
 
     await _db.collection('doctors').doc(uid).set({
       'doctorId': doctorId,
-      'name': name,
-      'specialty': specialty,    // <-- Saves the dropdown choice
-      'phone': phone,            // <-- Saves the 10-digit number
-      'hospital': 'Not Specified', // Defaulting since it isn't in the UI yet
-      'email': email,
+      'name': EncryptionService.encryptData(name),
+      'specialty': specialty,
+      'phone': EncryptionService.encryptData(phone),
+      'hospital': 'Not Specified',
+      'email': EncryptionService.encryptData(email),
       'createdAt': FieldValue.serverTimestamp(),
     });
 
@@ -180,7 +208,9 @@ class AuthService {
     if (query.docs.isEmpty) {
       throw Exception('No doctor found with ID: $doctorId');
     }
-    final email = query.docs.first.data()['email'] as String;
+    // Decrypt the email field before using it
+    final rawEmail = query.docs.first.data()['email'] as String;
+    final email = EncryptionService.decryptData(rawEmail);
 
     return doctorLogin(email: email, password: password);
   }
@@ -198,7 +228,8 @@ class AuthService {
         .limit(1)
         .get();
     if (query.docs.isEmpty) return 'Unknown Doctor';
-    return query.docs.first.data()['name'] ?? 'Unknown Doctor';
+    final rawName = query.docs.first.data()['name'] ?? 'Unknown Doctor';
+    return EncryptionService.decryptData(rawName);
   }
 
   // ─── COMMON ───
@@ -228,17 +259,18 @@ class AuthService {
     if (doc.exists) {
       return doc.data()!['patientId'] as String;
     } else {
-      // Create new patient profile
+      // Create new patient profile (encrypt sensitive fields)
       final patientId = _generatePatientId();
       await _db.collection('patients').doc(uid).set({
         'patientId': patientId,
-        'name': gUser.displayName ?? 'Unknown',
+        'name': EncryptionService.encryptData(gUser.displayName ?? 'Unknown'),
         'age': '',
         'bloodGroup': '',
         'phone': '',
         'emergencyContact': '',
         'allergies': [],
-        'diseases': [],
+        'pastDiseases': [],
+        'currentDiseases': [],
         'currentMedicines': [],
         'oldMedicines': [],
         'surgeries': [],
@@ -267,15 +299,15 @@ class AuthService {
     if (doc.exists) {
       return doc.data()!['doctorId'] as String;
     } else {
-      // Create new doctor profile
+      // Create new doctor profile (encrypt sensitive fields)
       final doctorId = _generateDoctorId();
       await _db.collection('doctors').doc(uid).set({
         'doctorId': doctorId,
-        'name': gUser.displayName ?? 'Unknown Doctor',
+        'name': EncryptionService.encryptData(gUser.displayName ?? 'Unknown Doctor'),
         'specialization': 'General Update Specialization',
         'hospital': 'Update Hospital Profile',
         'phone': '',
-        'email': gUser.email,
+        'email': EncryptionService.encryptData(gUser.email),
         'createdAt': FieldValue.serverTimestamp(),
       });
       return doctorId;

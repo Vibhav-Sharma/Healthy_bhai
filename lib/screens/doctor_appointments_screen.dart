@@ -4,7 +4,7 @@ import '../services/firestore_service.dart';
 
 class DoctorAppointmentsScreen extends StatefulWidget {
   final String doctorId;
-  const DoctorAppointmentsScreen({super.key, required this.doctorId});
+  DoctorAppointmentsScreen({super.key, required this.doctorId});
 
   @override
   State<DoctorAppointmentsScreen> createState() => _DoctorAppointmentsScreenState();
@@ -32,7 +32,12 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
     return '${months[dt.month - 1]} ${dt.day}, ${dt.year} at $hour:$minute $ampm';
   }
 
-  Future<String> _getPatientName(String patientId) async {
+  Future<String> _getPatientName(String patientId, {String? storedName}) async {
+    // If the appointment already has a name stored, use it directly
+    if (storedName != null && storedName.isNotEmpty) {
+      _patientNameCache[patientId] = storedName;
+      return storedName;
+    }
     if (_patientNameCache.containsKey(patientId)) {
       return _patientNameCache[patientId]!;
     }
@@ -49,15 +54,15 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
         bool? confirm = await showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Cancel Appointment'),
+            title: Text('Cancel Appointment'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Provide cancellation reason:'),
-                const SizedBox(height: 12),
+                Text('Provide cancellation reason:'),
+                SizedBox(height: 12),
                 TextField(
                   controller: reasonCtrl,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     border: OutlineInputBorder(),
                     hintText: 'Doctor unavailable, emergency, etc.',
                   ),
@@ -65,14 +70,14 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
               ],
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Back')),
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('Back')),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () {
                   if (reasonCtrl.text.trim().isEmpty) return;
                   Navigator.pop(ctx, true);
                 },
-                child: const Text('Confirm', style: TextStyle(color: Colors.white)),
+                child: Text('Confirm', style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -103,21 +108,71 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
     }
   }
 
+  Future<void> _showPrescriptionUploadDialog(String appointmentId, {String? existing}) async {
+    final ctrl = TextEditingController(text: existing ?? '');
+    bool? saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Upload Prescription', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Enter the prescription URL or paste prescription text:', style: TextStyle(fontSize: 13, color: Colors.grey)),
+            SizedBox(height: 12),
+            TextField(
+              controller: ctrl,
+              maxLines: 3,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                hintText: 'https://drive.google.com/... or prescription text',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+            onPressed: () {
+              if (ctrl.text.trim().isEmpty) return;
+              Navigator.pop(ctx, true);
+            },
+            child: Text('Save', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (saved != true) return;
+    try {
+      await FirestoreService.uploadPrescription(appointmentId, ctrl.text.trim());
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Prescription saved!'), backgroundColor: Colors.green),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF3F4F6),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('My Schedule', style: TextStyle(color: Color(0xffDC2626))),
-        backgroundColor: Colors.white,
+        title: Text('My Schedule', style: TextStyle(color: Color(0xffDC2626))),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xffDC2626)),
+        iconTheme: IconThemeData(color: Color(0xffDC2626)),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirestoreService.getDoctorAppointmentsStream(widget.doctorId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xffDC2626)));
+            return Center(child: CircularProgressIndicator(color: Color(0xffDC2626)));
           }
 
           if (snapshot.hasError) {
@@ -129,9 +184,9 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  Text('No upcoming appointments.', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+                  Icon(Icons.event_busy, size: 64, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
+                  SizedBox(height: 16),
+                  Text('No upcoming appointments.', style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
                 ],
               ),
             );
@@ -164,7 +219,7 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
           var sorted = [...upcoming, ...past];
 
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16),
             itemCount: sorted.length,
             itemBuilder: (context, index) {
               var doc = sorted[index];
@@ -197,14 +252,14 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
 
               return Card(
                 elevation: 0,
-                color: Colors.white,
-                margin: const EdgeInsets.only(bottom: 16),
+                color: Theme.of(context).cardColor,
+                margin: EdgeInsets.only(bottom: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Colors.grey.shade200),
+                  side: BorderSide(color: Theme.of(context).dividerColor),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -215,19 +270,19 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
                           Container(
                             width: 50, height: 50,
                             decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(12)),
-                            child: const Icon(Icons.person, color: Colors.blue, size: 28),
+                            child: Icon(Icons.person, color: Colors.blue, size: 28),
                           ),
-                          const SizedBox(width: 16),
+                          SizedBox(width: 16),
                           Expanded(
                             child: FutureBuilder<String>(
-                              future: _getPatientName(patientId),
+                              future: _getPatientName(patientId, storedName: data['patientName']?.toString()),
                               builder: (context, nameSnap) {
                                 String displayName = nameSnap.data ?? patientId;
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(displayName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xff1E293B))),
-                                    const SizedBox(height: 2),
+                                    Text(displayName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
+                                    SizedBox(height: 2),
                                     Text('ID: $patientId', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
                                   ],
                                 );
@@ -235,26 +290,26 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(color: statusBg, borderRadius: BorderRadius.circular(20)),
                             child: Text(status, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
 
-                      const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1)),
+                      Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1)),
 
                       // ─── Date & Type ───
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Row(children: [
-                            const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                            const SizedBox(width: 8),
-                            Text(_formatDateTime(date), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+                            Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                            SizedBox(width: 8),
+                            Text(_formatDateTime(date), style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
                           ]),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: type == 'Online' ? Colors.purple.shade50 : Colors.teal.shade50,
                               borderRadius: BorderRadius.circular(8),
@@ -262,40 +317,40 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
                             ),
                             child: Row(children: [
                               Icon(type == 'Online' ? Icons.videocam : Icons.business, size: 14, color: type == 'Online' ? Colors.purple : Colors.teal),
-                              const SizedBox(width: 4),
+                              SizedBox(width: 4),
                               Text(type == 'Online' ? 'Online' : 'In-Clinic', style: TextStyle(color: type == 'Online' ? Colors.purple : Colors.teal, fontSize: 12, fontWeight: FontWeight.bold)),
                             ]),
                           ),
                         ],
                       ),
 
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
 
                       // ─── Reason ───
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.all(12),
+                        padding: EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xffF8FAFC),
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey.shade200),
+                          border: Border.all(color: Theme.of(context).dividerColor, ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Reason for visit:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
-                            const SizedBox(height: 4),
-                            Text(reason, style: const TextStyle(fontSize: 13, color: Color(0xff1E293B), fontStyle: FontStyle.italic)),
+                            Text('Reason for visit:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                            SizedBox(height: 4),
+                            Text(reason, style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface, fontStyle: FontStyle.italic)),
                           ],
                         ),
                       ),
 
                       // ─── Cancellation reason ───
                       if ((status == 'Cancelled' || status == 'Rejected') && cancelReason != null && cancelReason.isNotEmpty) ...[
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(12),
+                          padding: EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: Colors.red.shade50,
                             borderRadius: BorderRadius.circular(8),
@@ -304,8 +359,8 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Cancellation Reason:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.red)),
-                              const SizedBox(height: 4),
+                              Text('Cancellation Reason:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.red)),
+                              SizedBox(height: 4),
                               Text(cancelReason, style: TextStyle(fontSize: 13, color: Colors.red.shade900)),
                             ],
                           ),
@@ -314,36 +369,76 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
 
                       // ─── Action Buttons ───
                       if (status == 'Waiting') ...[
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
                         Row(children: [
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () => _updateStatus(appointmentId, 'Upcoming'),
                               style: ElevatedButton.styleFrom(backgroundColor: Colors.green, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                              child: const Text('Approve', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              child: Text('Approve', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () => _updateStatus(appointmentId, 'Rejected'),
                               style: ElevatedButton.styleFrom(backgroundColor: Colors.red, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                              child: const Text('Reject', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              child: Text('Reject', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                             ),
                           ),
                         ]),
                       ],
 
                       if (status == 'Upcoming') ...[
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton(
                             onPressed: () => _updateStatus(appointmentId, 'Cancelled'),
-                            style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.red), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                            child: const Text('Cancel Appointment', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                            style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.red), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                            child: Text('Cancel Appointment', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
                           ),
                         ),
+                      ],
+
+                      // ─── Prescription Upload ───
+                      if (status == 'Upcoming' || status == 'Completed') ...[
+                        SizedBox(height: 12),
+                        if (data['prescriptionUrl'] != null && data['prescriptionUrl'].toString().isNotEmpty)
+                          Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.green.shade200),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.check_circle, color: Colors.green.shade700, size: 18),
+                                SizedBox(width: 8),
+                                Expanded(child: Text('Prescription uploaded', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13))),
+                                TextButton(
+                                  onPressed: () => _showPrescriptionUploadDialog(appointmentId, existing: data['prescriptionUrl'].toString()),
+                                  child: Text('Update', style: TextStyle(fontSize: 12)),
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () => _showPrescriptionUploadDialog(appointmentId),
+                              icon: Icon(Icons.upload_file, size: 18),
+                              label: Text('Upload Prescription'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.blue.shade700,
+                                side: BorderSide(color: Colors.blue.shade300),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                            ),
+                          ),
                       ],
                     ],
                   ),

@@ -7,7 +7,7 @@ import '../services/firestore_service.dart';
 
 class DocumentUploadScreen extends StatefulWidget {
   final String patientId;
-  const DocumentUploadScreen({super.key, required this.patientId});
+  DocumentUploadScreen({super.key, required this.patientId});
 
   @override
   State<DocumentUploadScreen> createState() => _DocumentUploadScreenState();
@@ -49,7 +49,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
     if (fileSize > 5 * 1024 * 1024) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('File size must be less than 5MB. Please choose a smaller file.')),
+        SnackBar(content: Text('File size must be less than 5MB. Please choose a smaller file.')),
       );
       return;
     }
@@ -94,7 +94,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('File uploaded successfully!')),
+        SnackBar(content: Text('File uploaded successfully!')),
       );
       await _loadReports(); // Refresh list and await completion before releasing loading state
     } catch (e) {
@@ -110,66 +110,66 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white, elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xff1E293B)), onPressed: () => Navigator.pop(context)),
-        title: const Text('Upload Documents', style: TextStyle(color: Color(0xff1E293B), fontSize: 18, fontWeight: FontWeight.bold)),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, elevation: 0,
+        leading: IconButton(icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).colorScheme.onSurface), onPressed: () => Navigator.pop(context)),
+        title: Text('Upload Documents', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
         centerTitle: true,
-        bottom: PreferredSize(preferredSize: const Size.fromHeight(1), child: Container(color: Colors.grey[100], height: 1)),
+        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Container(color: Colors.grey.withValues(alpha: 0.2), height: 1)),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Add New Record', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xff1E293B), letterSpacing: -0.5)),
-            const SizedBox(height: 8),
-            Text('Upload prescriptions, lab reports, or scans (PDF, JPG, PNG).', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey[500])),
+            Text('Add New Record', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface, letterSpacing: -0.5)),
+            SizedBox(height: 8),
+            Text('Upload prescriptions, lab reports, or scans (PDF, JPG, PNG).', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
 
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
 
             // Upload Area
             GestureDetector(
               onTap: _isUploading ? null : _pickAndUpload,
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+                padding: EdgeInsets.symmetric(vertical: 40, horizontal: 24),
                 decoration: BoxDecoration(
-                  color: const Color(0xffF8FAFC),
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.blue[200]!, width: 2),
                 ),
                 child: Column(
                   children: [
                     if (_isUploading)
-                      const CircularProgressIndicator(color: Colors.blue)
+                      CircularProgressIndicator(color: Colors.blue)
                     else ...[
                       Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: Colors.blue[50], shape: BoxShape.circle),
-                        child: const Icon(Icons.cloud_upload_outlined, size: 48, color: Colors.blue),
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), shape: BoxShape.circle),
+                        child: Icon(Icons.cloud_upload_outlined, size: 48, color: Colors.blue),
                       ),
-                      const SizedBox(height: 16),
-                      const Text('Tap to upload file', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
-                      const SizedBox(height: 8),
-                      Text('Ensure the file is clear and readable.', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                      SizedBox(height: 16),
+                      Text('Tap to upload file', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
+                      SizedBox(height: 8),
+                      Text('Ensure the file is clear and readable.', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 12)),
                     ],
                   ],
                 ),
               ),
             ),
 
-            const SizedBox(height: 48),
+            SizedBox(height: 48),
 
             // Recent Uploads (from Firestore)
-            const Text('Recent Uploads', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
-            const SizedBox(height: 16),
+            Text('Recent Uploads', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
+            SizedBox(height: 16),
 
             if (_isLoadingReports)
-              const Center(child: CircularProgressIndicator())
+              Center(child: CircularProgressIndicator())
             else if (_reports.isEmpty)
-              Center(child: Text('No reports uploaded yet.', style: TextStyle(color: Colors.grey[500])))
+              Center(child: Text('No reports uploaded yet.', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))))
             else
               ..._reports.map((report) {
                 final name = report['fileName'] ?? 'Unknown';
@@ -194,24 +194,24 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
 
   Widget _buildFileItem({required IconData icon, required Color iconColor, required String name, required String date}) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[200]!)),
+      margin: EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: Theme.of(context).dividerColor, )),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: EdgeInsets.all(10),
             decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
             child: Icon(icon, color: iconColor),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xff1E293B), fontSize: 14)),
-                const SizedBox(height: 4),
-                Text(date, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                Text(name, style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, fontSize: 14)),
+                SizedBox(height: 4),
+                Text(date, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 12)),
               ],
             ),
           ),

@@ -154,17 +154,31 @@ Please provide a concise clinical summary for the attending doctor.
       ),
       systemInstruction: Content.system(
         'You are a highly accurate medical prescription reader.\n'
-        'Extract the medicines, dosages, and timings from the provided prescription image.\n\n'
+        'Extract the medicines, dosages, frequency, meal-timing context, and duration '
+        'from the provided prescription image.\n\n'
+        'IMPORTANT: Preserve the EXACT medical abbreviation written by the doctor for '
+        'frequency (e.g., OD, BD, TDS, TID, QID, Q6H, Q8H, Q12H, SOS, PRN, STAT, HS).\n'
+        'For timing_context, use the meal-relative abbreviation or phrase '
+        '(e.g., AC, PC, "before meals", "after meals", "empty stomach", "before bed", "with meals").\n'
+        'If the doctor wrote plain English like "Morning and Night", put that in frequency.\n\n'
         'Return ONLY a valid JSON object strictly following this schema:\n'
         '{\n'
         '  "medicines": [\n'
         '    {\n'
         '      "name": "Paracetamol",\n'
         '      "dosage": "500mg",\n'
-        '      "timings": ["Morning", "Night"]  // Options: Morning, Afternoon, Night\n'
+        '      "frequency": "BD",\n'
+        '      "timing_context": "PC",\n'
+        '      "duration": "5 days",\n'
+        '      "timings": ["Morning", "Night"]\n'
         '    }\n'
         '  ]\n'
         '}\n'
+        'Rules:\n'
+        '- "frequency" = the dosing frequency abbreviation or phrase (BD, TDS, OD, Q8H, etc.)\n'
+        '- "timing_context" = meal relation (AC, PC, HS, empty stomach, etc.) or empty string if unspecified\n'
+        '- "duration" = how long to take (e.g., "5 days", "1 week", "30 days") or empty string if unspecified\n'
+        '- "timings" = still include the simple Morning/Afternoon/Night array as a fallback\n'
         'If no medicines are found, return {"medicines": []}.',
       ),
     );

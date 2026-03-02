@@ -4,7 +4,7 @@ import '../services/firestore_service.dart';
 
 class MedicalTimelineScreen extends StatefulWidget {
   final String patientId;
-  const MedicalTimelineScreen({super.key, required this.patientId});
+  MedicalTimelineScreen({super.key, required this.patientId});
 
   @override
   State<MedicalTimelineScreen> createState() => _MedicalTimelineScreenState();
@@ -32,18 +32,18 @@ class _MedicalTimelineScreenState extends State<MedicalTimelineScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white, elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xff1E293B)), onPressed: () => Navigator.pop(context)),
-        title: const Text('Medical History', style: TextStyle(color: Color(0xff1E293B), fontSize: 18, fontWeight: FontWeight.bold)),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, elevation: 0,
+        leading: IconButton(icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).colorScheme.onSurface), onPressed: () => Navigator.pop(context)),
+        title: Text('Medical History', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
         centerTitle: true,
-        bottom: PreferredSize(preferredSize: const Size.fromHeight(1), child: Container(color: Colors.grey[100], height: 1)),
+        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Container(color: Colors.grey.withValues(alpha: 0.2), height: 1)),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -52,34 +52,34 @@ class _MedicalTimelineScreenState extends State<MedicalTimelineScreen> {
                     children: [
                       Container(
                         width: 56, height: 56,
-                        decoration: BoxDecoration(color: Colors.blue[50], shape: BoxShape.circle),
-                        child: const Icon(Icons.history_edu, color: Colors.blue, size: 28),
+                        decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), shape: BoxShape.circle),
+                        child: Icon(Icons.history_edu, color: Colors.blue, size: 28),
                       ),
-                      const SizedBox(width: 16),
+                      SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Patient Timeline', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xff1E293B), letterSpacing: -0.5)),
-                            const SizedBox(height: 4),
-                            Text('Chronological medical history records.', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey[500])),
+                            Text('Patient Timeline', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface, letterSpacing: -0.5)),
+                            SizedBox(height: 4),
+                            Text('Chronological medical history records.', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
                           ],
                         ),
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 40),
+                  SizedBox(height: 40),
 
                   if (_events.isEmpty)
                     Center(
                       child: Column(
                         children: [
-                          Icon(Icons.history, size: 64, color: Colors.grey[300]),
-                          const SizedBox(height: 16),
-                          Text('No timeline events yet.', style: TextStyle(color: Colors.grey[500], fontSize: 16)),
-                          const SizedBox(height: 8),
-                          Text('Events will appear as you upload reports, get AI advice, and more.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[400], fontSize: 13)),
+                          Icon(Icons.history, size: 64, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
+                          SizedBox(height: 16),
+                          Text('No timeline events yet.', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 16)),
+                          SizedBox(height: 8),
+                          Text('Events will appear as you upload reports, get AI advice, and more.', textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3), fontSize: 13)),
                         ],
                       ),
                     )
@@ -110,7 +110,7 @@ class _MedicalTimelineScreenState extends State<MedicalTimelineScreen> {
                       );
                     }),
 
-                  const SizedBox(height: 40),
+                  SizedBox(height: 40),
                 ],
               ),
             ),
@@ -127,20 +127,20 @@ class _MedicalTimelineScreenState extends State<MedicalTimelineScreen> {
             child: Column(
               children: [
                 Container(width: 2, height: 20, color: isFirst ? Colors.transparent : Colors.grey[300]),
-                Container(width: 16, height: 16, decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: iconColor, width: 4))),
+                Container(width: 16, height: 16, decoration: BoxDecoration(color: Theme.of(context).cardColor, shape: BoxShape.circle, border: Border.all(color: iconColor, width: 4))),
                 Expanded(child: Container(width: isLast ? 0 : 2, color: isLast ? Colors.transparent : Colors.grey[300])),
               ],
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 32),
+              padding: EdgeInsets.only(bottom: 32),
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white, borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey[100]!),
+                  color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Theme.of(context).dividerColor, ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,18 +149,18 @@ class _MedicalTimelineScreenState extends State<MedicalTimelineScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
                           child: Text(year, style: TextStyle(color: iconColor, fontWeight: FontWeight.bold, fontSize: 12)),
                         ),
                         Icon(icon, color: iconColor.withValues(alpha: 0.8), size: 20),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+                    SizedBox(height: 12),
+                    Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
                     if (description.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Text(description, style: TextStyle(fontSize: 14, color: Colors.grey[600], height: 1.4)),
+                      SizedBox(height: 6),
+                      Text(description, style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), height: 1.4)),
                     ],
                   ],
                 ),
