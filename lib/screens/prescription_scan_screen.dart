@@ -19,6 +19,7 @@ class _PrescriptionScanScreenState extends State<PrescriptionScanScreen> {
   File? _image;
   bool _isProcessing = false;
   List<Map<String, dynamic>> _extractedMedicines = [];
+  String _processingStatus = '';
 
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
@@ -36,16 +37,59 @@ class _PrescriptionScanScreenState extends State<PrescriptionScanScreen> {
   Future<void> _processImage() async {
     if (_image == null) return;
 
-    setState(() => _isProcessing = true);
+    setState(() {
+      _isProcessing = true;
+      _processingStatus = 'Reading prescription with AI...';
+    });
 
     try {
       final bytes = await _image!.readAsBytes();
-      final data = await GeminiService.extractPrescription(bytes);
+
+      // Try extraction with auto-retry on rate-limit
+      Map<String, dynamic> data;
+      try {
+        data = await GeminiService.extractPrescription(bytes);
+      } catch (e) {
+        if (e.toString().toLowerCase().contains('quota') ||
+            e.toString().toLowerCase().contains('rate') ||
+            e.toString().toLowerCase().contains('429') ||
+            e.toString().toLowerCase().contains('resource_exhausted')) {
+          // Rate-limited — wait and retry once
+          if (mounted) setState(() => _processingStatus = 'Rate-limited, retrying in 10s...');
+          await Future.delayed(const Duration(seconds: 10));
+          if (mounted) setState(() => _processingStatus = 'Retrying prescription read...');
+          data = await GeminiService.extractPrescription(bytes);
+        } else {
+          rethrow;
+        }
+      }
+
+      final medicines = List<Map<String, dynamic>>.from(data['medicines']);
+
+      if (medicines.isNotEmpty) {
+        // Step 2: Spell-check medicine names via Gemini
+        if (mounted) setState(() => _processingStatus = 'Verifying medicine names...');
+        final names = medicines.map((m) => (m['name'] ?? '') as String).where((n) => n.isNotEmpty).toList();
+        final corrections = await GeminiService.correctMedicineNames(names);
+
+        // Apply corrections
+        for (final med in medicines) {
+          final original = (med['name'] ?? '') as String;
+          if (corrections.containsKey(original)) {
+            final corrected = corrections[original]!;
+            if (corrected != original) {
+              med['original_name'] = original;  // Keep OCR name for reference
+              med['name'] = corrected;          // Use corrected name
+            }
+          }
+        }
+      }
 
       if (mounted) {
         setState(() {
-          _extractedMedicines = List<Map<String, dynamic>>.from(data['medicines']);
+          _extractedMedicines = medicines;
           _isProcessing = false;
+          _processingStatus = '';
         });
 
         if (_extractedMedicines.isEmpty) {
@@ -56,7 +100,10 @@ class _PrescriptionScanScreenState extends State<PrescriptionScanScreen> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isProcessing = false);
+        setState(() {
+          _isProcessing = false;
+          _processingStatus = '';
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
         );
@@ -303,17 +350,18 @@ class _PrescriptionScanScreenState extends State<PrescriptionScanScreen> {
             const SizedBox(height: 32),
 
             // Results Area
-            if (_isProcessing)
+            if (_isProcessing) ...[
               const Center(
                 child: Column(
                   children: [
                     CircularProgressIndicator(color: Colors.blue),
                     SizedBox(height: 16),
-                    Text('Analysing prescription with AI...'),
                   ],
                 ),
-              )
-            else if (_extractedMedicines.isNotEmpty) ...[
+              ),
+              if (_processingStatus.isNotEmpty)
+                Center(child: Text(_processingStatus, style: TextStyle(color: Colors.grey[600], fontSize: 14))),
+            ] else if (_extractedMedicines.isNotEmpty) ...[
               const Text('Extracted Medicines', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
               const SizedBox(height: 16),
               ..._extractedMedicines.map((med) => _buildMedicineCard(med)),
@@ -391,6 +439,22 @@ class _PrescriptionScanScreenState extends State<PrescriptionScanScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xff1E293B))),
+                    if (med['original_name'] != null) ...[
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Icon(Icons.auto_fix_high, size: 12, color: Colors.orange[700]),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              'OCR: ${med['original_name']}',
+                              style: TextStyle(fontSize: 11, color: Colors.orange[700], fontStyle: FontStyle.italic),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     Text('Dosage: $dosage', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
                   ],
