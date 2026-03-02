@@ -4,7 +4,7 @@ import 'doctor_dashboard.dart';
 import '../services/auth_service.dart';
 
 class DoctorRegisterScreen extends StatefulWidget {
-  const DoctorRegisterScreen({super.key});
+  DoctorRegisterScreen({super.key});
 
   @override
   State<DoctorRegisterScreen> createState() => _DoctorRegisterScreenState();
@@ -65,14 +65,14 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
         _passwordController.text.trim().isEmpty ||
         _selectedSpecialty.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields and select a specialty.')),
+        SnackBar(content: Text('Please fill all fields and select a specialty.')),
       );
       return;
     }
 
     if (!_isValidPhone(_phoneController.text.trim()) || !_isPasswordStrong(_passwordController.text)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fix the errors in your phone number or password.')),
+        SnackBar(content: Text('Please fix the errors in your phone number or password.')),
       );
       return;
     }
@@ -96,7 +96,7 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
         SnackBar(
           content: Text('Registration Successful! Your ID is $newDoctorId'),
           backgroundColor: Colors.green,
-          duration: const Duration(seconds: 5),
+          duration: Duration(seconds: 5),
         ),
       );
       
@@ -117,16 +117,16 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white, elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xff1E293B)), onPressed: () => Navigator.pop(context)),
-        title: const Text('Healthy Bhai', style: TextStyle(color: Color(0xff1E293B), fontSize: 18, fontWeight: FontWeight.bold)),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, elevation: 0,
+        leading: IconButton(icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).colorScheme.onSurface), onPressed: () => Navigator.pop(context)),
+        title: Text('Healthy Bhai', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
         centerTitle: true,
-        bottom: PreferredSize(preferredSize: const Size.fromHeight(1), child: Container(color: Colors.grey[100], height: 1)),
+        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Container(color: Colors.grey.withValues(alpha: 0.2), height: 1)),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(
           children: [
             Center(
@@ -134,33 +134,33 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
                 children: [
                   Container(
                     width: 80, height: 80,
-                    decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.red[100]!)),
-                    child: const Icon(Icons.person_add, color: Color(0xffDC2626), size: 36),
+                    decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.red.withValues(alpha: 0.2))),
+                    child: Icon(Icons.person_add, color: Color(0xffDC2626), size: 36),
                   ),
-                  const SizedBox(height: 24),
-                  const Text('Doctor Registration', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: Color(0xff1E293B), letterSpacing: -0.5)),
-                  const SizedBox(height: 8),
-                  const Text('Join the Healthy Bhai medical network', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey)),
+                  SizedBox(height: 24),
+                  Text('Doctor Registration', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface, letterSpacing: -0.5)),
+                  SizedBox(height: 8),
+                  Text('Join the Healthy Bhai medical network', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey)),
                 ],
               ),
             ),
 
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
 
             Container(
-              padding: const EdgeInsets.all(32),
+              padding: EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: const Color(0xffF8FAFC),
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey[200]!),
+                border: Border.all(color: Theme.of(context).dividerColor, ),
               ),
               child: Column(
                 children: [
                   _buildInputField(label: 'Full Name', controller: _nameController, prefixIcon: Icons.person, hintText: 'Dr. John Doe'),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   
                   _buildInputField(label: 'Email Address', controller: _emailController, prefixIcon: Icons.mail, hintText: 'doctor@hospital.com', keyboardType: TextInputType.emailAddress),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // --- PHONE FIELD WITH LIVE VALIDATION ---
                   _buildInputField(
@@ -172,11 +172,11 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
                     onChanged: (val) => setState(() => _hasStartedTypingPhone = true),
                     bottomWidget: _buildPhoneCriteria(),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // --- DYNAMIC HEIGHT SPECIALTY SEARCH ---
                   _buildSpecialtySearchBox(),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   
                   // --- PASSWORD FIELD WITH LIVE VALIDATION ---
                   _buildInputField(
@@ -188,24 +188,24 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
                     onChanged: (val) => setState(() => _hasStartedTypingPassword = true),
                     bottomWidget: _buildPasswordCriteria(),
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: 32),
 
                   _isLoading
-                      ? const CircularProgressIndicator(color: Color(0xffDC2626))
+                      ? CircularProgressIndicator(color: Color(0xffDC2626))
                       : ElevatedButton(
                           onPressed: _register,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xffDC2626),
-                            minimumSize: const Size(double.infinity, 56),
+                            backgroundColor: Color(0xffDC2626),
+                            minimumSize: Size(double.infinity, 56),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             elevation: 0,
                           ),
-                          child: const Text('Register', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                          child: Text('Register', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                         ),
                 ],
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
           ],
         ),
       ),
@@ -214,12 +214,12 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
 
   // --- REAL-TIME FEEDBACK WIDGETS ---
   Widget _buildPhoneCriteria() {
-    if (!_hasStartedTypingPhone) return const SizedBox.shrink();
+    if (!_hasStartedTypingPhone) return SizedBox.shrink();
     bool isValid = _isValidPhone(_phoneController.text.trim());
     return Row(
       children: [
         Icon(isValid ? Icons.check_circle : Icons.cancel, color: isValid ? Colors.green : Colors.red, size: 16),
-        const SizedBox(width: 6),
+        SizedBox(width: 6),
         Text(
           isValid ? 'Valid phone number' : 'Must be exactly 10 digits',
           style: TextStyle(color: isValid ? Colors.green : Colors.red, fontSize: 12, fontWeight: FontWeight.w500),
@@ -229,13 +229,13 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
   }
 
   Widget _buildPasswordCriteria() {
-    if (!_hasStartedTypingPassword) return const SizedBox.shrink();
+    if (!_hasStartedTypingPassword) return SizedBox.shrink();
     bool isStrong = _isPasswordStrong(_passwordController.text);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(isStrong ? Icons.check_circle : Icons.cancel, color: isStrong ? Colors.green : Colors.red, size: 16),
-        const SizedBox(width: 6),
+        SizedBox(width: 6),
         Expanded(
           child: Text(
             isStrong ? 'Strong password' : 'Must be 8+ chars, include A-Z, a-z, 0-9, and a symbol (!@#\$&*~)',
@@ -251,9 +251,9 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(left: 4, bottom: 8),
-          child: Text('Specialty', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+          child: Text('Specialty', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
         ),
         LayoutBuilder(
           builder: (context, constraints) {
@@ -277,10 +277,10 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
                   focusNode: focusNode,
                   decoration: InputDecoration(
                     hintText: 'Type to search 50 specialties...',
-                    hintStyle: TextStyle(color: Colors.grey[400]),
-                    prefixIcon: Icon(Icons.medical_services, color: Colors.grey[400]),
-                    filled: true, fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 20),
+                    hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
+                    prefixIcon: Icon(Icons.medical_services, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
+                    filled: true, fillColor: Theme.of(context).inputDecorationTheme.fillColor,
+                    contentPadding: EdgeInsets.symmetric(vertical: 20),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
                     enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
                   ),
@@ -307,8 +307,8 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
                           return InkWell(
                             onTap: () => onSelected(option),
                             child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Text(option, style: const TextStyle(color: Color(0xff1E293B))),
+                              padding: EdgeInsets.all(16.0),
+                              child: Text(option, style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                             ),
                           );
                         },
@@ -339,8 +339,8 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
         ),
         TextField(
           controller: controller,
@@ -349,17 +349,17 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
           onChanged: onChanged,
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: TextStyle(color: Colors.grey[400]),
-            prefixIcon: Icon(prefixIcon, color: Colors.grey[400]),
-            suffixIcon: isPassword ? IconButton(icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Colors.grey[400]), onPressed: () => setState(() => _obscurePassword = !_obscurePassword)) : null,
-            filled: true, fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(vertical: 20),
+            hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
+            prefixIcon: Icon(prefixIcon, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
+            suffixIcon: isPassword ? IconButton(icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)), onPressed: () => setState(() => _obscurePassword = !_obscurePassword)) : null,
+            filled: true, fillColor: Theme.of(context).inputDecorationTheme.fillColor,
+            contentPadding: EdgeInsets.symmetric(vertical: 20),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
           ),
         ),
         if (bottomWidget != null) ...[
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           bottomWidget,
         ]
       ],

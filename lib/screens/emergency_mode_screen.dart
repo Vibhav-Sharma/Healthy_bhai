@@ -6,7 +6,7 @@ import '../services/location_service.dart';
 
 class EmergencyModeScreen extends StatefulWidget {
   final String? patientId;
-  const EmergencyModeScreen({super.key, this.patientId});
+  EmergencyModeScreen({super.key, this.patientId});
 
   @override
   State<EmergencyModeScreen> createState() => _EmergencyModeScreenState();
@@ -113,7 +113,7 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
             Text('🚑', style: TextStyle(fontSize: 28)),
             SizedBox(width: 12),
@@ -122,17 +122,17 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
         ),
         content: Text(
           'This will open your phone dialer with number $_ambulanceNumber.',
-          style: const TextStyle(fontSize: 14, color: Color(0xff64748B)),
+          style: TextStyle(fontSize: 14, color: Color(0xff64748B)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xffDC2626),
+              backgroundColor: Color(0xffDC2626),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
@@ -149,7 +149,7 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not open phone dialer.'), backgroundColor: Color(0xffDC2626)),
+            SnackBar(content: Text('Could not open phone dialer.'), backgroundColor: Color(0xffDC2626)),
           );
         }
       }
@@ -161,7 +161,7 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
   Future<void> _shareLocation() async {
     if (_locationLink == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Location not available yet. Please wait or tap Retry.'), backgroundColor: Color(0xffDC2626)),
+        SnackBar(content: Text('Location not available yet. Please wait or tap Retry.'), backgroundColor: Color(0xffDC2626)),
       );
       return;
     }
@@ -169,23 +169,23 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
     if (!mounted) return;
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('📍 My Location', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
+            Text('📍 My Location', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: const Color(0xffF1F5F9), borderRadius: BorderRadius.circular(10)),
-              child: SelectableText(_locationLink!, style: const TextStyle(fontSize: 13, color: Color(0xff3B82F6))),
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(10)),
+              child: SelectableText(_locationLink!, style: TextStyle(fontSize: 13, color: Color(0xff3B82F6))),
             ),
-            const SizedBox(height: 8),
-            Text(_locationText ?? '', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
-            const SizedBox(height: 16),
+            SizedBox(height: 8),
+            Text(_locationText ?? '', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
+            SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: () async {
                 Navigator.pop(ctx);
@@ -194,16 +194,16 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
                   await launchUrl(uri, mode: LaunchMode.externalApplication);
                 }
               },
-              icon: const Icon(Icons.map),
-              label: const Text('Open in Google Maps'),
+              icon: Icon(Icons.map),
+              label: Text('Open in Google Maps'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xff3B82F6),
+                backgroundColor: Color(0xff3B82F6),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             // SMS with location
             OutlinedButton.icon(
               onPressed: () async {
@@ -217,14 +217,14 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
                   await launchUrl(smsUri);
                 }
               },
-              icon: const Icon(Icons.sms),
-              label: const Text('Send via SMS'),
+              icon: Icon(Icons.sms),
+              label: Text('Send via SMS'),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
           ],
         ),
       ),
@@ -236,16 +236,16 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffFEF2F2),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Stack(
           children: [
-            Positioned(top: 0, left: 0, right: 0, child: Container(height: 200, color: const Color(0xffDC2626))),
+            Positioned(top: 0, left: 0, right: 0, child: Container(height: 200, color: Color(0xffDC2626))),
             Column(
               children: [
                 // Top bar
                 Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(16.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -253,41 +253,41 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
                         onTap: () => Navigator.pop(context),
                         child: Container(
                           width: 40, height: 40,
-                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-                          child: const Icon(Icons.close, color: Colors.white, size: 20),
+                          decoration: BoxDecoration(color: Theme.of(context).cardColor.withOpacity(0.2), shape: BoxShape.circle),
+                          child: Icon(Icons.close, color: Colors.white, size: 20),
                         ),
                       ),
-                      const Row(
+                      Row(
                         children: [
                           Icon(Icons.warning, color: Colors.white),
                           SizedBox(width: 8),
                           Text('EMERGENCY DATA', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 2)),
                         ],
                       ),
-                      const SizedBox(width: 40),
+                      SizedBox(width: 40),
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 Expanded(
                   child: _isLoading
-                      ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                      ? Center(child: CircularProgressIndicator(color: Colors.white))
                       : Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          padding: EdgeInsets.symmetric(horizontal: 24),
                           child: SingleChildScrollView(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 // ═══ QUICK ACTIONS (at TOP for visibility) ═══
                                 Container(
-                                  padding: const EdgeInsets.all(20),
+                                  padding: EdgeInsets.all(20),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: Theme.of(context).cardColor,
                                     borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: const Color(0xffFECACA)),
+                                    border: Border.all(color: Color(0xffFECACA)),
                                     boxShadow: [
-                                      BoxShadow(color: Colors.red.withOpacity(0.08), blurRadius: 16, offset: const Offset(0, 4)),
+                                      BoxShadow(color: Colors.red.withOpacity(0.08), blurRadius: 16, offset: Offset(0, 4)),
                                     ],
                                   ),
                                   child: Column(
@@ -296,22 +296,22 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
                                       Row(
                                         children: [
                                           Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(color: const Color(0xffFEF2F2), borderRadius: BorderRadius.circular(8)),
-                                            child: const Icon(Icons.emergency, color: Color(0xffDC2626), size: 20),
+                                            padding: EdgeInsets.all(8),
+                                            decoration: BoxDecoration(color: Color(0xffFEF2F2), borderRadius: BorderRadius.circular(8)),
+                                            child: Icon(Icons.emergency, color: Color(0xffDC2626), size: 20),
                                           ),
-                                          const SizedBox(width: 12),
-                                          const Text('QUICK ACTIONS', style: TextStyle(color: Color(0xffDC2626), fontWeight: FontWeight.bold, fontSize: 14, letterSpacing: 0.5)),
+                                          SizedBox(width: 12),
+                                          Text('QUICK ACTIONS', style: TextStyle(color: Color(0xffDC2626), fontWeight: FontWeight.bold, fontSize: 14, letterSpacing: 0.5)),
                                         ],
                                       ),
-                                      const SizedBox(height: 16),
+                                      SizedBox(height: 16),
                                       // Call Ambulance
                                       _buildActionButton(
                                         emoji: '🚑', label: 'Call Ambulance', subtitle: 'Dial $_ambulanceNumber for emergency',
                                         gradient: const [Color(0xffDC2626), Color(0xffB91C1C)],
                                         onTap: _callAmbulance,
                                       ),
-                                      const SizedBox(height: 12),
+                                      SizedBox(height: 12),
                                       // Share Location
                                       _buildActionButton(
                                         emoji: '📍', label: 'Share My Location', subtitle: 'Send GPS coordinates via SMS / Maps',
@@ -322,13 +322,13 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
                                   ),
                                 ),
 
-                                const SizedBox(height: 16),
+                                SizedBox(height: 16),
 
                                 // ═══ MY CURRENT LOCATION ═══
                                 Container(
-                                  padding: const EdgeInsets.all(20),
+                                  padding: EdgeInsets.all(20),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: Theme.of(context).cardColor,
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(color: Colors.blue.withOpacity(0.3)),
                                   ),
@@ -338,13 +338,13 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
                                       Row(
                                         children: [
                                           Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(8)),
+                                            padding: EdgeInsets.all(8),
+                                            decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                                             child: Icon(Icons.my_location, color: Colors.blue[700], size: 20),
                                           ),
-                                          const SizedBox(width: 12),
+                                          SizedBox(width: 12),
                                           Text('MY CURRENT LOCATION', style: TextStyle(color: Colors.blue[800], fontWeight: FontWeight.bold, fontSize: 14, letterSpacing: 0.5)),
-                                          const Spacer(),
+                                          Spacer(),
                                           if (!_locationLoading)
                                             GestureDetector(
                                               onTap: _fetchLocation,
@@ -352,13 +352,13 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
                                             ),
                                         ],
                                       ),
-                                      const SizedBox(height: 12),
+                                      SizedBox(height: 12),
                                       if (_locationLoading)
                                         Row(
                                           children: [
                                             SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.blue[600])),
-                                            const SizedBox(width: 10),
-                                            Text('Getting your location...', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                                            SizedBox(width: 10),
+                                            Text('Getting your location...', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 13)),
                                           ],
                                         )
                                       else if (_locationError != null)
@@ -366,7 +366,7 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text(_locationError!, style: TextStyle(color: Colors.red[700], fontSize: 13)),
-                                            const SizedBox(height: 8),
+                                            SizedBox(height: 8),
                                             GestureDetector(
                                               onTap: _fetchLocation,
                                               child: Text('Tap to retry', style: TextStyle(color: Colors.blue[600], fontWeight: FontWeight.w600, fontSize: 13)),
@@ -377,9 +377,9 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
                                         Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text(_locationText!, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+                                            Text(_locationText!, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
                                             if (_locationLink != null) ...[
-                                              const SizedBox(height: 6),
+                                              SizedBox(height: 6),
                                               GestureDetector(
                                                 onTap: () async {
                                                   final uri = Uri.parse(_locationLink!);
@@ -396,33 +396,33 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
                                   ),
                                 ),
 
-                                const SizedBox(height: 24),
+                                SizedBox(height: 24),
 
                                 // Patient Card
                                 Container(
-                                  padding: const EdgeInsets.all(24),
+                                  padding: EdgeInsets.all(24),
                                   decoration: BoxDecoration(
-                                    color: Colors.white, borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [BoxShadow(color: Colors.red.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10))],
+                                    color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [BoxShadow(color: Colors.red.withOpacity(0.1), blurRadius: 20, offset: Offset(0, 10))],
                                   ),
                                   child: Column(
                                     children: [
-                                      const CircleAvatar(radius: 40, backgroundColor: Color(0xffF1F5F9), child: Icon(Icons.person, size: 40, color: Colors.grey)),
-                                      const SizedBox(height: 16),
-                                      Text(_name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
-                                      const SizedBox(height: 4),
-                                      Text('Age: $_age', style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w500)),
-                                      const SizedBox(height: 24),
+                                      CircleAvatar(radius: 40, backgroundColor: Color(0xffF1F5F9), child: Icon(Icons.person, size: 40, color: Colors.grey)),
+                                      SizedBox(height: 16),
+                                      Text(_name, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
+                                      SizedBox(height: 4),
+                                      Text('Age: $_age', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w500)),
+                                      SizedBox(height: 24),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                                        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xffFEF2F2), borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(color: const Color(0xffFECACA)),
+                                          color: Color(0xffFEF2F2), borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(color: Color(0xffFECACA)),
                                         ),
                                         child: Column(
                                           children: [
                                             Text('BLOOD GROUP', style: TextStyle(color: Colors.red[800], fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
-                                            Text(_bloodGroup, style: const TextStyle(color: Color(0xffDC2626), fontSize: 32, fontWeight: FontWeight.w900)),
+                                            Text(_bloodGroup, style: TextStyle(color: Color(0xffDC2626), fontSize: 32, fontWeight: FontWeight.w900)),
                                           ],
                                         ),
                                       ),
@@ -430,48 +430,48 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
                                   ),
                                 ),
 
-                                const SizedBox(height: 24),
+                                SizedBox(height: 24),
 
                                 _buildWarningCard(
                                   title: 'SEVERE ALLERGIES', icon: Icons.warning_amber_rounded,
                                   items: _allergies.isEmpty ? ['None reported'] : _allergies,
-                                  color: const Color(0xffDC2626), bgColor: const Color(0xffFEF2F2),
+                                  color: Color(0xffDC2626), bgColor: Color(0xffFEF2F2),
                                 ),
-                                const SizedBox(height: 16),
+                                SizedBox(height: 16),
                                 _buildWarningCard(
                                   title: 'ACTIVE DISEASES', icon: Icons.coronavirus_outlined,
                                   items: _diseases.isEmpty ? ['None reported'] : _diseases,
-                                  color: Colors.orange[800]!, bgColor: Colors.orange[50]!,
+                                  color: Colors.orange[800]!, bgColor: Colors.orange.withValues(alpha: 0.1)!,
                                 ),
-                                const SizedBox(height: 16),
+                                SizedBox(height: 16),
                                 _buildWarningCard(
                                   title: 'CURRENT MEDICINES', icon: Icons.medication,
                                   items: _medicines.isEmpty ? ['None reported'] : _medicines,
-                                  color: Colors.blue[800]!, bgColor: Colors.blue[50]!,
+                                  color: Colors.blue[800]!, bgColor: Colors.blue.withValues(alpha: 0.1)!,
                                 ),
-                                const SizedBox(height: 16),
+                                SizedBox(height: 16),
 
                                 // Emergency Contact
                                 Container(
-                                  padding: const EdgeInsets.all(20),
+                                  padding: EdgeInsets.all(20),
                                   decoration: BoxDecoration(
-                                    color: Colors.white, borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: Colors.grey[200]!),
+                                    color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: Theme.of(context).dividerColor, ),
                                   ),
                                   child: Row(
                                     children: [
                                       Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(color: Colors.green[50], shape: BoxShape.circle),
-                                        child: const Icon(Icons.phone_in_talk, color: Colors.green),
+                                        padding: EdgeInsets.all(12),
+                                        decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), shape: BoxShape.circle),
+                                        child: Icon(Icons.phone_in_talk, color: Colors.green),
                                       ),
-                                      const SizedBox(width: 16),
+                                      SizedBox(width: 16),
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text('EMERGENCY CONTACT', style: TextStyle(color: Colors.grey[500], fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
-                                            Text(_emergencyContact, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+                                            Text('EMERGENCY CONTACT', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                                            Text(_emergencyContact, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
                                           ],
                                         ),
                                       ),
@@ -484,15 +484,15 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
                                             }
                                           },
                                           child: Container(
-                                            padding: const EdgeInsets.all(10),
-                                            decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(10)),
+                                            padding: EdgeInsets.all(10),
+                                            decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
                                             child: Icon(Icons.call, color: Colors.green[700], size: 20),
                                           ),
                                         ),
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: 40),
+                                SizedBox(height: 40),
                               ],
                             ),
                           ),
@@ -524,20 +524,20 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
           decoration: BoxDecoration(
             gradient: LinearGradient(colors: gradient),
             borderRadius: BorderRadius.circular(14),
-            boxShadow: [BoxShadow(color: gradient[0].withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+            boxShadow: [BoxShadow(color: gradient[0].withOpacity(0.3), blurRadius: 8, offset: Offset(0, 4))],
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            padding: EdgeInsets.symmetric(horizontal: 18, vertical: 16),
             child: Row(
               children: [
-                Text(emoji, style: const TextStyle(fontSize: 28)),
-                const SizedBox(width: 14),
+                Text(emoji, style: TextStyle(fontSize: 28)),
+                SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(label, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 2),
+                      Text(label, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      SizedBox(height: 2),
                       Text(subtitle, style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12)),
                     ],
                   ),
@@ -555,28 +555,28 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
 
   Widget _buildWarningCard({required String title, required IconData icon, required List<String> items, required Color color, required Color bgColor}) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.circular(16),
+        color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: color, size: 20)),
-            const SizedBox(width: 12),
+            Container(padding: EdgeInsets.all(8), decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: color, size: 20)),
+            SizedBox(width: 12),
             Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 14, letterSpacing: 0.5)),
           ]),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           ...items.map((item) => Padding(
-            padding: const EdgeInsets.only(bottom: 8.0, left: 4),
+            padding: EdgeInsets.only(bottom: 8.0, left: 4),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(padding: const EdgeInsets.only(top: 6), child: CircleAvatar(radius: 3, backgroundColor: color)),
-                const SizedBox(width: 8),
-                Expanded(child: Text(item, style: const TextStyle(fontSize: 15, color: Color(0xff1E293B), fontWeight: FontWeight.w600))),
+                Padding(padding: EdgeInsets.only(top: 6), child: CircleAvatar(radius: 3, backgroundColor: color)),
+                SizedBox(width: 8),
+                Expanded(child: Text(item, style: TextStyle(fontSize: 15, color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600))),
               ],
             ),
           )),

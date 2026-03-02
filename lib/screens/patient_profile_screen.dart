@@ -6,7 +6,7 @@ import '../services/qr_crypto_service.dart';
 
 class PatientProfileScreen extends StatefulWidget {
   final String patientId;
-  const PatientProfileScreen({super.key, required this.patientId});
+  PatientProfileScreen({super.key, required this.patientId});
 
   @override
   State<PatientProfileScreen> createState() => _PatientProfileScreenState();
@@ -143,7 +143,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
         if (mounted) {
           setState(() { _isEditing = false; _isSaving = false; });
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile updated! QR code refreshed.')),
+            SnackBar(content: Text('Profile updated! QR code refreshed.')),
           );
         }
       }
@@ -161,7 +161,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     if (_encryptedQR == null) return;
     showDialog(
       context: context,
-      barrierColor: const Color(0xEE1E293B),
+      barrierColor: Color(0xEE1E293B),
       builder: (ctx) => GestureDetector(
         onTap: () => Navigator.pop(ctx),
         child: Scaffold(
@@ -170,14 +170,14 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Scan My QR', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 1)),
-                const SizedBox(height: 8),
-                Text('Tap anywhere to close', style: TextStyle(color: Colors.grey[400], fontSize: 13)),
-                const SizedBox(height: 32),
+                Text('Scan My QR', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                SizedBox(height: 8),
+                Text('Tap anywhere to close', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3), fontSize: 13)),
+                SizedBox(height: 32),
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: QrImageView(
@@ -185,13 +185,15 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                     version: QrVersions.auto,
                     size: 280.0,
                     backgroundColor: Colors.white,
+                    eyeStyle: const QrEyeStyle(color: Colors.black),
+                    dataModuleStyle: const QrDataModuleStyle(color: Colors.black),
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(8)),
-                  child: Text('ID: ${widget.patientId}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 2, color: Color(0xffDC2626))),
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                  child: Text('ID: ${widget.patientId}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 2, color: Color(0xffDC2626))),
                 ),
               ],
             ),
@@ -204,13 +206,13 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('My Profile', style: TextStyle(color: Color(0xff1E293B), fontSize: 18, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text('My Profile', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xff1E293B)),
+          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
@@ -227,11 +229,11 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : _data == null
-              ? const Center(child: Text('Failed to load profile.'))
+              ? Center(child: Text('Failed to load profile.'))
               : SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.all(24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -244,12 +246,12 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                               GestureDetector(
                                 onLongPress: () => _showQRPopup(),
                                 child: Container(
-                                  padding: const EdgeInsets.all(16),
+                                  padding: EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: Theme.of(context).cardColor,
                                     borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: Colors.grey[200]!),
-                                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4))],
+                                    border: Border.all(color: Theme.of(context).dividerColor, ),
+                                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: Offset(0, 4))],
                                   ),
                                   child: Column(
                                     children: [
@@ -258,47 +260,49 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                                         version: QrVersions.auto,
                                         size: 180.0,
                                         backgroundColor: Colors.white,
+                                        eyeStyle: const QrEyeStyle(color: Colors.black),
+                                        dataModuleStyle: const QrDataModuleStyle(color: Colors.black),
                                       ),
-                                      const SizedBox(height: 10),
+                                      SizedBox(height: 10),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                        decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(20)),
+                                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Icon(Icons.lock, color: Colors.green[700], size: 13),
-                                            const SizedBox(width: 4),
+                                            SizedBox(width: 4),
                                             Text('AES-256 Encrypted', style: TextStyle(color: Colors.green[700], fontSize: 11, fontWeight: FontWeight.w600)),
                                           ],
                                         ),
                                       ),
-                                      const SizedBox(height: 6),
-                                      Text('Hold to enlarge', style: TextStyle(fontSize: 11, color: Colors.grey[400])),
+                                      SizedBox(height: 6),
+                                      Text('Hold to enlarge', style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3))),
                                     ],
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                              SizedBox(height: 16),
                             ],
                             // Name + ID
-                            Text(_data!['name'] ?? '-', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
-                            const SizedBox(height: 4),
+                            Text(_data!['name'] ?? '-', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
+                            SizedBox(height: 4),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                              decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(8)),
-                              child: Text('ID: ${widget.patientId}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.5, color: Color(0xffDC2626))),
+                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                              child: Text('ID: ${widget.patientId}', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.5, color: Color(0xffDC2626))),
                             ),
-                            const SizedBox(height: 6),
-                            Text('Show this QR to your doctor for instant access.', style: TextStyle(fontSize: 12, color: Colors.grey[400])),
+                            SizedBox(height: 6),
+                            Text('Show this QR to your doctor for instant access.', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3))),
                           ],
                         ),
                       ),
 
-                      const SizedBox(height: 32),
+                      SizedBox(height: 32),
 
                       // ── PERSONAL INFO ──
                       _sectionHeader('PERSONAL INFO'),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
                       _isEditing
                           ? Column(children: [
                               _editField('Age', _ageController, Icons.cake_outlined, keyboardType: TextInputType.number),
@@ -314,11 +318,11 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                               _infoRow(Icons.phone_outlined, 'Emergency Contact', _data!['emergencyContact'] ?? '-'),
                             ]),
 
-                      const SizedBox(height: 28),
+                      SizedBox(height: 28),
 
                       // ── MEDICAL HISTORY ──
                       _sectionHeader('MEDICAL HISTORY'),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
                       _isEditing
                           ? Column(children: [
                               _editField('Allergies', _allergiesController, Icons.warning_amber_rounded),
@@ -341,7 +345,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                               _infoRow(Icons.healing_outlined, 'Treatments', _listStr('treatments')),
                             ]),
 
-                      const SizedBox(height: 28),
+                      SizedBox(height: 28),
 
                       // ── ACTIONS ──
                       if (_isEditing) ...[
@@ -350,13 +354,13 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                           child: ElevatedButton(
                             onPressed: _isSaving ? null : _save,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xffDC2626),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              backgroundColor: Color(0xffDC2626),
+                              padding: EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                             child: _isSaving
-                                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                : const Text('SAVE CHANGES', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                                ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                : Text('SAVE CHANGES', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
                           ),
                         ),
                       ] else ...[
@@ -367,18 +371,18 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                               await AuthService.signOut();
                               if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
                             },
-                            icon: const Icon(Icons.logout, color: Colors.red),
-                            label: const Text('Logout', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
+                            icon: Icon(Icons.logout, color: Colors.red),
+                            label: Text('Logout', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
                             style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              side: const BorderSide(color: Colors.red),
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                              side: BorderSide(color: Colors.red),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                           ),
                         ),
                       ],
 
-                      const SizedBox(height: 40),
+                      SizedBox(height: 40),
                     ],
                   ),
                 ),
@@ -392,28 +396,28 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
   }
 
   Widget _sectionHeader(String text) {
-    return Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.5));
+    return Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.5));
   }
 
   Widget _infoRow(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: EdgeInsets.only(bottom: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8)),
-            child: Icon(icon, color: Colors.grey[600], size: 18),
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+            child: Icon(icon, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), size: 18),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[500], fontWeight: FontWeight.w500)),
-                const SizedBox(height: 2),
-                Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xff1E293B))),
+                Text(label, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w500)),
+                SizedBox(height: 2),
+                Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
               ],
             ),
           ),
@@ -424,7 +428,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
 
   Widget _editField(String label, TextEditingController controller, IconData icon, {TextInputType keyboardType = TextInputType.text}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.only(bottom: 12),
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
@@ -432,7 +436,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
           labelText: label,
           prefixIcon: Icon(icon, size: 20),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
     );

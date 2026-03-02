@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
 class PatientRegisterScreen extends StatefulWidget {
-  const PatientRegisterScreen({super.key});
+  PatientRegisterScreen({super.key});
 
   @override
   State<PatientRegisterScreen> createState() => _PatientRegisterScreenState();
@@ -81,28 +81,28 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
         _emergencyContactController.text.trim().isEmpty ||
         _passwordController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all required fields.')),
+        SnackBar(content: Text('Please fill in all required fields.')),
       );
       return;
     }
 
     if (!_isValidEmail(_emailController.text.trim())) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid email address.')),
+        SnackBar(content: Text('Please enter a valid email address.')),
       );
       return;
     }
 
     if (!_isValidPhone(_emergencyContactController.text.trim())) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Phone number must be exactly 10 digits.')),
+        SnackBar(content: Text('Phone number must be exactly 10 digits.')),
       );
       return;
     }
 
     if (!_isPasswordStrong(_passwordController.text)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fix the errors in your password.')),
+        SnackBar(content: Text('Please fix the errors in your password.')),
       );
       return;
     }
@@ -136,25 +136,25 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          title: const Text('Registration Successful!'),
+          title: Text('Registration Successful!'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.check_circle, color: Colors.green, size: 64),
-              const SizedBox(height: 16),
-              const Text('Your Patient ID is:'),
-              const SizedBox(height: 8),
+              Icon(Icons.check_circle, color: Colors.green, size: 64),
+              SizedBox(height: 16),
+              Text('Your Patient ID is:'),
+              SizedBox(height: 8),
               SelectableText(
                 patientId,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w900,
                   color: Color(0xffDC2626),
                   letterSpacing: 2,
                 ),
               ),
-              const SizedBox(height: 8),
-              const Text(
+              SizedBox(height: 8),
+              Text(
                 'Save this ID! Doctors will use it to access your records.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12, color: Colors.grey),
@@ -167,7 +167,7 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
                 Navigator.pop(ctx); // close dialog
                 Navigator.pop(context); // go back to login
               },
-              child: const Text('GO TO LOGIN'),
+              child: Text('GO TO LOGIN'),
             ),
           ],
         ),
@@ -187,65 +187,65 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xff1E293B)),
+          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Patient Registration',
-          style: TextStyle(color: Color(0xff1E293B), fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 24),
         child: Column(
           children: [
             Container(
               width: 80, height: 80,
               decoration: BoxDecoration(
-                color: Colors.blue[50], shape: BoxShape.circle,
-                border: Border.all(color: Colors.blue[100]!),
+                color: Colors.blue.withValues(alpha: 0.1), shape: BoxShape.circle,
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
               ),
-              child: const Icon(Icons.assignment_ind, color: Colors.blue, size: 36),
+              child: Icon(Icons.assignment_ind, color: Colors.blue, size: 36),
             ),
-            const SizedBox(height: 24),
-            const Text('Create Your Profile',
+            SizedBox(height: 24),
+            Text('Create Your Profile',
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Color(0xff0F172A), letterSpacing: -0.5),
             ),
-            const SizedBox(height: 8),
-            const Text('Generate your unique Patient ID instantly.',
+            SizedBox(height: 8),
+            Text('Generate your unique Patient ID instantly.',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
 
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xffF8FAFC),
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey[200]!),
+                border: Border.all(color: Theme.of(context).dividerColor, ),
               ),
               child: Column(
                 children: [
                   _buildInputField(label: 'FULL NAME', controller: _nameController, prefixIcon: Icons.person_outline, hintText: 'Jane Doe'),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   Row(
                     children: [
                       Expanded(child: _buildInputField(label: 'AGE', controller: _ageController, prefixIcon: Icons.cake_outlined, hintText: 'e.g., 34', keyboardType: TextInputType.number)),
-                      const SizedBox(width: 16),
+                      SizedBox(width: 16),
                       Expanded(child: _buildInputField(label: 'BLOOD GROUP', controller: _bloodGroupController, prefixIcon: Icons.bloodtype_outlined, hintText: 'e.g., O+')),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   _buildInputField(label: 'WEIGHT (kg)', controller: _weightController, prefixIcon: Icons.monitor_weight_outlined, hintText: 'e.g., 70', keyboardType: TextInputType.number),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   _buildInputField(label: 'HEIGHT (cm)', controller: _heightController, prefixIcon: Icons.height, hintText: 'e.g., 170', keyboardType: TextInputType.number),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
 
                   // --- PHONE FIELD WITH LIVE VALIDATION ---
                   _buildInputField(
@@ -257,8 +257,8 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
                     onChanged: (val) => setState(() => _hasStartedTypingPhone = true),
                     bottomWidget: _buildPhoneCriteria(),
                   ),
-                  const SizedBox(height: 20),
-                  Divider(color: Colors.grey[300], height: 32),
+                  SizedBox(height: 20),
+                  Divider(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3), height: 32),
 
                   // --- EMAIL FIELD WITH LIVE VALIDATION ---
                   _buildInputField(
@@ -270,7 +270,7 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
                     onChanged: (val) => setState(() => _hasStartedTypingEmail = true),
                     bottomWidget: _buildEmailCriteria(),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
 
                   // --- PASSWORD FIELD WITH LIVE VALIDATION ---
                   _buildInputField(
@@ -282,35 +282,35 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
                     onChanged: (val) => setState(() => _hasStartedTypingPassword = true),
                     bottomWidget: _buildPasswordCriteria(),
                   ),
-                  const SizedBox(height: 20),
-                  Divider(color: Colors.grey[300], height: 32),
-                  const Text('MEDICAL HISTORY (OPTIONAL)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5)),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 20),
+                  Divider(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3), height: 32),
+                  Text('MEDICAL HISTORY (OPTIONAL)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5)),
+                  SizedBox(height: 16),
                   
                   _buildInputField(label: 'ALLERGIES', controller: _allergiesController, prefixIcon: Icons.warning_amber_rounded, hintText: 'Any known allergies?'),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(child: _buildInputField(label: 'PAST DISEASES', controller: _pastDiseasesController, prefixIcon: Icons.history, hintText: 'E.g., Jaundice')),
-                      const SizedBox(width: 16),
+                      SizedBox(width: 16),
                       Expanded(child: _buildInputField(label: 'CURRENT DISEASES', controller: _currentDiseasesController, prefixIcon: Icons.coronavirus_outlined, hintText: 'E.g., Diabetes')),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   _buildInputField(label: 'CHRONIC DISEASES', controller: _chronicDiseasesController, prefixIcon: Icons.favorite_border, hintText: 'E.g., Blood Pressure, Asthma'),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(child: _buildInputField(label: 'CURRENT MEDICINES', controller: _currentMedicinesController, prefixIcon: Icons.medication, hintText: 'E.g., Metformin')),
-                      const SizedBox(width: 16),
+                      SizedBox(width: 16),
                       Expanded(child: _buildInputField(label: 'OLD MEDICINES', controller: _oldMedicinesController, prefixIcon: Icons.medication_outlined, hintText: 'Past medications')),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(child: _buildInputField(label: 'PAST SURGERIES', controller: _surgeriesController, prefixIcon: Icons.content_cut_outlined, hintText: 'E.g., Appendectomy')),
-                      const SizedBox(width: 16),
+                      SizedBox(width: 16),
                       Expanded(child: _buildInputField(label: 'TREATMENTS', controller: _treatmentsController, prefixIcon: Icons.healing_outlined, hintText: 'E.g., Physiotherapy')),
                     ],
                   ),
@@ -318,22 +318,22 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
               ),
             ),
 
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
 
             _isLoading
-                ? const CircularProgressIndicator(color: Color(0xffDC2626))
+                ? CircularProgressIndicator(color: Color(0xffDC2626))
                 : ElevatedButton(
                     onPressed: _register,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xffDC2626),
-                      minimumSize: const Size(double.infinity, 56),
+                      backgroundColor: Color(0xffDC2626),
+                      minimumSize: Size(double.infinity, 56),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
                     ),
-                    child: const Text('REGISTER', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    child: Text('REGISTER', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
 
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
           ],
         ),
       ),
@@ -342,12 +342,12 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
 
   // --- REAL-TIME FEEDBACK WIDGETS ---
   Widget _buildPhoneCriteria() {
-    if (!_hasStartedTypingPhone) return const SizedBox.shrink();
+    if (!_hasStartedTypingPhone) return SizedBox.shrink();
     bool isValid = _isValidPhone(_emergencyContactController.text.trim());
     return Row(
       children: [
         Icon(isValid ? Icons.check_circle : Icons.cancel, color: isValid ? Colors.green : Colors.red, size: 16),
-        const SizedBox(width: 6),
+        SizedBox(width: 6),
         Text(
           isValid ? 'Valid phone number' : 'Must be exactly 10 digits',
           style: TextStyle(color: isValid ? Colors.green : Colors.red, fontSize: 12, fontWeight: FontWeight.w500),
@@ -357,12 +357,12 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
   }
 
   Widget _buildEmailCriteria() {
-    if (!_hasStartedTypingEmail) return const SizedBox.shrink();
+    if (!_hasStartedTypingEmail) return SizedBox.shrink();
     bool isValid = _isValidEmail(_emailController.text.trim());
     return Row(
       children: [
         Icon(isValid ? Icons.check_circle : Icons.cancel, color: isValid ? Colors.green : Colors.red, size: 16),
-        const SizedBox(width: 6),
+        SizedBox(width: 6),
         Text(
           isValid ? 'Valid email address' : 'Please enter a valid email address',
           style: TextStyle(color: isValid ? Colors.green : Colors.red, fontSize: 12, fontWeight: FontWeight.w500),
@@ -372,13 +372,13 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
   }
 
   Widget _buildPasswordCriteria() {
-    if (!_hasStartedTypingPassword) return const SizedBox.shrink();
+    if (!_hasStartedTypingPassword) return SizedBox.shrink();
     bool isStrong = _isPasswordStrong(_passwordController.text);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(isStrong ? Icons.check_circle : Icons.cancel, color: isStrong ? Colors.green : Colors.red, size: 16),
-        const SizedBox(width: 6),
+        SizedBox(width: 6),
         Expanded(
           child: Text(
             isStrong ? 'Strong password' : 'Must be 8+ chars, include A-Z, a-z, 0-9, and a symbol (!@#\$&*~)',
@@ -403,8 +403,8 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xff1E293B), letterSpacing: 0.5)),
-        const SizedBox(height: 8),
+        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, letterSpacing: 0.5)),
+        SizedBox(height: 8),
         TextField(
           controller: controller,
           obscureText: isPassword ? _obscurePassword : false,
@@ -412,19 +412,19 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
           onChanged: onChanged,
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.w500),
-            prefixIcon: Icon(prefixIcon, color: Colors.grey[400]),
-            suffixIcon: isPassword ? IconButton(icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Colors.grey[400]), onPressed: () => setState(() => _obscurePassword = !_obscurePassword)) : null,
+            hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3), fontWeight: FontWeight.w500),
+            prefixIcon: Icon(prefixIcon, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
+            suffixIcon: isPassword ? IconButton(icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)), onPressed: () => setState(() => _obscurePassword = !_obscurePassword)) : null,
             filled: true,
-            fillColor: Colors.white,
+            fillColor: Theme.of(context).inputDecorationTheme.fillColor,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xffDC2626))),
-            contentPadding: const EdgeInsets.symmetric(vertical: 16),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Color(0xffDC2626))),
+            contentPadding: EdgeInsets.symmetric(vertical: 16),
           ),
         ),
         if (bottomWidget != null) ...[
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           bottomWidget,
         ]
       ],

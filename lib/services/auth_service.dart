@@ -123,7 +123,9 @@ class AuthService {
     if (query.docs.isEmpty) {
       throw Exception('No patient found with ID: $patientId');
     }
-    final email = query.docs.first.data()['email'] as String;
+    // Decrypt email in case it's encrypted (backward compatible — returns plain text as-is)
+    final rawEmail = query.docs.first.data()['email'] as String;
+    final email = EncryptionService.decryptData(rawEmail);
 
     // Sign in with the found email
     return patientLogin(email: email, password: password);
