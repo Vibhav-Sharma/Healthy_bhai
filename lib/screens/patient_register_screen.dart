@@ -19,6 +19,11 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
 
+  // Track if user has started typing to show live feedback
+  bool _hasStartedTypingPhone = false;
+  bool _hasStartedTypingPassword = false;
+  bool _hasStartedTypingEmail = false;
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -30,13 +35,53 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
     super.dispose();
   }
 
+  // --- VALIDATION LOGIC (copied from Doctor Registration) ---
+  bool _isPasswordStrong(String password) {
+    if (password.length < 8) return false;
+    if (!password.contains(RegExp(r'[A-Z]'))) return false;
+    if (!password.contains(RegExp(r'[a-z]'))) return false;
+    if (!password.contains(RegExp(r'[0-9]'))) return false;
+    if (!password.contains(RegExp(r'[!@#\$&*~]'))) return false;
+    return true;
+  }
+
+  bool _isValidPhone(String phone) {
+    return RegExp(r'^\d{10}$').hasMatch(phone);
+  }
+
+  bool _isValidEmail(String email) {
+    return RegExp(r'^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$').hasMatch(email);
+  }
+
   Future<void> _register() async {
-    // Validate
+    // Validate all required fields
     if (_nameController.text.trim().isEmpty ||
         _emailController.text.trim().isEmpty ||
+        _emergencyContactController.text.trim().isEmpty ||
         _passwordController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in Name, Email, and Password.')),
+        const SnackBar(content: Text('Please fill in all required fields.')),
+      );
+      return;
+    }
+
+    if (!_isValidEmail(_emailController.text.trim())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email address.')),
+      );
+      return;
+    }
+
+    if (!_isValidPhone(_emergencyContactController.text.trim())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Phone number must be exactly 10 digits.')),
+      );
+      return;
+    }
+
+    if (!_isPasswordStrong(_passwordController.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fix the errors in your password.')),
       );
       return;
     }
@@ -98,9 +143,11 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString().replaceAll('Exception: ', '')}')),
-      );
+      // Clean up the Firebase error message so it looks nice
+      String msg = e.toString()
+          .replaceAll('Exception: ', '')
+          .replaceAll('[firebase_auth/email-already-in-use]', 'This email is already registered. Please use a different email or log in.');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg.trim())));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -164,12 +211,42 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  _buildInputField(label: 'EMERGENCY CONTACT', controller: _emergencyContactController, prefixIcon: Icons.phone_outlined, hintText: '+1 234 567 8900', keyboardType: TextInputType.phone),
+
+                  // --- PHONE FIELD WITH LIVE VALIDATION ---
+                  _buildInputField(
+                    label: 'EMERGENCY CONTACT',
+                    controller: _emergencyContactController,
+                    prefixIcon: Icons.phone_outlined,
+                    hintText: '10-digit mobile number',
+                    keyboardType: TextInputType.phone,
+                    onChanged: (val) => setState(() => _hasStartedTypingPhone = true),
+                    bottomWidget: _buildPhoneCriteria(),
+                  ),
                   const SizedBox(height: 20),
                   Divider(color: Colors.grey[300], height: 32),
-                  _buildInputField(label: 'EMAIL ADDRESS', controller: _emailController, prefixIcon: Icons.mail_outline, hintText: 'jane@example.com', keyboardType: TextInputType.emailAddress),
+
+                  // --- EMAIL FIELD WITH LIVE VALIDATION ---
+                  _buildInputField(
+                    label: 'EMAIL ADDRESS',
+                    controller: _emailController,
+                    prefixIcon: Icons.mail_outline,
+                    hintText: 'jane@example.com',
+                    keyboardType: TextInputType.emailAddress,
+                    onChanged: (val) => setState(() => _hasStartedTypingEmail = true),
+                    bottomWidget: _buildEmailCriteria(),
+                  ),
                   const SizedBox(height: 20),
-                  _buildInputField(label: 'PASSWORD', controller: _passwordController, prefixIcon: Icons.lock_outline, hintText: '••••••••', isPassword: true),
+
+                  // --- PASSWORD FIELD WITH LIVE VALIDATION ---
+                  _buildInputField(
+                    label: 'PASSWORD',
+                    controller: _passwordController,
+                    prefixIcon: Icons.lock_outline,
+                    hintText: 'Create a strong password',
+                    isPassword: true,
+                    onChanged: (val) => setState(() => _hasStartedTypingPassword = true),
+                    bottomWidget: _buildPasswordCriteria(),
+                  ),
                 ],
               ),
             ),
@@ -196,6 +273,56 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
     );
   }
 
+  // --- REAL-TIME FEEDBACK WIDGETS ---
+  Widget _buildPhoneCriteria() {
+    if (!_hasStartedTypingPhone) return const SizedBox.shrink();
+    bool isValid = _isValidPhone(_emergencyContactController.text.trim());
+    return Row(
+      children: [
+        Icon(isValid ? Icons.check_circle : Icons.cancel, color: isValid ? Colors.green : Colors.red, size: 16),
+        const SizedBox(width: 6),
+        Text(
+          isValid ? 'Valid phone number' : 'Must be exactly 10 digits',
+          style: TextStyle(color: isValid ? Colors.green : Colors.red, fontSize: 12, fontWeight: FontWeight.w500),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmailCriteria() {
+    if (!_hasStartedTypingEmail) return const SizedBox.shrink();
+    bool isValid = _isValidEmail(_emailController.text.trim());
+    return Row(
+      children: [
+        Icon(isValid ? Icons.check_circle : Icons.cancel, color: isValid ? Colors.green : Colors.red, size: 16),
+        const SizedBox(width: 6),
+        Text(
+          isValid ? 'Valid email address' : 'Please enter a valid email address',
+          style: TextStyle(color: isValid ? Colors.green : Colors.red, fontSize: 12, fontWeight: FontWeight.w500),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordCriteria() {
+    if (!_hasStartedTypingPassword) return const SizedBox.shrink();
+    bool isStrong = _isPasswordStrong(_passwordController.text);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(isStrong ? Icons.check_circle : Icons.cancel, color: isStrong ? Colors.green : Colors.red, size: 16),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            isStrong ? 'Strong password' : 'Must be 8+ chars, include A-Z, a-z, 0-9, and a symbol (!@#\$&*~)',
+            style: TextStyle(color: isStrong ? Colors.green : Colors.red, fontSize: 12, fontWeight: FontWeight.w500, height: 1.3),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- STANDARD INPUT FIELD (with onChanged + bottomWidget support) ---
   Widget _buildInputField({
     required String label,
     required TextEditingController controller,
@@ -203,6 +330,8 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
     required String hintText,
     bool isPassword = false,
     TextInputType keyboardType = TextInputType.text,
+    ValueChanged<String>? onChanged,
+    Widget? bottomWidget,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,6 +342,7 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
           controller: controller,
           obscureText: isPassword ? _obscurePassword : false,
           keyboardType: keyboardType,
+          onChanged: onChanged,
           decoration: InputDecoration(
             hintText: hintText,
             hintStyle: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.w500),
@@ -226,6 +356,10 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
             contentPadding: const EdgeInsets.symmetric(vertical: 16),
           ),
         ),
+        if (bottomWidget != null) ...[
+          const SizedBox(height: 8),
+          bottomWidget,
+        ]
       ],
     );
   }
