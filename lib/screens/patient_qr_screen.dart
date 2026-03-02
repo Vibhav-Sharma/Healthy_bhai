@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class PatientQRScreen extends StatelessWidget {
@@ -66,7 +67,12 @@ class PatientQRScreen extends StatelessWidget {
             const SizedBox(height: 64),
 
             OutlinedButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: patientId));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Patient ID "$patientId" copied to clipboard!'), duration: const Duration(seconds: 2)),
+                );
+              },
               icon: const Icon(Icons.share, color: Colors.white),
               label: const Text('Share ID', style: TextStyle(color: Colors.white)),
               style: OutlinedButton.styleFrom(

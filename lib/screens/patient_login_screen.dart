@@ -14,6 +14,7 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -25,7 +26,7 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
   Future<void> _login() async {
     if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter email and password.')),
+        const SnackBar(content: Text('Please enter email/Patient ID and password.')),
       );
       return;
     }
@@ -33,10 +34,23 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final patientId = await AuthService.patientLogin(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      final input = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+
+      String patientId;
+      if (AuthService.isPatientId(input)) {
+        // Login using PatientID
+        patientId = await AuthService.patientLoginWithId(
+          patientId: input.toUpperCase(),
+          password: password,
+        );
+      } else {
+        // Login using email
+        patientId = await AuthService.patientLogin(
+          email: input,
+          password: password,
+        );
+      }
 
       if (!mounted) return;
 
@@ -49,10 +63,10 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
       if (!mounted) return;
       String msg = e.toString().replaceAll('Exception: ', '');
       // Clean up Firebase error messages
-      if (msg.contains('user-not-found')) msg = 'No account found with this email.';
+      if (msg.contains('user-not-found')) msg = 'No account found.';
       if (msg.contains('wrong-password')) msg = 'Incorrect password.';
       if (msg.contains('invalid-email')) msg = 'Invalid email address.';
-      if (msg.contains('invalid-credential')) msg = 'Invalid email or password.';
+      if (msg.contains('invalid-credential')) msg = 'Invalid email/ID or password.';
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(msg)),
@@ -117,13 +131,12 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
                         children: [
                           const Padding(
                             padding: EdgeInsets.only(left: 4, bottom: 8),
-                            child: Text('Email Address', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+                            child: Text('Email or Patient ID', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
                           ),
                           TextField(
                             controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
-                              hintText: 'name@example.com',
+                              hintText: 'name@example.com or HB-XXXX-XX',
                               hintStyle: TextStyle(color: Colors.grey[400]),
                               prefixIcon: Icon(Icons.mail, color: Colors.grey[400]),
                               filled: true, fillColor: Colors.white,
@@ -147,12 +160,12 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
                           ),
                           TextField(
                             controller: _passwordController,
-                            obscureText: true,
+                            obscureText: _obscurePassword,
                             decoration: InputDecoration(
                               hintText: 'Enter your password',
                               hintStyle: TextStyle(color: Colors.grey[400]),
                               prefixIcon: Icon(Icons.lock, color: Colors.grey[400]),
-                              suffixIcon: Icon(Icons.visibility, color: Colors.grey[400]),
+                              suffixIcon: IconButton(icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Colors.grey[400]), onPressed: () => setState(() => _obscurePassword = !_obscurePassword)),
                               filled: true, fillColor: Colors.white,
                               contentPadding: const EdgeInsets.symmetric(vertical: 20),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),

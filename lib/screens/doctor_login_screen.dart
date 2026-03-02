@@ -14,6 +14,7 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -25,7 +26,7 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
   Future<void> _login() async {
     if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter email and password.')),
+        const SnackBar(content: Text('Please enter email/Doctor ID and password.')),
       );
       return;
     }
@@ -33,10 +34,21 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final doctorId = await AuthService.doctorLogin(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      final input = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+
+      String doctorId;
+      if (AuthService.isDoctorId(input)) {
+        doctorId = await AuthService.doctorLoginWithId(
+          doctorId: input.toUpperCase(),
+          password: password,
+        );
+      } else {
+        doctorId = await AuthService.doctorLogin(
+          email: input,
+          password: password,
+        );
+      }
 
       if (!mounted) return;
 
@@ -47,10 +59,10 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
     } catch (e) {
       if (!mounted) return;
       String msg = e.toString().replaceAll('Exception: ', '');
-      if (msg.contains('user-not-found')) msg = 'No account found with this email.';
+      if (msg.contains('user-not-found')) msg = 'No account found.';
       if (msg.contains('wrong-password')) msg = 'Incorrect password.';
       if (msg.contains('invalid-email')) msg = 'Invalid email address.';
-      if (msg.contains('invalid-credential')) msg = 'Invalid email or password.';
+      if (msg.contains('invalid-credential')) msg = 'Invalid email/ID or password.';
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } finally {
@@ -100,7 +112,7 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
               ),
               child: Column(
                 children: [
-                  _buildInputField(label: 'Email Address', controller: _emailController, prefixIcon: Icons.mail, hintText: 'doctor@hospital.com'),
+                  _buildInputField(label: 'Email or Doctor ID', controller: _emailController, prefixIcon: Icons.mail, hintText: 'doctor@hospital.com or DR-XXXX-XX'),
                   const SizedBox(height: 24),
                   _buildInputField(label: 'Password', controller: _passwordController, prefixIcon: Icons.lock, hintText: 'Enter your password', isPassword: true),
                   const SizedBox(height: 32),
@@ -150,12 +162,12 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
         ),
         TextField(
           controller: controller,
-          obscureText: isPassword,
+          obscureText: isPassword ? _obscurePassword : false,
           decoration: InputDecoration(
             hintText: hintText,
             hintStyle: TextStyle(color: Colors.grey[400]),
             prefixIcon: Icon(prefixIcon, color: Colors.grey[400]),
-            suffixIcon: isPassword ? Icon(Icons.visibility, color: Colors.grey[400]) : null,
+            suffixIcon: isPassword ? IconButton(icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Colors.grey[400]), onPressed: () => setState(() => _obscurePassword = !_obscurePassword)) : null,
             filled: true, fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(vertical: 20),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
