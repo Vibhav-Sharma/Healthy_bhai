@@ -3,9 +3,11 @@ import 'medical_timeline_screen.dart';
 import 'document_upload_screen.dart';
 import 'emergency_mode_screen.dart';
 import 'patient_qr_screen.dart';
-import 'ai_emergency_assistant_screen.dart';
+import 'ai_assistant_screen.dart';
+
 class PatientDashboard extends StatelessWidget {
-  const PatientDashboard({super.key});
+  final String patientId;
+  const PatientDashboard({super.key, required this.patientId});
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +70,7 @@ class PatientDashboard extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const AIEmergencyAssistantScreen()));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AiAssistantScreen(patientId: patientId)));
         },
         backgroundColor: Colors.blue,
         child: const Icon(Icons.smart_toy, color: Colors.white),
@@ -81,8 +83,8 @@ class PatientDashboard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header
-                const Text(
-                  'Hello, Patient',
+                Text(
+                  'Hello, Patient ($patientId)',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
@@ -115,28 +117,28 @@ class PatientDashboard extends StatelessWidget {
                       icon: Icons.history_edu,
                       title: 'Medical History',
                       subtitle: 'Detailed logs of your past treatments.',
-                      destination: const MedicalTimelineScreen(),
+                      destination: MedicalTimelineScreen(patientId: patientId),
                     ),
                      _buildGridButton(
                       context,
                       icon: Icons.upload_file,
                       title: 'Upload Reports',
                       subtitle: 'Add new lab results or documents.',
-                      destination: const DocumentUploadScreen(),
+                      destination: DocumentUploadScreen(patientId: patientId),
                     ),
                      _buildGridButton(
                       context,
                       icon: Icons.local_hospital,
                       title: 'Emergency Info',
                       subtitle: 'Critical medical data for responders.',
-                      destination: const EmergencyModeScreen(),
+                      destination: EmergencyModeScreen(patientId: patientId),
                     ),
                      _buildGridButton(
                       context,
                       icon: Icons.qr_code_2,
                       title: 'My QR Code',
                       subtitle: 'Your unique patient identifier.',
-                      destination: const PatientQRScreen(),
+                      destination: PatientQRScreen(patientId: patientId),
                     ),
                   ],
                 ),

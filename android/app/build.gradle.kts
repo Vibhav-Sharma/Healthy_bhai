@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "health.com"
+    namespace = "com.example.flutter_application_1"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,8 +20,8 @@ android {
     }
 
     defaultConfig {
-        applicationId = "health.com"
-        minSdk = flutter.minSdkVersion
+        applicationId = "com.example.flutter_application_1"
+        minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

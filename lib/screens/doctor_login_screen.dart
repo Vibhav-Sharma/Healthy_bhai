@@ -1,363 +1,168 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 import 'doctor_dashboard.dart';
 import 'doctor_register_screen.dart';
 
-class DoctorLoginScreen extends StatelessWidget {
+class DoctorLoginScreen extends StatefulWidget {
   const DoctorLoginScreen({super.key});
+
+  @override
+  State<DoctorLoginScreen> createState() => _DoctorLoginScreenState();
+}
+
+class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login() async {
+    if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter email and password.')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final doctorId = await AuthService.doctorLogin(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => DoctorDashboard(doctorId: doctorId)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      String msg = e.toString().replaceAll('Exception: ', '');
+      if (msg.contains('user-not-found')) msg = 'No account found with this email.';
+      if (msg.contains('wrong-password')) msg = 'Incorrect password.';
+      if (msg.contains('invalid-email')) msg = 'Invalid email address.';
+      if (msg.contains('invalid-credential')) msg = 'Invalid email or password.';
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          // Background grid pattern simulation
-          Positioned.fill(
-              child: Opacity(
-            opacity: 0.05,
-            child: Container(
-              color: Colors.transparent, // Let grid shine through
-            ),
-          )),
-          SafeArea(
-            child: Column(
-              children: [
-                // Top app bar
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.grey[200]!),
-                            color: Colors.white,
-                          ),
-                          child: const Icon(Icons.arrow_back, color: Colors.grey, size: 20),
-                        ),
-                      ),
-                      const Text(
-                        'Healthy Bhai',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(width: 40), // Spacer
-                    ],
+      appBar: AppBar(
+        backgroundColor: Colors.white, elevation: 0,
+        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xff1E293B)), onPressed: () => Navigator.pop(context)),
+        title: const Text('Healthy Bhai', style: TextStyle(color: Color(0xff1E293B), fontSize: 18, fontWeight: FontWeight.bold)),
+        centerTitle: true,
+        bottom: PreferredSize(preferredSize: const Size.fromHeight(1), child: Container(color: Colors.grey[100], height: 1)),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          children: [
+            Center(
+              child: Column(
+                children: [
+                  Container(
+                    width: 80, height: 80,
+                    decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.red[100]!)),
+                    child: const Icon(Icons.local_hospital, color: Color(0xffDC2626), size: 36),
                   ),
-                ),
-                
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                    child: Column(
-                      children: [
-                        // Icon
-                        Container(
-                          width: 96,
-                          height: 96,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.red[50],
-                            border: Border.all(color: Colors.red[100]!),
-                            boxShadow: [
-                               BoxShadow(
-                                color: const Color(0xffDC2626).withOpacity(0.1),
-                                blurRadius: 20,
-                                offset: const Offset(0, 4),
-                              )
-                            ]
+                  const SizedBox(height: 24),
+                  const Text('Doctor Login', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: Color(0xff1E293B), letterSpacing: -0.5)),
+                  const SizedBox(height: 8),
+                  const Text('Access patient records and manage notes', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey)),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: const Color(0xffF8FAFC),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: Column(
+                children: [
+                  _buildInputField(label: 'Email Address', controller: _emailController, prefixIcon: Icons.mail, hintText: 'doctor@hospital.com'),
+                  const SizedBox(height: 24),
+                  _buildInputField(label: 'Password', controller: _passwordController, prefixIcon: Icons.lock, hintText: 'Enter your password', isPassword: true),
+                  const SizedBox(height: 32),
+
+                  _isLoading
+                      ? const CircularProgressIndicator(color: Color(0xffDC2626))
+                      : ElevatedButton(
+                          onPressed: _login,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xffDC2626),
+                            minimumSize: const Size(double.infinity, 56),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 0,
                           ),
-                          child: const Icon(
-                            Icons.medical_services,
-                            color: Color(0xffDC2626),
-                            size: 48,
-                          ),
+                          child: const Text('Login', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                         ),
-                        const SizedBox(height: 24),
-                        
-                        // Titles
-                        const Text(
-                          'Doctor Login',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xff0F172A),
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Secure access to patient records',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 32),
-                        
-                        // Form Card
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.grey[100]!),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.02),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              )
-                            ]
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildInputField(
-                                label: 'EMAIL ID',
-                                prefixIcon: Icons.mail,
-                                hintText: 'doctor@healthybhai.com',
-                              ),
-                              const SizedBox(height: 24),
-                              _buildInputField(
-                                label: 'PASSWORD',
-                                prefixIcon: Icons.lock_open,
-                                hintText: '••••••••',
-                                isPassword: true,
-                              ),
-                              
-                              const SizedBox(height: 16),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: Checkbox(
-                                          value: false,
-                                          onChanged: (v) {},
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                                          side: BorderSide(color: Colors.grey[300]!),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Remember me',
-                                        style: TextStyle(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.w500),
-                                      ),
-                                    ],
-                                  ),
-                                  const Text(
-                                    'Forgot Password?',
-                                    style: TextStyle(
-                                      color: Color(0xffDC2626),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  )
-                                ],
-                              ),
-                              
-                              const SizedBox(height: 24),
-                              ElevatedButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => const DoctorDashboard()),
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xffDC2626),
-                                  minimumSize: const Size(double.infinity, 56),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'ACCESS DASHBOARD',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    SizedBox(width: 8),
-                                    Icon(Icons.arrow_forward, color: Colors.white, size: 18),
-                                  ],
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 32),
-                        
-                        // Social Login
-                        const SizedBox(height: 32),
-                        Row(
-                          children: [
-                            Expanded(child: Divider(color: Colors.grey[200])),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: Text(
-                                'OR CONTINUE WITH',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey[400],
-                                  letterSpacing: 1
-                                ),
-                              ),
-                            ),
-                             Expanded(child: Divider(color: Colors.grey[200])),
-                          ],
-                        ),
-                        
-                        const SizedBox(height: 24),
-                        
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey[200]!),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.g_mobiledata, color: Colors.black87, size: 32),
-                                    SizedBox(width: 4),
-                                    Text('Google', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        
-                        const SizedBox(height: 32),
-                         Row(
-                           mainAxisAlignment: MainAxisAlignment.center,
-                           children: [
-                             Text(
-                               'New to Healthy Bhai? ',
-                               style: TextStyle(color: Colors.grey[500], fontSize: 14, fontWeight: FontWeight.w500),
-                             ),
-                             GestureDetector(
-                               onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => const DoctorRegisterScreen()),
-                                  );
-                               },
-                               child: const Text(
-                                 'Register Practice',
-                                 style: TextStyle(
-                                   color: Color(0xffDC2626),
-                                   fontSize: 14,
-                                   fontWeight: FontWeight.bold,
-                                 ),
-                               ),
-                             )
-                           ],
-                         ),
-                          const SizedBox(height: 24),
-                      ],
+
+                  const SizedBox(height: 12),
+
+                  OutlinedButton(
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const DoctorRegisterScreen())),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 56),
+                      side: const BorderSide(color: Color(0xffDC2626)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
+                    child: const Text('Register', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xffDC2626))),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          
-           // Bottom Fade
-           Positioned(
-             bottom: 0,
-             left: 0,
-             right: 0,
-             child: Container(
-               height: 96,
-               decoration: BoxDecoration(
-                 gradient: LinearGradient(
-                   begin: Alignment.bottomCenter,
-                   end: Alignment.topCenter,
-                   colors: [
-                     Colors.white,
-                     Colors.white.withOpacity(0),
-                   ]
-                 )
-               ),
-             ),
-           )
-        ],
+
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildInputField({
-    required String label,
-    required IconData prefixIcon,
-    required String hintText,
-    bool isPassword = false,
-  }) {
+  Widget _buildInputField({required String label, required TextEditingController controller, required IconData prefixIcon, required String hintText, bool isPassword = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey,
-            letterSpacing: 1,
-          ),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
         ),
-        const SizedBox(height: 8),
         TextField(
+          controller: controller,
           obscureText: isPassword,
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.w500),
+            hintStyle: TextStyle(color: Colors.grey[400]),
             prefixIcon: Icon(prefixIcon, color: Colors.grey[400]),
             suffixIcon: isPassword ? Icon(Icons.visibility, color: Colors.grey[400]) : null,
-            filled: true,
-            fillColor: const Color(0xffF8FAFC),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[200]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[200]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-               borderSide: const BorderSide(color: Color(0xffDC2626)),
-            ),
-             contentPadding: const EdgeInsets.symmetric(vertical: 16),
+            filled: true, fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(vertical: 20),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
           ),
-        )
+        ),
       ],
     );
   }
-
 }
