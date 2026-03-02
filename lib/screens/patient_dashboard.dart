@@ -24,6 +24,9 @@ class _PatientDashboardState extends State<PatientDashboard> {
   int _navIndex = 0;
   String _patientName = 'Patient';
   List<Map<String, dynamic>> _recentActivity = [];
+  bool _isChatBotHovered = false;
+  double? _fabX;
+  double? _fabY;
 
   @override
   void initState() {
@@ -166,11 +169,6 @@ class _PatientDashboardState extends State<PatientDashboard> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AiAssistantScreen(patientId: widget.patientId))),
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.smart_toy, color: Colors.white),
-      ),
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -239,19 +237,12 @@ class _PatientDashboardState extends State<PatientDashboard> {
                     else if (eventText.contains('Note')) { icon = Icons.note; iconColor = Colors.orange[600]!; iconBg = Colors.orange[50]!; }
                     else if (eventText.contains('medicine') || eventText.contains('prescription') || eventText.contains('extracted')) { icon = Icons.medication; iconColor = Colors.teal[600]!; iconBg = Colors.teal[50]!; }
 
-                    // Format the Firestore Timestamp to a readable string
-                    String dateStr = '';
-                    try {
-                      if (event['date'] != null) {
-                        final dt = (event['date'] as dynamic).toDate();
-                        dateStr = '${dt.day}/${dt.month}/${dt.year}';
-                      }
-                    } catch (_) {}
-
                     final dateObj = event['date'];
                     String dateStr = '';
                     if (dateObj != null) {
-                      dateStr = DateFormat('MMM dd, yyyy - hh:mm a').format((dateObj as dynamic).toDate());
+                      try {
+                        dateStr = DateFormat('MMM dd, yyyy - hh:mm a').format((dateObj as dynamic).toDate());
+                      } catch (_) {}
                     }
 
                     return Padding(
@@ -286,7 +277,50 @@ class _PatientDashboardState extends State<PatientDashboard> {
               ),
             ),
           ),
+
+          // Draggable Assistive Touch Chatbot
+          if (_fabX == null || _fabY == null)
+            Positioned(
+              right: 24,
+              bottom: 110,
+              child: _buildDraggableFab(),
+            )
+          else
+            Positioned(
+              left: _fabX,
+              top: _fabY,
+              child: _buildDraggableFab(),
+            ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDraggableFab() {
+    return GestureDetector(
+      onPanUpdate: (details) {
+        setState(() {
+          if (_fabX == null || _fabY == null) {
+            final size = MediaQuery.of(context).size;
+            // rough estimations of starting pos if null
+            _fabX = size.width - 24 - (_isChatBotHovered ? 120 : 56);
+            _fabY = size.height - 110 - 56;
+          }
+          _fabX = _fabX! + details.delta.dx;
+          _fabY = _fabY! + details.delta.dy;
+        });
+      },
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isChatBotHovered = true),
+        onExit: (_) => setState(() => _isChatBotHovered = false),
+        child: FloatingActionButton.extended(
+          elevation: 8,
+          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AiAssistantScreen(patientId: widget.patientId))),
+          backgroundColor: Colors.blue,
+          isExtended: _isChatBotHovered,
+          icon: const Icon(Icons.smart_toy, color: Colors.white),
+          label: const Text('Ask AI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        ),
       ),
     );
   }
