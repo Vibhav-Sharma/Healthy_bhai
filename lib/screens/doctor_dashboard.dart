@@ -4,6 +4,7 @@ import '../services/firestore_service.dart';
 import 'doctor_patient_search_screen.dart';
 import 'doctor_appointments_screen.dart';
 import 'doctor_patient_detail_screen.dart';
+import 'doctor_settings_screen.dart';
 
 class DoctorDashboard extends StatefulWidget {
   final String doctorId;
@@ -83,12 +84,11 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
     );
   }
 
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF3F4F6),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -114,6 +114,13 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.settings, color: Colors.grey),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorSettingsScreen(doctorId: widget.doctorId)));
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.logout, color: Color(0xffDC2626)),
             onPressed: () async {
               await AuthService.signOut();
@@ -129,7 +136,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Welcome, Doctor', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xff1E293B))),
+                Text('Welcome, Doctor', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.inverseSurface)),
                 const SizedBox(height: 4),
                 Text('Manage your patients and records.', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey[500])),
                 const SizedBox(height: 24),
@@ -173,7 +180,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                             hintStyle: TextStyle(color: Colors.grey[400]),
                             prefixIcon: const Icon(Icons.search, color: Colors.grey),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: Theme.of(context).cardColor,
                             contentPadding: const EdgeInsets.symmetric(vertical: 14),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
                             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
@@ -239,14 +246,14 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                 const SizedBox(height: 32),
 
                 // Recent Activity Header
-                const Text('Recent Activity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xff1E293B))),
+                Text('Recent Activity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.inverseSurface)),
                 const SizedBox(height: 16),
 
                 // Dynamic activity cards from Firestore
                 if (_recentActivity.isEmpty)
                   Container(
                     padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[100]!)),
+                    decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[100]!)),
                     child: Center(child: Text('No recent activity yet.', style: TextStyle(color: Colors.grey[400]))),
                   )
                 else
@@ -262,13 +269,13 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Container(
                         padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[100]!)),
+                        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[100]!)),
                         child: Row(
                           children: [
                             Container(width: 40, height: 40, decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle), child: Icon(icon, color: iconColor, size: 20)),
                             const SizedBox(width: 16),
                             Expanded(
-                              child: Text(eventText, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xff1E293B)), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              child: Text(eventText, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.inverseSurface), maxLines: 1, overflow: TextOverflow.ellipsis),
                             ),
                           ],
                         ),
@@ -287,7 +294,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
             child: Container(
               padding: const EdgeInsets.only(top: 16, bottom: 24, left: 24, right: 24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 border: Border(top: BorderSide(color: Colors.grey[200]!)),
               ),
               child: Row(
@@ -310,7 +317,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey[100]!)),
+        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey[100]!)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -332,13 +339,13 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
   Widget _buildStatCard(String title, String value) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[100]!)),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[100]!)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[500], letterSpacing: 1)),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xff1E293B), letterSpacing: 1)),
+          Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.inverseSurface, letterSpacing: 1)),
         ],
       ),
     );
@@ -351,9 +358,9 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: isActive ? const Color(0xff1E293B) : Colors.grey[400], size: 24),
+          Icon(icon, color: isActive ? Theme.of(context).colorScheme.inverseSurface : Colors.grey[400], size: 24),
           const SizedBox(height: 6),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1, color: isActive ? const Color(0xff1E293B) : Colors.grey[400])),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1, color: isActive ? Theme.of(context).colorScheme.inverseSurface : Colors.grey[400])),
         ],
       ),
     );
