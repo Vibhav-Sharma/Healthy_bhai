@@ -16,6 +16,15 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  final _allergiesController = TextEditingController();
+  final _pastDiseasesController = TextEditingController();
+  final _currentDiseasesController = TextEditingController();
+  final _chronicDiseasesController = TextEditingController();
+  final _currentMedicinesController = TextEditingController();
+  final _oldMedicinesController = TextEditingController();
+  final _surgeriesController = TextEditingController();
+  final _treatmentsController = TextEditingController();
+
   bool _isLoading = false;
   bool _obscurePassword = true;
 
@@ -32,6 +41,14 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
     _emergencyContactController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _allergiesController.dispose();
+    _pastDiseasesController.dispose();
+    _currentDiseasesController.dispose();
+    _chronicDiseasesController.dispose();
+    _currentMedicinesController.dispose();
+    _oldMedicinesController.dispose();
+    _surgeriesController.dispose();
+    _treatmentsController.dispose();
     super.dispose();
   }
 
@@ -96,6 +113,14 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
         age: _ageController.text.trim(),
         bloodGroup: _bloodGroupController.text.trim(),
         emergencyContact: _emergencyContactController.text.trim(),
+        allergies: _allergiesController.text.trim(),
+        pastDiseases: _pastDiseasesController.text.trim(),
+        currentDiseases: _currentDiseasesController.text.trim(),
+        chronicDiseases: _chronicDiseasesController.text.trim(),
+        currentMedicines: _currentMedicinesController.text.trim(),
+        oldMedicines: _oldMedicinesController.text.trim(),
+        surgeries: _surgeriesController.text.trim(),
+        treatments: _treatmentsController.text.trim(),
       );
 
       if (!mounted) return;
@@ -246,6 +271,38 @@ class _PatientRegisterScreenState extends State<PatientRegisterScreen> {
                     isPassword: true,
                     onChanged: (val) => setState(() => _hasStartedTypingPassword = true),
                     bottomWidget: _buildPasswordCriteria(),
+                  ),
+                  const SizedBox(height: 20),
+                  Divider(color: Colors.grey[300], height: 32),
+                  const Text('MEDICAL HISTORY (OPTIONAL)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5)),
+                  const SizedBox(height: 16),
+                  
+                  _buildInputField(label: 'ALLERGIES', controller: _allergiesController, prefixIcon: Icons.warning_amber_rounded, hintText: 'Any known allergies?'),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(child: _buildInputField(label: 'PAST DISEASES', controller: _pastDiseasesController, prefixIcon: Icons.history, hintText: 'E.g., Jaundice')),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildInputField(label: 'CURRENT DISEASES', controller: _currentDiseasesController, prefixIcon: Icons.coronavirus_outlined, hintText: 'E.g., Diabetes')),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildInputField(label: 'CHRONIC DISEASES', controller: _chronicDiseasesController, prefixIcon: Icons.favorite_border, hintText: 'E.g., Blood Pressure, Asthma'),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(child: _buildInputField(label: 'CURRENT MEDICINES', controller: _currentMedicinesController, prefixIcon: Icons.medication, hintText: 'E.g., Metformin')),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildInputField(label: 'OLD MEDICINES', controller: _oldMedicinesController, prefixIcon: Icons.medication_outlined, hintText: 'Past medications')),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(child: _buildInputField(label: 'PAST SURGERIES', controller: _surgeriesController, prefixIcon: Icons.content_cut_outlined, hintText: 'E.g., Appendectomy')),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildInputField(label: 'TREATMENTS', controller: _treatmentsController, prefixIcon: Icons.healing_outlined, hintText: 'E.g., Physiotherapy')),
+                    ],
                   ),
                 ],
               ),
