@@ -159,7 +159,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
             Container(
               padding: EdgeInsets.all(8),
               decoration: BoxDecoration(color: Color(0xffDC2626).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-              child: Icon(Icons.health_and_safety, color: Color(0xffDC2626), size: 24),
+              child: ClipRRect(borderRadius: BorderRadius.circular(6), child: Image.asset('assets/images/Logo.png', width: 24, height: 24, fit: BoxFit.contain)),
             ),
             SizedBox(width: 12),
             Column(

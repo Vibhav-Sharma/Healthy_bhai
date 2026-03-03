@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:intl/intl.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
@@ -15,6 +16,7 @@ import 'notification_settings_screen.dart';
 import 'active_medicines_screen.dart';
 import 'patient_profile_screen.dart';
 import 'patient_settings_screen.dart';
+import 'health_sync_screen.dart';
 
 class PatientDashboard extends StatefulWidget {
   final String patientId;
@@ -122,7 +124,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
                 color: Color(0xffDC2626).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.health_and_safety, color: Color(0xffDC2626), size: 24),
+              child: ClipRRect(borderRadius: BorderRadius.circular(6), child: Image.asset('assets/images/Logo.png', width: 24, height: 24, fit: BoxFit.contain)),
             ),
             SizedBox(width: 12),
             Column(
@@ -217,6 +219,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
                     _buildGridButton(context, icon: Icons.calendar_today, title: 'Appointments', subtitle: 'Book or view your schedule.', destination: PatientAppointmentsScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.local_hospital, title: 'Emergency Info', subtitle: 'Critical medical data for responders.', destination: EmergencyModeScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.location_on, title: 'Nearby Hospitals', subtitle: 'Find hospitals & clinics near you.', destination: NearbyHospitalsScreen()),
+                    _buildGridButton(context, icon: Icons.monitor_heart, title: 'Health Sync', subtitle: 'Sync smartwatch data from Health Connect.', destination: HealthSyncScreen(patientId: widget.patientId)),
                   ],
                 ),
 
@@ -269,7 +272,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
                     );
                   })),
 
-                SizedBox(height: 100),
+                const SizedBox(height: 100),
               ],
             ),
           ),
