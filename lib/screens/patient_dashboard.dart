@@ -218,7 +218,8 @@ class _PatientDashboardState extends State<PatientDashboard> {
                     _buildGridButton(context, icon: Icons.upload_file, title: 'Upload Reports', subtitle: 'Add new lab results or documents.', destination: DocumentUploadScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.calendar_today, title: 'Appointments', subtitle: 'Book or view your schedule.', destination: PatientAppointmentsScreen(patientId: widget.patientId)),
                     _buildGridButton(context, icon: Icons.local_hospital, title: 'Emergency Info', subtitle: 'Critical medical data for responders.', destination: EmergencyModeScreen(patientId: widget.patientId)),
-                    _buildGridButton(context, icon: Icons.location_on, title: 'Nearby Hospitals', subtitle: 'Find hospitals & clinics near you.', destination: const NearbyHospitalsScreen()),
+                    _buildGridButton(context, icon: Icons.location_on, title: 'Nearby Hospitals', subtitle: 'Find hospitals & clinics near you.', destination: NearbyHospitalsScreen()),
+                    _buildGridButton(context, icon: Icons.monitor_heart, title: 'Health Sync', subtitle: 'Sync smartwatch data from Health Connect.', destination: HealthSyncScreen(patientId: widget.patientId)),
                   ],
                 ),
 
