@@ -65,17 +65,16 @@ class _SplashScreenState extends State<SplashScreen> {
                             )
                           ],
                         ),
-                        child: Icon(
-                          Icons.local_hospital,
-                          size: 80,
-                          color: Color(0xffD32F2F),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.asset('assets/images/Logo.png', width: 80, height: 80, fit: BoxFit.contain),
                         ),
                       ),
                     ],
                   ),
                   SizedBox(height: 32),
                   Text(
-                    'Healthy Bhai',
+                    'Swasthya',
                     style: TextStyle(
                       color: Color(0xffB71C1C),
                       fontSize: 36,

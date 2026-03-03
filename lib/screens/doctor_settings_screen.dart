@@ -139,7 +139,7 @@ class _DoctorSettingsScreenState extends State<DoctorSettingsScreen> {
             SizedBox(height: 48),
             Center(
               child: Text(
-                'Healthy Bhai (Doctor) v1.0.0',
+                'Swasthya (Doctor) v1.0.0',
                 style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 13, fontWeight: FontWeight.w500),
               ),
             ),

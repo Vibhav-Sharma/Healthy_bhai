@@ -109,7 +109,7 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor, elevation: 0,
         leading: IconButton(icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).colorScheme.inverseSurface), onPressed: () => Navigator.pop(context)),
-        title: Text('Healthy Bhai', style: TextStyle(color: Theme.of(context).colorScheme.inverseSurface, fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text('Swasthya', style: TextStyle(color: Theme.of(context).colorScheme.inverseSurface, fontSize: 18, fontWeight: FontWeight.bold)),
         centerTitle: true,
         bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Container(color: Colors.grey.withValues(alpha: 0.2), height: 1)),
       ),

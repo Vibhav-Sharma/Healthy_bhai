@@ -4,7 +4,7 @@ import 'package:encrypt/encrypt.dart';
 
 /// AES-256-CBC encryption service for QR code data.
 ///
-/// Only the Healthy Bhai app knows the secret key, so QR codes scanned
+/// Only the Swasthya app knows the secret key, so QR codes scanned
 /// by third-party readers will show unreadable ciphertext.
 class QrCryptoService {
   // 32-byte key for AES-256

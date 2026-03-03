@@ -16,7 +16,7 @@
     <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED"/>
 
     <application
-        android:label="Healthy Bhai"
+        android:label="Swasthya"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
