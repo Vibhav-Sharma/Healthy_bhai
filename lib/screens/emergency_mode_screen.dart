@@ -44,7 +44,7 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
           _age = data['age']?.toString() ?? '—';
           _bloodGroup = data['bloodGroup'] ?? '—';
           _allergies = List<String>.from(data['allergies'] ?? []);
-          _diseases = List<String>.from(data['diseases'] ?? []);
+          _diseases = List<String>.from(data['currentDiseases'] ?? []);
           _medicines = List<String>.from(data['currentMedicines'] ?? []);
           _emergencyContact = data['emergencyContact'] ?? '—';
 

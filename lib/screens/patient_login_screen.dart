@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import '../services/auth_service.dart';
 import 'patient_dashboard.dart';
 import 'patient_register_screen.dart';
@@ -229,6 +230,24 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
                 ),
 
                 SizedBox(height: 32),
+
+                // Sloth jumping animation
+                Center(
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.22,
+                    child: Lottie.network(
+                      'https://assets9.lottiefiles.com/packages/lf20_vPnn3K.json',
+                      fit: BoxFit.contain,
+                      repeat: true,
+                      animate: true,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 24),
               ],
             ),
           ),

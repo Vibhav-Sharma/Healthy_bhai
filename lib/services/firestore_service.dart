@@ -509,6 +509,61 @@ class FirestoreService {
     return 7;
   }
 
+  // ─── HEALTH CONNECT DAILY STATS ───
+
+  /// Upload a daily health summary from Health Connect.
+  /// Writes to: patients/{patientId}/dailyStats/{date}
+  /// Uses set() with merge to allow re-syncing the same day.
+  static Future<void> uploadDailySummary(
+      String patientId, Map<String, dynamic> data) async {
+    final date = data['date'] as String? ?? '';
+    if (date.isEmpty) throw Exception('date field is required');
+
+    // Find the patient document by patientId
+    final query = await _db
+        .collection('patients')
+        .where('patientId', isEqualTo: patientId)
+        .limit(1)
+        .get();
+
+    if (query.docs.isEmpty) {
+      throw Exception('Patient not found for ID: $patientId');
+    }
+
+    final patientDoc = query.docs.first;
+
+    // Write to subcollection: patients/{uid}/dailyStats/{date}
+    await patientDoc.reference
+        .collection('dailyStats')
+        .doc(date)
+        .set({
+      ...data,
+      'uploadedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  /// Get a daily summary for a specific date.
+  /// Returns null if no data exists for that date.
+  static Future<Map<String, dynamic>?> getDailySummary(
+      String patientId, String date) async {
+    final query = await _db
+        .collection('patients')
+        .where('patientId', isEqualTo: patientId)
+        .limit(1)
+        .get();
+
+    if (query.docs.isEmpty) return null;
+
+    final patientDoc = query.docs.first;
+    final doc = await patientDoc.reference
+        .collection('dailyStats')
+        .doc(date)
+        .get();
+
+    if (!doc.exists) return null;
+    return doc.data();
+  }
+
   // ─── DOCTOR PROFILE ───
 
   /// Get a doctor's full profile (decrypted) by their custom doctorId (DR-XXXX-XX)
