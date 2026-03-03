@@ -75,7 +75,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                   SizedBox(height: 32),
                   Text(
-                    'Healthy Bhai',
+                    'Swasthya',
                     style: TextStyle(
                       color: Color(0xffB71C1C),
                       fontSize: 36,

@@ -70,7 +70,7 @@ class AIEmergencyAssistantScreen extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.all(16),
               children: [
-                _buildAIMessage(context, 'Hello Jane. I am your Healthy Bhai AI assistant. What emergency guidance do you need today?'),
+                _buildAIMessage(context, 'Hello Jane. I am your Swasthya AI assistant. What emergency guidance do you need today?'),
                 _buildUserMessage('I have a high fever and I am a diabetic type 2. What should I do?'),
                 _buildAIMessage(context, 
                   'I understand you have a high fever and are a Type 2 Diabetic.\n\n'

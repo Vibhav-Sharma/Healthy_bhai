@@ -315,7 +315,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                               _infoRow(Icons.bloodtype_outlined, 'Blood Group', _data!['bloodGroup'] ?? '-'),
                               _infoRow(Icons.height, 'Height', _data!['height'] == null || _data!['height'].toString().trim().isEmpty ? '-' : '${_data!['height']} cm'),
                               _infoRow(Icons.monitor_weight_outlined, 'Weight', _data!['weight'] == null || _data!['weight'].toString().trim().isEmpty ? '-' : '${_data!['weight']} kg'),
-                              _infoRow(Icons.phone_outlined, 'Emergency Contact', _data!['emergencyContact'] ?? '-'),
+                              _infoRow(Icons.phone_outlined, 'Emergency Contact', _formatPhone(_data!['emergencyContact'])),
                             ]),
 
                       SizedBox(height: 28),
@@ -393,6 +393,13 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     final list = _data![key] as List?;
     if (list == null || list.isEmpty) return 'None';
     return list.join(', ');
+  }
+
+  String _formatPhone(dynamic raw) {
+    if (raw == null) return '-';
+    final digits = raw.toString().replaceAll(RegExp(r'\D'), '');
+    if (digits.length >= 10) return digits.substring(digits.length - 10);
+    return digits.isEmpty ? '-' : digits;
   }
 
   Widget _sectionHeader(String text) {

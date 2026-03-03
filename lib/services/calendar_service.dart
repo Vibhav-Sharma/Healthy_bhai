@@ -80,7 +80,7 @@ class CalendarService {
     final eventBody = {
       'summary': '💊 Take $medicineName ($dosage)',
       'description': '${scheduleTime.label}: Take $medicineName $dosage\n\n'
-          'Set by Healthy Bhai app from your scanned prescription.',
+          'Set by Swasthya app from your scanned prescription.',
       'start': {
         'dateTime': startIso,
         'timeZone': 'Asia/Kolkata',

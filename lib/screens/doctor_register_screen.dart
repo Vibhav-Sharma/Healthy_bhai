@@ -121,7 +121,7 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor, elevation: 0,
         leading: IconButton(icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).colorScheme.onSurface), onPressed: () => Navigator.pop(context)),
-        title: Text('Healthy Bhai', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text('Swasthya', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
         centerTitle: true,
         bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Container(color: Colors.grey.withValues(alpha: 0.2), height: 1)),
       ),
@@ -140,7 +140,7 @@ class _DoctorRegisterScreenState extends State<DoctorRegisterScreen> {
                   SizedBox(height: 24),
                   Text('Doctor Registration', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface, letterSpacing: -0.5)),
                   SizedBox(height: 8),
-                  Text('Join the Healthy Bhai medical network', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey)),
+                  Text('Join the Swasthya medical network', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey)),
                 ],
               ),
             ),
