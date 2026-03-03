@@ -109,11 +109,11 @@ class _DoctorPatientSearchScreenState extends State<DoctorPatientSearchScreen> {
               hasNavigated = true;
               Navigator.pop(context); // close scanner
 
-              // Try to decrypt the QR data (encrypted by Healthy Bhai app)
+              // Try to decrypt the QR data (encrypted by Swasthya app)
               final decryptedData = QrCryptoService.decrypt(code);
 
               if (decryptedData != null && decryptedData.containsKey('patientId')) {
-                // Valid Healthy Bhai QR — use the embedded patient ID to navigate
+                // Valid Swasthya QR — use the embedded patient ID to navigate
                 final patientId = decryptedData['patientId'] as String;
                 _searchController.text = patientId;
                 // Navigate directly with QR data so name/age/etc show immediately
@@ -125,14 +125,14 @@ class _DoctorPatientSearchScreenState extends State<DoctorPatientSearchScreen> {
                   ),
                 ));
               } else {
-                // Not a Healthy Bhai QR — show error
+                // Not a Swasthya QR — show error
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Row(
                       children: [
                         Icon(Icons.warning_amber_rounded, color: Colors.white),
                         SizedBox(width: 12),
-                        Expanded(child: Text('Invalid QR code — not a Healthy Bhai patient QR.')),
+                        Expanded(child: Text('Invalid QR code — not a Swasthya patient QR.')),
                       ],
                     ),
                     backgroundColor: Colors.red[700],

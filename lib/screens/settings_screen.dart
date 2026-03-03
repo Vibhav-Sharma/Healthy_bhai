@@ -21,7 +21,7 @@ class SettingsScreen extends StatelessWidget {
         padding: EdgeInsets.all(16),
         children: [
           ListTile(
-            title: Text('About Healthy Bhai', style: TextStyle(fontWeight: FontWeight.bold)),
+            title: Text('About Swasthya', style: TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text('Version 1.0.0'),
             leading: Icon(Icons.info_outline, color: Color(0xffDC2626)),
           ),

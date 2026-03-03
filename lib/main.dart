@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
       valueListenable: themeNotifier,
       builder: (_, ThemeMode currentMode, __) {
         return MaterialApp(
-          title: 'Healthy Bhai',
+          title: 'Swasthya',
           debugShowCheckedModeBanner: false,
           themeMode: currentMode,
 

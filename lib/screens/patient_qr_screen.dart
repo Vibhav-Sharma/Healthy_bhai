@@ -223,7 +223,7 @@ class _PatientQRScreenState extends State<PatientQRScreen> {
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 48),
           child: Text(
-            'This QR can only be read by the Healthy Bhai app. Other scanners will see encrypted data.',
+            'This QR can only be read by the Swasthya app. Other scanners will see encrypted data.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 12, height: 1.5),
           ),

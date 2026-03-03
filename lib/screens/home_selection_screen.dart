@@ -96,16 +96,14 @@ class HomeSelectionScreen extends StatelessWidget {
                               )
                             ]
                           ),
-                          child: Icon(
-                            Icons.health_and_safety,
-                            size: 48,
-                            color: Color(0xffDC2626),
+                          child: ClipOval(
+                            child: Image.asset('assets/images/Logo.png', width: 48, height: 48, fit: BoxFit.contain),
                           ),
                         ),
                         
                         // Header
                         Text(
-                          'Healthy Bhai',
+                          'Swasthya',
                           style: TextStyle(
                             fontSize: 48,
                             fontWeight: FontWeight.w800,
