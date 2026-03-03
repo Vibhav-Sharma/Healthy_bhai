@@ -60,10 +60,10 @@ class _PatientDashboardState extends State<PatientDashboard> {
           final surgeries = data['surgeries'] as List? ?? [];
           final treatments = data['treatments'] as List? ?? [];
           
-          _needsMedicalDetails = allergies.isEmpty || pastDiseases.isEmpty || 
-                                 currentDiseases.isEmpty || chronicDiseases.isEmpty || 
-                                 currentMedicines.isEmpty || oldMedicines.isEmpty || 
-                                 surgeries.isEmpty || treatments.isEmpty;
+          _needsMedicalDetails = allergies.isEmpty && pastDiseases.isEmpty && 
+                                 currentDiseases.isEmpty && chronicDiseases.isEmpty && 
+                                 currentMedicines.isEmpty && oldMedicines.isEmpty && 
+                                 surgeries.isEmpty && treatments.isEmpty;
         });
       }
     } catch (_) {}
@@ -128,7 +128,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Healthy Bhai', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xffDC2626), letterSpacing: -0.5)),
+                Text('Swasthya', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xffDC2626), letterSpacing: -0.5)),
                 Text('Patient Portal', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.grey)),
               ],
             ),

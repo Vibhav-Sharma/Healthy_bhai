@@ -105,7 +105,7 @@ class HomeSelectionScreen extends StatelessWidget {
                         
                         // Header
                         Text(
-                          'Healthy Bhai',
+                          'Swasthya',
                           style: TextStyle(
                             fontSize: 48,
                             fontWeight: FontWeight.w800,
