@@ -76,6 +76,7 @@ class ReminderService {
   /// [frequency] — the medical abbreviation (e.g., "BD", "TDS", "Q6H")
   /// [timingContext] — meal context (e.g., "AC", "PC", "empty stomach")
   /// [fallbackTimings] — legacy Morning/Afternoon/Night list as fallback
+  /// [endDate] — if provided, skip scheduling if medicine is already expired
   static Future<void> scheduleMedicineReminder({
     required int id,
     required String medicineName,
@@ -83,7 +84,11 @@ class ReminderService {
     String frequency = '',
     String timingContext = '',
     List<String> fallbackTimings = const [],
+    DateTime? endDate,
   }) async {
+    // Skip if medicine is already expired
+    if (endDate != null && endDate.isBefore(DateTime.now())) return;
+
     // Check if medication reminders are enabled
     if (!await isMedicationRemindersEnabled()) return;
 
@@ -131,7 +136,7 @@ class ReminderService {
       await _notificationsPlugin.zonedSchedule(
         id: notificationId,
         title: '💊 Medicine Reminder',
-        body: '${time.label}: Take $medicineName ($dosage)',
+        body: 'Time to take $medicineName ($dosage)',
         scheduledDate: _nextInstanceOfTime(time.hour, time.minute),
         notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(

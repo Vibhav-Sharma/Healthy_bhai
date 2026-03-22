@@ -125,11 +125,15 @@ class _PrescriptionScanScreenState extends State<PrescriptionScanScreen> {
 
       // 2. Schedule Local Notifications using smart abbreviation parsing
       int baseId = DateTime.now().millisecondsSinceEpoch ~/ 100000;
+      final now = DateTime.now();
       for (int i = 0; i < _extractedMedicines.length; i++) {
         final med = _extractedMedicines[i];
         final frequency = (med['frequency'] as String?) ?? '';
         final timingContext = (med['timing_context'] as String?) ?? '';
         final fallbackTimings = List<String>.from(med['timings'] ?? []);
+        final durationStr = (med['duration'] as String?) ?? '';
+        final durationDays = CalendarService.parseDurationToDays(durationStr);
+        final endDate = now.add(Duration(days: durationDays));
 
         await ReminderService.scheduleMedicineReminder(
           id: baseId + i,
@@ -138,6 +142,7 @@ class _PrescriptionScanScreenState extends State<PrescriptionScanScreen> {
           frequency: frequency,
           timingContext: timingContext,
           fallbackTimings: fallbackTimings,
+          endDate: endDate,
         );
       }
 

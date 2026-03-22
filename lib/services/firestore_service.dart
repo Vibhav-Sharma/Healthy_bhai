@@ -8,7 +8,7 @@ class FirestoreService {
   // ─── FIELDS TO ENCRYPT PER COLLECTION ───
   static const List<String> _patientEncryptedFields = [
     'name', 'phone', 'emergencyContact',
-    'allergies', 'pastDiseases', 'currentDiseases', 'chronicDiseases', 
+    'allergies', 'pastDiseases', 'currentDiseases', 'chronicDiseases', 'diseases', 
     'currentMedicines', 'oldMedicines', 'surgeries', 'treatments',
   ];
 
@@ -472,9 +472,11 @@ class FirestoreService {
   }
 
   /// Deactivate all expired medicines for a patient.
-  static Future<int> deactivateExpiredMedicines(String patientId) async {
+  /// Also moves expired medicine names from `currentMedicines` → `oldMedicines`.
+  /// Returns the list of expired medicine names (so callers can cancel notifications).
+  static Future<List<String>> deactivateExpiredMedicines(String patientId) async {
     final query = await _db.collection('patients').where('patientId', isEqualTo: patientId).limit(1).get();
-    if (query.docs.isEmpty) return 0;
+    if (query.docs.isEmpty) return [];
 
     final patientDoc = query.docs.first;
     final snapshot = await patientDoc.reference
@@ -483,17 +485,28 @@ class FirestoreService {
         .get();
 
     final now = DateTime.now();
-    int deactivated = 0;
+    final List<String> expiredNames = [];
 
     for (final doc in snapshot.docs) {
-      final expiresAt = (doc.data()['expiresAt'] as Timestamp?)?.toDate();
+      final data = doc.data();
+      final expiresAt = (data['expiresAt'] as Timestamp?)?.toDate();
       if (expiresAt != null && expiresAt.isBefore(now)) {
         await doc.reference.update({'active': false});
-        deactivated++;
+        final name = data['name']?.toString() ?? '';
+        if (name.isNotEmpty) expiredNames.add(name);
       }
     }
 
-    return deactivated;
+    // Move expired medicine names: currentMedicines → oldMedicines
+    if (expiredNames.isNotEmpty) {
+      final encryptedExpired = expiredNames.map((n) => EncryptionService.encryptData(n)).toList();
+      await patientDoc.reference.update({
+        'currentMedicines': FieldValue.arrayRemove(encryptedExpired),
+        'oldMedicines': FieldValue.arrayUnion(encryptedExpired),
+      });
+    }
+
+    return expiredNames;
   }
 
   /// Parse duration string into days (helper).
