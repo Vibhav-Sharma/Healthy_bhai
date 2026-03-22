@@ -3,6 +3,7 @@ import 'package:lottie/lottie.dart';
 import 'package:intl/intl.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
+import '../services/reminder_service.dart';
 import 'medical_timeline_screen.dart';
 import 'document_upload_screen.dart';
 import 'emergency_mode_screen.dart';
@@ -82,7 +83,34 @@ class _PatientDashboardState extends State<PatientDashboard> {
 
   Future<void> _cleanupExpiredMedicines() async {
     try {
+      // 1. Deactivate expired and move names to oldMedicines
       await FirestoreService.deactivateExpiredMedicines(widget.patientId);
+
+      // 2. Cancel ALL existing medicine notifications (stale ones included)
+      await ReminderService.cancelAllReminders();
+
+      // 3. Re-schedule only active (non-expired) medicines
+      final allMeds = await FirestoreService.getMedicines(widget.patientId);
+      final activeMeds = allMeds.where((m) => m['active'] == true).toList();
+
+      int baseId = DateTime.now().millisecondsSinceEpoch ~/ 100000;
+      for (int i = 0; i < activeMeds.length; i++) {
+        final med = activeMeds[i];
+        final expiresAt = (med['expiresAt'] as dynamic)?.toDate() as DateTime?;
+
+        await ReminderService.scheduleMedicineReminder(
+          id: baseId + i,
+          medicineName: med['name'] ?? 'Medicine',
+          dosage: med['dosage'] ?? '',
+          frequency: (med['frequency'] as String?) ?? '',
+          timingContext: (med['timingContext'] as String?) ?? '',
+          fallbackTimings: List<String>.from(med['timings'] ?? []),
+          endDate: expiresAt,
+        );
+      }
+
+      // Reload patient data to reflect updated currentMedicines
+      _loadPatientData();
     } catch (_) {}
   }
 
