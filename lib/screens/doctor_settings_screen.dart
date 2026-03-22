@@ -135,6 +135,43 @@ class _DoctorSettingsScreenState extends State<DoctorSettingsScreen> {
                 },
               ),
             ]),
+            SizedBox(height: 24),
+
+            _buildSectionHeader('About & Support', subheadColor),
+            _buildCardGroup(cardColor, [
+              _buildActionTile(
+                icon: Icons.info_outline,
+                iconColor: Color(0xffDC2626),
+                title: 'About Swasthya',
+                subtitle: 'Version 1.0.0',
+                textColor: textColor,
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Swasthya v1.0.0')));
+                },
+              ),
+              _buildDivider(isDark),
+              _buildActionTile(
+                icon: Icons.help_outline,
+                iconColor: Color(0xffDC2626),
+                title: 'Help & Support',
+                subtitle: 'Contact us for any issues',
+                textColor: textColor,
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Contact support@swasthya.com')));
+                },
+              ),
+              _buildDivider(isDark),
+              _buildActionTile(
+                icon: Icons.privacy_tip_outlined,
+                iconColor: Color(0xffDC2626),
+                title: 'Terms & Privacy',
+                subtitle: 'Read our data policies',
+                textColor: textColor,
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Terms & Privacy')));
+                },
+              ),
+            ]),
 
             SizedBox(height: 48),
             Center(

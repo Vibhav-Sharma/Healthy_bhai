@@ -218,6 +218,29 @@ class FirestoreService {
     }
   }
 
+  /// Delete all AI-related timeline events for a patient.
+  /// Returns the number of events deleted.
+  static Future<int> deleteAiTimelineEvents(String patientId) async {
+    final query = await _db
+        .collection('timeline')
+        .where('patientId', isEqualTo: patientId)
+        .get();
+
+    final aiDocs = query.docs.where((doc) {
+      final event = doc.data()['event']?.toString() ?? '';
+      return event.startsWith('AI Advice') || event.startsWith('AI extracted');
+    }).toList();
+
+    if (aiDocs.isEmpty) return 0;
+
+    final batch = _db.batch();
+    for (final doc in aiDocs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+    return aiDocs.length;
+  }
+
   // ─── DOCTOR ACTIVITY ───
 
   /// Add a doctor activity event
