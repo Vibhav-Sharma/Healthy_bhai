@@ -105,6 +105,9 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
       case 2:
         Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorProfileScreen(doctorId: widget.doctorId))).then((_) => _loadDoctorProfile());
         break;
+      case 3:
+        Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorSettingsScreen(doctorId: widget.doctorId)));
+        break;
     }
   }
 
@@ -172,11 +175,6 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.settings, color: Colors.grey),
-            tooltip: 'Settings',
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorSettingsScreen(doctorId: widget.doctorId))),
-          ),
           IconButton(
             icon: Icon(Icons.logout, color: Color(0xffDC2626)),
             onPressed: () async {
@@ -383,6 +381,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                   _buildNavItem(Icons.home, 'HOME', 0),
                   _buildNavItem(Icons.search, 'SEARCH', 1),
                   _buildNavItem(Icons.account_circle, 'PROFILE', 2),
+                  _buildNavItem(Icons.settings, 'SETTINGS', 3),
                 ],
               ),
             ),

@@ -13,7 +13,7 @@ import 'patient_appointments_screen.dart';
 import 'nearby_hospitals_screen.dart';
 import 'book_appointment_screen.dart';
 import 'prescription_scan_screen.dart';
-import 'notification_settings_screen.dart';
+
 import 'active_medicines_screen.dart';
 import 'patient_profile_screen.dart';
 import 'patient_settings_screen.dart';
@@ -126,7 +126,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
         Navigator.push(context, MaterialPageRoute(builder: (_) => MedicalTimelineScreen(patientId: widget.patientId)));
         break;
       case 3: // SETTINGS
-        Navigator.push(context, MaterialPageRoute(builder: (_) => NotificationSettingsScreen(role: 'patient')));
+        Navigator.push(context, MaterialPageRoute(builder: (_) => PatientSettingsScreen(patientId: widget.patientId)));
         break;
     }
   }
@@ -165,13 +165,6 @@ class _PatientDashboardState extends State<PatientDashboard> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.settings, color: Colors.grey),
-            tooltip: 'Settings',
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => PatientSettingsScreen(patientId: widget.patientId)));
-            },
-          ),
           IconButton(
             icon: Icon(Icons.account_circle, color: Color(0xffDC2626), size: 28),
             tooltip: 'My Profile',
