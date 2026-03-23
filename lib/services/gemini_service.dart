@@ -1,16 +1,103 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import '../config/api_keys.dart';
 
 class GeminiService {
-  /// Sends patient info + symptoms to Gemini 2.5 Flash and returns advice.
-  ///
-  /// [symptoms] - User-entered symptoms (e.g., "Fever and headache")
-  /// [bloodGroup] - Patient's blood group (e.g., "O+")
-  /// [diseases] - Known diseases (e.g., "Diabetes")
-  /// [allergies] - Known allergies (e.g., "Penicillin")
-  /// [medicines] - Current medicines (e.g., "Metformin")
+  static const String _baseUrl = 'https://api.groq.com/openai/v1/chat/completions';
+
+  static Future<String> _callGroqApi({
+    required String systemPrompt,
+    required String userPrompt,
+    bool jsonMode = false,
+  }) async {
+    final Map<String, dynamic> body = {
+      'model': 'llama-3.3-70b-versatile',
+      'messages': [
+        {'role': 'system', 'content': systemPrompt},
+        {'role': 'user', 'content': userPrompt},
+      ],
+      'temperature': 0.2,
+    };
+
+    if (jsonMode) {
+      body['response_format'] = {'type': 'json_object'};
+    }
+
+    final response = await http.post(
+      Uri.parse(_baseUrl),
+      headers: {
+        'Authorization': 'Bearer $ACTIVE_AI_API_KEY',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      return jsonResponse['choices'][0]['message']['content'];
+    } else {
+      throw Exception('Groq API Error: ${response.statusCode} - ${response.body}');
+    }
+  }
+
+  static Future<String> _callGroqVisionApi({
+    required String systemPrompt,
+    required String userPrompt,
+    required Uint8List imageBytes,
+  }) async {
+    final base64Image = base64Encode(imageBytes);
+    final String dataUrl = 'data:image/jpeg;base64,$base64Image';
+
+    final Map<String, dynamic> body = {
+      'model': 'meta-llama/llama-4-scout-17b-16e-instruct',
+      'messages': [
+        {
+          'role': 'user',
+          'content': [
+            // Vision model sometimes performs better with system prompt embedded in user prompt
+            {'type': 'text', 'text': systemPrompt + '\n\n' + userPrompt},
+            {
+              'type': 'image_url',
+              'image_url': {'url': dataUrl}
+            }
+          ]
+        }
+      ],
+      'temperature': 0.2,
+    };
+
+    final response = await http.post(
+      Uri.parse(_baseUrl),
+      headers: {
+        'Authorization': 'Bearer $ACTIVE_AI_API_KEY',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      return jsonResponse['choices'][0]['message']['content'];
+    } else {
+      throw Exception('Groq Vision API Error: ${response.statusCode} - ${response.body}');
+    }
+  }
+
+  static String _cleanJsonResponse(String text) {
+    text = text.trim();
+    if (text.startsWith('```json')) {
+      text = text.substring(7);
+    } else if (text.startsWith('```')) {
+      text = text.substring(3);
+    }
+    if (text.endsWith('```')) {
+      text = text.substring(0, text.length - 3);
+    }
+    return text.trim();
+  }
+
+  /// Sends patient info + symptoms to Groq and returns advice.
   static Future<String> getEmergencyAdvice({
     required String symptoms,
     String bloodGroup = 'Not provided',
@@ -19,11 +106,7 @@ class GeminiService {
     String medicines = 'None',
   }) async {
     try {
-      // Create the Gemini model with system instruction
-      final model = GenerativeModel(
-        model: 'gemini-2.5-flash',
-        apiKey: dotenv.env['GEMINI_API_KEY'] ?? '',
-        systemInstruction: Content.system(
+      final systemInstruction =
           'You are an AI emergency medical triage assistant.\n\n'
           'RULES:\n'
           '1. Provide practical, actionable first-aid and emergency advice.\n'
@@ -38,9 +121,7 @@ class GeminiService {
           'breathing difficulty), tell them to CALL EMERGENCY SERVICES IMMEDIATELY.\n'
           '6. Always recommend visiting a doctor for proper diagnosis.\n'
           '7. Give short bullet-point advice.\n'
-          '8. End with a disclaimer that this is AI-generated advice, not a substitute for a real doctor.',
-        ),
-      );
+          '8. End with a disclaimer that this is AI-generated advice, not a substitute for a real doctor.';
 
       // Build the prompt with patient info + symptoms
       final String prompt = '''
@@ -54,20 +135,20 @@ Symptoms:
 $symptoms
 ''';
 
-      // Send request to Gemini
-      final response = await model.generateContent([Content.text(prompt)]);
+      final responseText = await _callGroqApi(
+        systemPrompt: systemInstruction,
+        userPrompt: prompt,
+      );
 
-      return response.text?.trim() ??
-          'No advice generated. Please try again.';
+      return responseText.trim().isEmpty
+          ? 'No advice generated. Please try again.'
+          : responseText.trim();
     } catch (e) {
       return 'Error: Could not connect to AI service. Please check your internet connection and try again.\n\nDetails: $e';
     }
   }
 
   /// Generates a concise clinical summary of a patient for the doctor.
-  ///
-  /// Fetches all available data (profile, reports, notes, timeline) and
-  /// asks Gemini to produce a structured, diagnosis-ready overview.
   static Future<String> getPatientSummary({
     required Map<String, dynamic> patient,
     required List<Map<String, dynamic>> reports,
@@ -75,10 +156,7 @@ $symptoms
     required List<Map<String, dynamic>> timeline,
   }) async {
     try {
-      final model = GenerativeModel(
-        model: 'gemini-2.5-flash',
-        apiKey: dotenv.env['GEMINI_API_KEY'] ?? '',
-        systemInstruction: Content.system(
+      final systemInstruction =
           'You are a clinical summarisation assistant for doctors.\n\n'
           'RULES:\n'
           '1. Summarise the patient\'s medical history in a concise, structured way.\n'
@@ -88,9 +166,7 @@ $symptoms
           '5. Use clear Markdown formatting with headings, bold text, and bullet points.\n'
           '6. Keep the summary brief but comprehensive — a doctor should be able to glance at it before a consultation.\n'
           '7. End with a quick "Key Points for Consultation" section.\n'
-          '8. Do NOT provide treatment advice. Only summarise existing data.',
-        ),
-      );
+          '8. Do NOT provide treatment advice. Only summarise existing data.';
 
       // Build the data dump
       final name = patient['name'] ?? 'Unknown';
@@ -135,24 +211,22 @@ $timelineSummary
 Please provide a concise clinical summary for the attending doctor.
 ''';
 
-      final response = await model.generateContent([Content.text(prompt)]);
-      return response.text?.trim() ?? 'No summary generated. Please try again.';
+      final responseText = await _callGroqApi(
+        systemPrompt: systemInstruction,
+        userPrompt: prompt,
+      );
+
+      return responseText.trim().isEmpty
+          ? 'No summary generated. Please try again.'
+          : responseText.trim();
     } catch (e) {
       return 'Error: Could not generate summary. Please check your internet connection and try again.\n\nDetails: $e';
     }
   }
 
   /// Extracts medicines, dosages, and timings from a prescription image.
-  /// Uses Gemini 2.5 Flash multimodal capabilities.
-  /// Returns a structured Map or throws an Exception.
   static Future<Map<String, dynamic>> extractPrescription(Uint8List imageBytes) async {
-    final model = GenerativeModel(
-      model: 'gemini-2.5-flash',
-      apiKey: dotenv.env['GEMINI_API_KEY'] ?? '',
-      generationConfig: GenerationConfig(
-        responseMimeType: 'application/json',
-      ),
-      systemInstruction: Content.system(
+    final systemInstruction =
         'You are a highly accurate medical prescription reader.\n'
         'Extract the medicines, dosages, frequency, meal-timing context, and duration '
         'from the provided prescription image.\n\n'
@@ -161,7 +235,7 @@ Please provide a concise clinical summary for the attending doctor.
         'For timing_context, use the meal-relative abbreviation or phrase '
         '(e.g., AC, PC, "before meals", "after meals", "empty stomach", "before bed", "with meals").\n'
         'If the doctor wrote plain English like "Morning and Night", put that in frequency.\n\n'
-        'Return ONLY a valid JSON object strictly following this schema:\n'
+        'Return ONLY a valid JSON object strictly following this schema without any markdown formatting:\n'
         '{\n'
         '  "medicines": [\n'
         '    {\n'
@@ -179,24 +253,24 @@ Please provide a concise clinical summary for the attending doctor.
         '- "timing_context" = meal relation (AC, PC, HS, empty stomach, etc.) or empty string if unspecified\n'
         '- "duration" = how long to take (e.g., "5 days", "1 week", "30 days") or empty string if unspecified\n'
         '- "timings" = still include the simple Morning/Afternoon/Night array as a fallback\n'
-        'If no medicines are found, return {"medicines": []}.',
-      ),
-    );
+        'If no medicines are found, return {"medicines": []}.';
 
-    final prompt = TextPart('Extract the medicines from this prescription.');
-    final imagePart = DataPart('image/jpeg', imageBytes);
+    final prompt = 'Extract the medicines from this prescription strictly using the requested JSON format. Ensure the output is valid JSON.';
 
     try {
-      final response = await model.generateContent([
-        Content.multi([prompt, imagePart])
-      ]);
+      final responseText = await _callGroqVisionApi(
+        systemPrompt: systemInstruction,
+        userPrompt: prompt,
+        imageBytes: imageBytes,
+      );
 
-      if (response.text == null || response.text!.isEmpty) {
+      if (responseText.isEmpty) {
         throw Exception('No response from AI.');
       }
 
       // Parse the JSON strictly
-      final data = jsonDecode(response.text!) as Map<String, dynamic>;
+      final cleanedText = _cleanJsonResponse(responseText);
+      final data = jsonDecode(cleanedText) as Map<String, dynamic>;
       
       // Ensure the key exists
       if (!data.containsKey('medicines')) {
@@ -210,20 +284,11 @@ Please provide a concise clinical summary for the attending doctor.
   }
 
   /// Spell-checks / corrects medicine names extracted by OCR.
-  ///
-  /// Sends all names in one batch to Gemini and gets back the corrected
-  /// (or validated) medicine names.  Returns a Map of original → corrected.
   static Future<Map<String, String>> correctMedicineNames(List<String> names) async {
     if (names.isEmpty) return {};
 
     try {
-      final model = GenerativeModel(
-        model: 'gemini-2.5-flash',
-        apiKey: dotenv.env['GEMINI_API_KEY'] ?? '',
-        generationConfig: GenerationConfig(
-          responseMimeType: 'application/json',
-        ),
-        systemInstruction: Content.system(
+      final systemInstruction =
           'You are a pharmaceutical spell-checker.\n\n'
           'TASK:\n'
           'Given a JSON array of medicine names extracted via OCR from a '
@@ -243,16 +308,20 @@ Please provide a concise clinical summary for the attending doctor.
           '- One entry per input name, in the same order.\n'
           '- "changed" is true only if you modified the name.\n'
           '- Do NOT add medicines that were not in the input.\n'
-          '- Do NOT remove any medicines from the input.',
-        ),
-      );
+          '- Do NOT remove any medicines from the input.';
 
       final prompt = 'Verify and correct these medicine names:\n${jsonEncode(names)}';
-      final response = await model.generateContent([Content.text(prompt)]);
+      
+      final responseText = await _callGroqApi(
+        systemPrompt: systemInstruction,
+        userPrompt: prompt,
+        jsonMode: true,
+      );
 
-      if (response.text == null || response.text!.isEmpty) return {};
+      if (responseText.isEmpty) return {};
 
-      final data = jsonDecode(response.text!) as Map<String, dynamic>;
+      final cleanedText = _cleanJsonResponse(responseText);
+      final data = jsonDecode(cleanedText) as Map<String, dynamic>;
       final corrections = List<Map<String, dynamic>>.from(data['corrections'] ?? []);
 
       final result = <String, String>{};
